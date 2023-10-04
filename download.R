@@ -21,6 +21,16 @@ if(http_error(res)){
 content <- content(res, as="text")
 tree <- read_html(content)
 
+# Create zip_data and xpt_data directories if they don't exist
+xpt_path <- "xpt_data"
+zip_path <- "zip_data"
+if (!dir.exists(zip_path)) {
+  dir.create(zip_path)
+}
+if (!dir.exists(xpt_path)) {
+  dir.create(xpt_path)
+}
+
 # Create zip_data directory if it doesn't exist
 dir <- "zip_data"
 if(!dir.exists(dir)){
@@ -37,10 +47,16 @@ for(i in 1:length(trs)){
     file_date <- html_text(tds[2])
     file_size <- html_text(tds[3])
     file_url <- html_attr(html_node(tds[4], 'a'), 'href')
-    local_file <- paste0(dir, "/", file_name, '.zip')
-    if(grepl("c4591001.*xpt", file_name) && !file.exists(local_file)){
-      print(paste("Downloading", file_name, "-", file_url))
-      download.file(file_url, local_file)
+    online_file <- basename(file_url)
+    file_ext <- tools::file_ext(online_file)
+    if(grepl("c4591001.*xpt", file_name)){
+      local_file <- ifelse(file_ext == "zip", paste0(zip_path, "/", online_file), 
+                           ifelse(file_ext == "xpt", paste0(xpt_path, "/", online_file), 
+                                  stop(paste0("Unknown extension : [", file_ext, "] on file [", file_name, "] (", online_file, "), contact the script authors to obtain an update."))))
+      if (!file.exists(local_file)) {
+        print(paste0("Downloading [", local_file, "] from [", file_url, "]"))
+        download.file(file_url, local_file, mode = "wb")
+      }
     }
   }
 }
