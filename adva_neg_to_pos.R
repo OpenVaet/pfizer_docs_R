@@ -1,7 +1,7 @@
 library(readr)
 library(dplyr)
 
-# Loading ADSL data.
+# Loading ADVA data.
 adva_file <- 'csv_data/FDA-CBER-2021-5683-0123168 to -0126026_125742_S1_M5_c4591001-A-D-adva.csv'
 
 load_adva <- function() {
