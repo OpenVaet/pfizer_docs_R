@@ -494,10 +494,6 @@ cat("oi_bnt_detected : ", oi_bnt_detected, "\n")
 cat("oi_bnt_undetected : ", oi_bnt_undetected, "\n")
 cat("oi_placebo_detected : ", oi_placebo_detected, "\n")
 cat("oi_placebo_undetected : ", oi_placebo_undetected, "\n")
-cat("oi_n11 : ", oi_n11, "\n")
-cat("oi_n1p : ", oi_n1p, "\n")
-cat("oi_np1 : ", oi_np1, "\n")
-cat("oi_npp : ", oi_npp, "\n")
 cat("oi_fisher_exact : ", oi_fisher_exact, "\n")
 
 noi_testing_ratio_offset <- abs(noi_bnt_detection_rate - noi_placebo_detection_rate)
@@ -506,10 +502,6 @@ cat("noi_bnt_detected : ", noi_bnt_detected, "\n")
 cat("noi_bnt_undetected : ", noi_bnt_undetected, "\n")
 cat("noi_placebo_detected : ", noi_placebo_detected, "\n")
 cat("noi_placebo_undetected : ", noi_placebo_undetected, "\n")
-cat("noi_n11 : ", noi_n11, "\n")
-cat("noi_n1p : ", noi_n1p, "\n")
-cat("noi_np1 : ", noi_np1, "\n")
-cat("noi_npp : ", noi_npp, "\n")
 cat("noi_fisher_exact : ", noi_fisher_exact, "\n")
 
 write.csv(data.frame(
@@ -524,4 +516,4 @@ write.csv(data.frame(
   "Fisher Exact Test" = c(noi_fisher_exact, oi_fisher_exact)
 ), file = "testing_rates_by_sites_nm_vs_anm.csv", row.names = FALSE)
 
-# print(stats)
+print(stats)
