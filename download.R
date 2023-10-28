@@ -31,12 +31,6 @@ if (!dir.exists(xpt_path)) {
   dir.create(xpt_path)
 }
 
-# Create zip_data directory if it doesn't exist
-dir <- "zip_data"
-if(!dir.exists(dir)){
-  dir.create(dir)
-}
-
 # Downloads each file.
 trs <- html_nodes(tree, 'tbody tr')
 for(i in 1:length(trs)){
