@@ -110,11 +110,6 @@ for(i in 1:length(trs)){
                         "Subjects Screened:", subjects_screened, 
                         "Subjects Randomized:", subjects_randomized))
             
-            # Print the output
-            print(paste("File:", basename(local_file), "Trial Site ID:", trial_site_id, 
-                        "Subjects Screened:", subjects_screened, 
-                        "Subjects Randomized:", subjects_randomized))
-            
             # Write to the output file
             write(paste(basename(local_file), trial_site_id, subjects_screened, subjects_randomized, sep = ";"), 
                   file = output_file, append = TRUE)
