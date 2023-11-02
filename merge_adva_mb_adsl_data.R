@@ -56,7 +56,7 @@ merged_mb_data <- merge(adsl_data, mb_data, by = "SUBJID")
 
 # Renaming columns for consistency
 names(merged_mb_data)[names(merged_mb_data) == 'SUBJID'] <- 'subject_id'
-names(merged_mb_data)[names(merged_mb_data) == 'VISIT'] <- 'test_visit'
+names(merged_mb_data)[names(merged_mb_data) == 'VISIT'] <- 'test_visit' 
 names(merged_mb_data)[names(merged_mb_data) == 'MBORRES'] <- 'test_result'
 
 # Merging ADSL and ADVA data
