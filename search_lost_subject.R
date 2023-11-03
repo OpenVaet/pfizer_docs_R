@@ -15,7 +15,7 @@ files <- list.files(path = "xpt_data", pattern = "*.xpt", full.names = TRUE)
 # Process each file
 for (file in files) {
   print(paste(file));
-  # Skip the specified file
+  # Skip the heaviest file (already checked for being void, comment if you want to check)
   if (file == "xpt_data/FDA-CBER-2021-5683-0066701 to -0123167_125742_S1_M5_c4591001-A-D-adfacevd.xpt") {
     next
   }
