@@ -74,7 +74,7 @@ for (i in 1:nrow(invest_data)) {
 }
  
 out <- file('F6_M6_ADSL_Randomization_subjects.csv', 'w')
-writeLines("Trial Site ID;FA Random;M6 Random;FA Investig;M6 Investig;", out)
+writeLines("Trial Site ID;FA Random;M6 Random;FA Investig;M6 Investig", out)
 
 for (trial_site_id in sort(names(stats))) {
   fa_random <- stats[[trial_site_id]]$fa_random
