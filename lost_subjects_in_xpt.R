@@ -49,7 +49,7 @@ for(subject_id in names(subjects_profiles)){
   total_files <- length(names(subjects_profiles[[subject_id]]))
   stats[[as.character(total_files)]] <- stats[[as.character(total_files)]] + 1
   
-  if(total_files >= 24){
+  if(total_files >= 20){
     # Add to df_over_N_xpt_lost
     df_over_N_xpt_lost <- rbind(df_over_N_xpt_lost, data.frame("SUBJID" = subject_id))
     
