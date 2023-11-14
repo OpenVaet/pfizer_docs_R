@@ -35,6 +35,10 @@ filtered_data <- data %>%
 stats <- filtered_data %>%
   group_by(COVBLST) %>%
   summarise(n = n())
+stats <- stats %>%
+  rename(`Total Subjects` = n)
+
+write.table(stats, "covblst_status_distribution.csv", row.names = FALSE, quote = FALSE, sep = ";")
 
 total_subjects <- sum(stats$n)
 print(paste('Total Subjects : ', total_subjects))
