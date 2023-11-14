@@ -89,10 +89,13 @@ filtered_data <- data %>%
   )
 
 stats <- list()
+subjects_data <- new.env(hash = TRUE, parent = emptyenv(), size = nrow(data))
 stats_with_days <- list()
 stats_by_arms <- list()
+stats_by_sites <- list()
 ct <- 0
 subjects_parsed <- 0
+subjects_pos_or_missing <- 0
 for(i in 1:nrow(filtered_data)) {
   row <- filtered_data[i,]
   ct <- ct + 1
@@ -101,14 +104,23 @@ for(i in 1:nrow(filtered_data)) {
     print(paste('Parsing Subjects ... ', i, '/', nrow(filtered_data)))
     ct <- 0
   }
-  subject_id <- row$SUBJID
+  subjid <- row$SUBJID
   covblst <- row$COVBLST
+  covblst_set <- 0
+  if (is.na(covblst)) {
+    covblst <- 'MIS'
+  }
+  if (covblst == 'POS' || covblst == 'NEG') {
+    covblst_set <- 1
+  }
   arm <- row$ARM
-  subject_id <- as.character(subject_id)
+  subjid <- as.character(subjid)
   vax101dt <- row$VAX101DT
   vax201dt <- row$VAX201DT
   category_arm <- arm
-  # print(category_arm)
+  siteid <- substr(subjid, 0, 4);
+  siteid <- as.character(siteid)
+
   # print(vax201dt)
   if (!is.na(arm) && !is.na(vax201dt) && arm == "Placebo" && vax201dt != "NA") {
     category_arm <- 'Placebo -> BNT162b2 30mg'
@@ -119,17 +131,17 @@ for(i in 1:nrow(filtered_data)) {
   visit_1_compdate <- NA
   visit_1_date <- NA
   abs_days <- 'MIS'
-  if (subject_id %in% names(subjects)) {
-    for (test_date in sort(names(subjects[[subject_id]]$tests))) {
+  if (subjid %in% names(subjects)) {
+    for (test_date in sort(names(subjects[[subjid]]$tests))) {
       # print(test_date)
-      for (test_type in sort(names(subjects[[subject_id]]$tests[[test_date]]))) {
+      for (test_type in sort(names(subjects[[subjid]]$tests[[test_date]]))) {
         # print(test_type)
-        test_visit <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_visit
+        test_visit <- subjects[[subjid]]$tests[[test_date]][[test_type]]$test_visit
         if (is.null(test_visit)) {
           stop("test_visit is null")
         }
         
-        test_result <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_result
+        test_result <- subjects[[subjid]]$tests[[test_date]][[test_type]]$test_result
         # print(test_visit)
         # print(test_result)
         
@@ -156,9 +168,6 @@ for(i in 1:nrow(filtered_data)) {
     abs_days <- as.character(abs_days)
   }
   
-  if (is.na(covblst)) {
-    covblst <- 'MIS'
-  }
   if (is.na(v1_PCR)) {
     v1_PCR <- 'MIS'
   }
@@ -166,7 +175,7 @@ for(i in 1:nrow(filtered_data)) {
     v1_NB <- 'MIS'
   }
 
-  # print(paste('subject_id : ', subject_id))
+  # print(paste('subjid : ', subjid))
   # print(paste('visit_1_date : ', visit_1_date))
   # print(paste('vax101dt : ', vax101dt))
   # print(paste('covblst : ', covblst))
@@ -174,6 +183,23 @@ for(i in 1:nrow(filtered_data)) {
   # print(paste('v1_NB : ', v1_NB))
   # print(abs_days)
   # break
+
+  # Increments relevant subjects data for later use.
+  if (covblst_set == 0 || covblst == 'POS') {
+    subjects_pos_or_missing <- subjects_pos_or_missing + 1
+    subjects_data[[subjid]]$covblst <- covblst
+    subjects_data[[subjid]]$covblst_set <- covblst_set
+    subjects_data[[subjid]]$arm <- arm
+    subjects_data[[subjid]]$vax101dt <- vax101dt
+    subjects_data[[subjid]]$vax201dt <- vax201dt
+    subjects_data[[subjid]]$category_arm <- category_arm
+    subjects_data[[subjid]]$siteid <- siteid
+    subjects_data[[subjid]]$v1_PCR <- v1_PCR
+    subjects_data[[subjid]]$v1_NB <- v1_NB
+    subjects_data[[subjid]]$visit_1_date <- visit_1_date
+    subjects_data[[subjid]]$abs_days <- abs_days
+  }
+  covblst_set <- as.character(covblst_set)
 
   # Create a new list for tests if it doesn't exist
   if (!covblst %in% names(stats)) {
@@ -207,21 +233,25 @@ for(i in 1:nrow(filtered_data)) {
   if (!category_arm %in% names(stats_by_arms)) {
     stats_by_arms[[category_arm]] <- list()
   }
-  covblst_set <- 0
-  if (covblst == 'POS' || covblst == 'NEG') {
-    covblst_set <- 1
-  }
-  covblst_set <- as.character(covblst_set)
   if (!covblst_set %in% names(stats_by_arms[[category_arm]])) {
     stats_by_arms[[category_arm]][[covblst_set]] <- 0
   }
   stats_by_arms[[category_arm]][[covblst_set]] <- stats_by_arms[[category_arm]][[covblst_set]] + 1
-}
-# print(stats)
-print(paste('Total Subjects : ', subjects_parsed))
-print(stats_by_arms)
 
-# Function to flatten the stats list and convert it to a data frame
+  # Create a new list for tests by arms if it doesn't exist
+  if (!siteid %in% names(stats_by_sites)) {
+    stats_by_sites[[siteid]] <- list()
+  }
+  if (!category_arm %in% names(stats_by_sites[[siteid]])) {
+    stats_by_sites[[siteid]][[category_arm]] <- list('0' = 0, '1' = 0)
+  }
+  if (!covblst_set %in% names(stats_by_sites[[siteid]][[category_arm]])) {
+    stats_by_sites[[siteid]][[category_arm]][[covblst_set]] <- 0
+  }
+  stats_by_sites[[siteid]][[category_arm]][[covblst_set]] <- stats_by_sites[[siteid]][[category_arm]][[covblst_set]] + 1
+}
+
+# Prints the stats by V1 Test for analysis.
 flatten_stats <- function(stats) {
   do.call(rbind, lapply(names(stats), function(covblst) {
     do.call(rbind, lapply(names(stats[[covblst]]), function(v1_NB) {
@@ -236,12 +266,8 @@ flatten_stats <- function(stats) {
     }))
   }))
 }
-
-# Flatten the stats list and write to CSV
 stats_df <- flatten_stats(stats)
 write.table(stats_df, "covblst_v1_tests.csv", row.names = FALSE, quote = FALSE, sep = ";")
-
-# Function to flatten the stats_with_days list and convert it to a data frame
 flatten_stats_with_days <- function(stats_with_days) {
   do.call(rbind, lapply(names(stats_with_days), function(covblst) {
     do.call(rbind, lapply(names(stats_with_days[[covblst]]), function(v1_NB) {
@@ -259,20 +285,16 @@ flatten_stats_with_days <- function(stats_with_days) {
     }))
   }))
 }
-
-# Flatten the stats_with_days list and write to CSV
 stats_with_days_df <- flatten_stats_with_days(stats_with_days)
 write.table(stats_with_days_df, "covblst_v1_tests_day_tod_d1.csv", row.names = FALSE, quote = FALSE, sep = ";")
 
-# Create a data frame from the stats_by_arms list
+# Prints the stats by arms for analysis.
 stats_by_arms_df <- data.frame(
   `Treatment Arm` = character(),
   `Tag Set` = integer(),
   `Tag Not Set` = integer(),
   stringsAsFactors = FALSE
 )
-
-# Populate the data frame
 for (arm in names(stats_by_arms)) {
   stats_by_arms_df <- rbind(stats_by_arms_df, data.frame(
     `Treatment Arm` = arm,
@@ -280,6 +302,45 @@ for (arm in names(stats_by_arms)) {
     `Tag Not Set` = stats_by_arms[[arm]][['0']]
   ))
 }
+write.table(stats_by_arms_df, file = "covblst_stats_by_arms.csv", row.names = FALSE, sep = ";")
+
+# Prints the stats by sites for analysis.
+stats_by_sites_df <- data.frame(
+  `Site Id` = character(),
+  `Treatment Arm` = character(),
+  `Tag Set` = integer(),
+  `Tag Not Set` = integer(),
+  stringsAsFactors = FALSE
+)
+for (site_id in names(stats_by_sites)) {
+  for (arm in names(stats_by_sites[[site_id]])) {
+    stats_by_sites_df <- rbind(stats_by_sites_df, data.frame(
+      `Site Id` = site_id,
+      `Treatment Arm` = arm,
+      `Tag Set` = stats_by_sites[[site_id]][[arm]][['1']],
+      `Tag Not Set` = stats_by_sites[[site_id]][[arm]][['0']]
+    ))
+  }
+}
+write.table(stats_by_sites_df, file = "covblst_by_sites.csv", row.names = FALSE, sep = ";")
+
+# Prints the subjects data for later use.
+subjects_data_list <- eapply(subjects_data, I)
+subjects_data_list <- lapply(subjects_data_list, function(x) {
+  if ("vax101dt" %in% names(x)) {
+    x$vax101dt <- as.character(x$vax101dt)
+  }
+  if ("visit_1_date" %in% names(x)) {
+    x$visit_1_date <- as.character(x$visit_1_date)
+  }
+  return(x)
+})
+
+# Now try to bind the rows again
+subjects_data_df <- bind_rows(subjects_data_list, .id = "SUBJID")
 
 # Write the data frame to a CSV file
-write.table(stats_by_arms_df, file = "stats_by_arms.csv", row.names = FALSE, sep = ";")
+write.csv(subjects_data_df, "covblst_subjects_data.csv", row.names = FALSE)
+
+print(paste('Total Subjects : ', subjects_parsed))
+print(paste('Total Subjects POS or MIS : ', subjects_pos_or_missing))
