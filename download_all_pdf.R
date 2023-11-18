@@ -57,6 +57,7 @@ for(i in 1:length(trs)){
   tds <- html_nodes(tr, 'td')
   if(length(tds) > 0){
     file_name <- html_text(tds[1])
+    file_name <- tolower(file_name)
     file_date <- html_text(tds[2])
     file_size <- html_text(tds[3])
     file_url <- html_attr(html_node(tds[4], 'a'), 'href')
