@@ -7,7 +7,7 @@ adva_file <- 'csv_data/FDA-CBER-2021-5683-0123168 to -0126026_125742_S1_M5_c4591
 load_adva <- function() {
   data <- read_csv(adva_file)
   
-  # Filter data
+  # Filters data
   data <- data %>%
     filter(ADT <= as.Date('2020-11-15')) %>%
     filter(PARAM == 'N-binding antibody - N-binding Antibody Assay') %>%
@@ -26,6 +26,6 @@ load_adva <- function() {
 
 subjects <- load_adva()
 
-# Print the results
+# Prints the results
 cat("Placebo: ", nrow(filter(subjects, Arm == 'Placebo')), "\n")
 cat("Vaccinated: ", nrow(filter(subjects, Arm == 'BNT162b2')), "\n")
