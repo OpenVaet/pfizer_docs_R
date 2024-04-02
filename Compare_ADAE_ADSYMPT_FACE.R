@@ -141,6 +141,16 @@ adcevd_pos_data$AENAME <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 2
 face_pos_data$VAXSTAGE <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 1)
 face_pos_data$AENAME <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 2)
 
+# Isolates the phase 1 subjects, and excludes them from the 3 tables.
+phase_2_3_subjects <- adsl_selected_data[adsl_selected_data$PHASE != 'Phase 1', ]
+phase_2_3_subjects <- phase_2_3_subjects[phase_2_3_subjects$ARM != 'SCREEN FAILURE' & phase_2_3_subjects$ARM != 'NOT ASSIGNED', ]
+print(phase_2_3_subjects)
+
+# Filters the dataframes to only include subjects in phase_2_3_subjects
+face_pos_data <- face_pos_data[face_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
+adcevd_pos_data <- adcevd_pos_data[adcevd_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
+adsympt_pos_data <- adsympt_pos_data[adsympt_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
+
 # Counts the unique SUBJID for each AENAME in each of the datasets.
 face_pos_data_aes_counts <- face_pos_data %>%
   group_by(AENAME) %>%
@@ -165,7 +175,47 @@ merged_aes_counts <- full_join(merged_aes_counts,
 # Prints the results
 print(merged_aes_counts, n = 100)
 
-distinct_subjid_adae <- unique(face_pos_data$VISIT)
-print(distinct_subjid_adae)
+distinct_arms  <- unique(phase_2_3_subjects$ARM)
+print(distinct_arms)
+distinct_phases  <- unique(phase_2_3_subjects$PHASE)
+print(distinct_phases)
 print(face_pos_data, n = 100)
 
+# Replaces "BNT162b2 Phase 2/3 (30 mcg)" with "BNT162b2"
+phase_2_3_subjects$ARM[phase_2_3_subjects$ARM == "BNT162b2 Phase 2/3 (30 mcg)"] <- "BNT162b2"
+
+# Counts the unique SUBJID for each AENAME in each of the datasets, grouped by ARM
+face_pos_data_aes_counts_by_arm <- left_join(face_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+  group_by(AENAME, ARM) %>%
+  summarize(FACEUNIQSUBJS = n_distinct(SUBJID))
+
+adcevd_pos_data_aes_counts_by_arm <- left_join(adcevd_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+  group_by(AENAME, ARM) %>%
+  summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
+
+adsympt_pos_data_aes_counts_by_arm <- left_join(adsympt_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+  group_by(PARAM, ARM) %>%
+  summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
+
+adsympt_pos_data_aes_counts_by_arm <- rename(adsympt_pos_data_aes_counts_by_arm, AENAME = PARAM)
+
+# Merges the three dataframes by AENAME and ARM
+merged_aes_counts_by_arm <- full_join(face_pos_data_aes_counts_by_arm, 
+                                     adcevd_pos_data_aes_counts_by_arm, 
+                                     by = c("AENAME", "ARM"))
+merged_aes_counts_by_arm <- full_join(merged_aes_counts_by_arm,
+                                     adsympt_pos_data_aes_counts_by_arm,
+                                     by = c("AENAME", "ARM"))
+
+# Prints the results
+print(merged_aes_counts_by_arm, n = 100)
+write.csv(merged_aes_counts_by_arm, "merged_aes_counts_by_arm.csv", row.names = FALSE)
+
+# Reshapes the merged_aes_counts_by_arm dataframe to the desired format
+library(tidyr)
+merged_aes_counts_by_arm_final <- merged_aes_counts_by_arm %>%
+  pivot_wider(names_from = ARM, values_from = c(FACEUNIQSUBJS, ADCEVDUNIQSUBJS, ADSYMPTUNIQSUBJS))
+
+# Prints the results
+print(merged_aes_counts_by_arm_final, n = 100)
+write.csv(merged_aes_counts_by_arm_final, "merged_aes_counts_by_arm_final.csv", row.names = FALSE)
