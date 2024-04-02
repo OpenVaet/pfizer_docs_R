@@ -6,6 +6,7 @@ library(rvest)
 library(xml2)
 library(haven)
 library(dplyr)
+library(tidyr)
 
 # Verifies if the requireed files have been properly retrieved.
 # ADSL
@@ -152,6 +153,7 @@ adcevd_pos_data <- adcevd_pos_data[adcevd_pos_data$SUBJID %in% phase_2_3_subject
 adsympt_pos_data <- adsympt_pos_data[adsympt_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
 
 # Counts the unique SUBJID for each AENAME in each of the datasets.
+adsympt_pos_data <- rename(adsympt_pos_data, AENAME = PARAM)
 face_pos_data_aes_counts <- face_pos_data %>%
   group_by(AENAME) %>%
   summarize(FACEUNIQSUBJS = n_distinct(SUBJID))
@@ -159,9 +161,8 @@ adcevd_pos_data_aes_counts <- adcevd_pos_data %>%
   group_by(AENAME) %>%
   summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
 adsympt_pos_data_aes_counts <- adsympt_pos_data %>%
-  group_by(PARAM) %>%
+  group_by(AENAME) %>%
   summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
-adsympt_pos_data_aes_counts <- rename(adsympt_pos_data_aes_counts, AENAME = PARAM)
 
 # Merges the three dataframes
 merged_aes_counts <- full_join(face_pos_data_aes_counts, 
@@ -194,10 +195,8 @@ adcevd_pos_data_aes_counts_by_arm <- left_join(adcevd_pos_data, phase_2_3_subjec
   summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
 
 adsympt_pos_data_aes_counts_by_arm <- left_join(adsympt_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
-  group_by(PARAM, ARM) %>%
+  group_by(AENAME, ARM) %>%
   summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
-
-adsympt_pos_data_aes_counts_by_arm <- rename(adsympt_pos_data_aes_counts_by_arm, AENAME = PARAM)
 
 # Merges the three dataframes by AENAME and ARM
 merged_aes_counts_by_arm <- full_join(face_pos_data_aes_counts_by_arm, 
@@ -212,10 +211,27 @@ print(merged_aes_counts_by_arm, n = 100)
 write.csv(merged_aes_counts_by_arm, "merged_aes_counts_by_arm.csv", row.names = FALSE)
 
 # Reshapes the merged_aes_counts_by_arm dataframe to the desired format
-library(tidyr)
 merged_aes_counts_by_arm_final <- merged_aes_counts_by_arm %>%
   pivot_wider(names_from = ARM, values_from = c(FACEUNIQSUBJS, ADCEVDUNIQSUBJS, ADSYMPTUNIQSUBJS))
 
 # Prints the results
 print(merged_aes_counts_by_arm_final, n = 100)
 write.csv(merged_aes_counts_by_arm_final, "merged_aes_counts_by_arm_final.csv", row.names = FALSE)
+
+# Combines the 3 datasets into one
+all_pos_data <- bind_rows(face_pos_data, adcevd_pos_data, adsympt_pos_data)
+
+# Joins the all_pos_data with phase_2_3_subjects to get the ARM information
+combined_pos_data <- left_join(all_pos_data, phase_2_3_subjects, by = "SUBJID")
+
+# Counts the unique SUBJID in each ARM that have reported at least one AENAME
+unique_subjs_by_arms <- combined_pos_data %>%
+  distinct(SUBJID, ARM, AENAME) %>%
+  group_by(AENAME, ARM) %>%
+  summarize(total_unique_subjid = n_distinct(SUBJID)) %>%
+  pivot_wider(names_from = ARM, values_from = total_unique_subjid)
+
+print(unique_subjs_by_arms, n = 100)
+write.csv(unique_subjs_by_arms, "unique_subjs_by_arms.csv", row.names = FALSE)
+
+
