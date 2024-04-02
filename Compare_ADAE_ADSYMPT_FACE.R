@@ -5,6 +5,7 @@ library(httr)
 library(rvest)
 library(xml2)
 library(haven)
+library(dplyr)
 
 # Verifies if the requireed files have been properly retrieved.
 # ADSL
@@ -127,3 +128,39 @@ adsl_selected_data$HASPOSFACE <- ifelse(adsl_selected_data$HASPOSFACE, 'Y', 'N')
 print(adsl_selected_data)
 write.csv(adsl_selected_data, "symptoms_through_files_synthesis_by_subject.csv", row.names = FALSE)
 
+print(adsympt_pos_data)
+print(face_pos_data)
+print(adcevd_pos_data)
+
+distinct_test$FALNKGRP <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_face
+
+# Splits the CELNKGRP column and create the new columns for adcevd_pos_data
+adcevd_pos_data$VAXSTAGE <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 1)
+adcevd_pos_data$AENAME <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 2)
+# Splits the FALNKGRP column and create the new columns for face_pos_data
+face_pos_data$VAXSTAGE <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 1)
+face_pos_data$AENAME <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 2)
+
+# Counts the unique SUBJID for each AENAME in each of the datasets.
+face_pos_data_aes_counts <- face_pos_data %>%
+  group_by(AENAME) %>%
+  summarize(FACEUNIQSUBJS = n_distinct(SUBJID))
+adcevd_pos_data_aes_counts <- adcevd_pos_data %>%
+  group_by(AENAME) %>%
+  summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
+adsympt_pos_data_aes_counts <- adsympt_pos_data %>%
+  group_by(PARAM) %>%
+  summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
+adsympt_pos_data_aes_counts <- rename(adsympt_pos_data_aes_counts, AENAME = PARAM)
+
+# Merges the three dataframes
+merged_aes_counts <- full_join(face_pos_data_aes_counts, 
+                               adcevd_pos_data_aes_counts, 
+                               by = "AENAME", 
+                               suffix = c("_FACE", "_ADCEVD"))
+merged_aes_counts <- full_join(merged_aes_counts,
+                               adsympt_pos_data_aes_counts,
+                               by = "AENAME",
+                               suffix = "_ADSYMPT")
+# Print the results
+print(adsympt_pos_data_aes_counts)
