@@ -105,6 +105,8 @@ names(flag_counts_df) <- c("ACTARM", "HASADAE", "HASADCEVD", "HASADSYMPT", "HASF
 adsympt_pos_data <- adsympt_filtered_data[adsympt_filtered_data$AVALC == 'Y', ]
 print(adsympt_pos_data)
 face_pos_data <- face_filtered_data[face_filtered_data$FAORRES == 'Y', ]
+face_pos_data <- face_pos_data[face_pos_data$VISIT != 'COVID_A' & face_pos_data$VISIT != 'COVID_B' & face_pos_data$VISIT != 'COVID_C' & face_pos_data$VISIT != 'COVID_D' & face_pos_data$VISIT != 'COVID_E' & face_pos_data$VISIT != 'COVID_F', ]
+
 print(face_pos_data)
 adcevd_pos_data <- adcevd_filtered_data[adcevd_filtered_data$CEOCCUR == 'Y', ]
 print(adcevd_pos_data)
@@ -131,8 +133,6 @@ write.csv(adsl_selected_data, "symptoms_through_files_synthesis_by_subject.csv",
 print(adsympt_pos_data)
 print(face_pos_data)
 print(adcevd_pos_data)
-
-distinct_test$FALNKGRP <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_face
 
 # Splits the CELNKGRP column and create the new columns for adcevd_pos_data
 adcevd_pos_data$VAXSTAGE <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 1)
@@ -161,6 +161,11 @@ merged_aes_counts <- full_join(face_pos_data_aes_counts,
 merged_aes_counts <- full_join(merged_aes_counts,
                                adsympt_pos_data_aes_counts,
                                by = "AENAME",
-                               suffix = "_ADSYMPT")
-# Print the results
-print(adsympt_pos_data_aes_counts)
+                               suffix = c("", "_ADSYMPT"))
+# Prints the results
+print(merged_aes_counts, n = 100)
+
+distinct_subjid_adae <- unique(face_pos_data$VISIT)
+print(distinct_subjid_adae)
+print(face_pos_data, n = 100)
+
