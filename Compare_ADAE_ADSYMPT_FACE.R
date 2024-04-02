@@ -52,8 +52,10 @@ print(adsympt_filtered_data)
 
 # Reads & filters the FACE file.
 face_data <- read_xpt(face_path)
-face_selected_data <- face_data[c("USUBJID", "VISIT", "FADTC", "FATEST", "FASTRESC")]
-face_filtered_data <- face_selected_data[face_selected_data$FATEST %in% c('First Symptom Date', 'Last Symptom Resolved Date'), ]
+face_selected_data <- face_data[c("USUBJID", "VISIT", "FADTC", "FATEST", "FASTRESC", "FAORRES", "FALNKGRP")]
+distinct_test_face <- unique(face_selected_data$FATEST)
+print(distinct_test_face)
+face_filtered_data <- face_selected_data[face_selected_data$FATEST == 'Occurrence Indicator', ]
 face_filtered_data$SUBJID <- sub(".*C4591001 \\d{4} (\\d{8}).*", "\\1", face_filtered_data$USUBJID)
 print(face_filtered_data)
 
@@ -63,24 +65,65 @@ adcevd_selected_data <- adcevd_data[c("SUBJID", "USUBJID", "ASTDT", "AENDT", "CE
 adcevd_filtered_data <- adcevd_selected_data[adcevd_selected_data$CEGRPID %in% c('VACCINATION 1-SYSTEMIC', 'VACCINATION 2-SYSTEMIC'), ]
 print(adcevd_filtered_data)
 
-# Get a list of all distinct SUBJID values in each file.
+# Gets a list of all distinct SUBJID values in each file.
 distinct_subjid_adae <- unique(adae_selected_data$SUBJID)
 distinct_subjid_adcevd <- unique(adcevd_filtered_data$SUBJID)
 distinct_subjid_adsympt <- unique(adsympt_filtered_data$SUBJID)
 distinct_subjid_face <- unique(face_filtered_data$SUBJID)
 
-# Add the four flags to adsl_selected_data
+# Adds the four flags to adsl_selected_data
 adsl_selected_data$HASADAE <- adsl_selected_data$SUBJID %in% distinct_subjid_adae
 adsl_selected_data$HASADCEVD <- adsl_selected_data$SUBJID %in% distinct_subjid_adcevd
 adsl_selected_data$HASADSYMPT <- adsl_selected_data$SUBJID %in% distinct_subjid_adsympt
 adsl_selected_data$HASFACE <- adsl_selected_data$SUBJID %in% distinct_subjid_face
 
-# Convert the flags to 'Y' and 'N'
+# Converts the flags to 'Y' and 'N'
 adsl_selected_data$HASADAE <- ifelse(adsl_selected_data$HASADAE, 'Y', 'N')
 adsl_selected_data$HASADCEVD <- ifelse(adsl_selected_data$HASADCEVD, 'Y', 'N')
 adsl_selected_data$HASADSYMPT <- ifelse(adsl_selected_data$HASADSYMPT, 'Y', 'N')
 adsl_selected_data$HASFACE <- ifelse(adsl_selected_data$HASFACE, 'Y', 'N')
 
-# Print the updated adsl_selected_data
+# Prints the updated adsl_selected_data
 print(adsl_selected_data)
 write.csv(adsl_selected_data, "symptoms_through_files_synthesis_by_subject.csv", row.names = FALSE)
+
+# Creates a cross-tabulation of the four flags and ACTARM
+flag_counts <- table(adsl_selected_data$ARM,
+                     adsl_selected_data$HASADAE,
+                     adsl_selected_data$HASADCEVD,
+                     adsl_selected_data$HASADSYMPT,
+                     adsl_selected_data$HASFACE)
+
+# Converts the flag_counts array to a data frame
+flag_counts_df <- as.data.frame.table(flag_counts)
+
+# Renames the columns
+names(flag_counts_df) <- c("ACTARM", "HASADAE", "HASADCEVD", "HASADSYMPT", "HASFACE", "Freq")
+
+## Scopes on rows which only have positive results for symptoms in each file.
+adsympt_pos_data <- adsympt_filtered_data[adsympt_filtered_data$AVALC == 'Y', ]
+print(adsympt_pos_data)
+face_pos_data <- face_filtered_data[face_filtered_data$FAORRES == 'Y', ]
+print(face_pos_data)
+adcevd_pos_data <- adcevd_filtered_data[adcevd_filtered_data$CEOCCUR == 'Y', ]
+print(adcevd_pos_data)
+
+## Gets a list of all distinct SUBJID values in each positive subset
+distinct_pos_subjid_adcevd <- unique(adcevd_pos_data$SUBJID)
+distinct_pos_subjid_adsympt <- unique(adsympt_pos_data$SUBJID)
+distinct_pos_subjid_face <- unique(face_pos_data$SUBJID)
+
+## Adds the 3 flags to adsl_selected_data
+adsl_selected_data$HASPOSADCEVD <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_adcevd
+adsl_selected_data$HASPOSADSYMPT <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_adsympt
+adsl_selected_data$HASPOSFACE <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_face
+
+## Converts the flags to 'Y' and 'N'
+adsl_selected_data$HASPOSADCEVD <- ifelse(adsl_selected_data$HASPOSADCEVD, 'Y', 'N')
+adsl_selected_data$HASPOSADSYMPT <- ifelse(adsl_selected_data$HASPOSADSYMPT, 'Y', 'N')
+adsl_selected_data$HASPOSFACE <- ifelse(adsl_selected_data$HASPOSFACE, 'Y', 'N')
+
+# Prints the updated adsl_selected_data
+print(adsl_selected_data)
+write.csv(adsl_selected_data, "symptoms_through_files_synthesis_by_subject.csv", row.names = FALSE)
+
