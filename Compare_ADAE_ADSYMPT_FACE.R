@@ -7,6 +7,7 @@ library(xml2)
 library(haven)
 library(dplyr)
 library(tidyr)
+library(lubridate)
 
 # Verifies if the requireed files have been properly retrieved.
 # ADSL
@@ -37,7 +38,8 @@ if (!file.exists(adcevd_path)) {
 
 # Reads & filters the ADSL file
 adsl_data <- read_xpt(adsl_path)
-adsl_selected_data <- adsl_data[c("SUBJID", "USUBJID", "PHASE", "RFICDT", "RANDDT", "AGE", "SEX", "ARM", "ACTARM", "VAX101DT", "VAX102DT", "VAX201DT", "VAX202DT", "UNBLNDDT")]
+print(colnames(adsl_data))
+adsl_selected_data <- adsl_data[c("SUBJID", "USUBJID", "PHASE", "RFICDT", "RANDDT", "AGE", "SEX", "ARM", "ACTARM", "VAX101DT", "VAX102DT", "VAX201DT", "VAX202DT", "DTHDT")]
 print(adsl_selected_data)
 
 # Reads & filters the ADAE file.
@@ -141,26 +143,93 @@ adcevd_pos_data$AENAME <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 2
 # Splits the FALNKGRP column and create the new columns for face_pos_data
 face_pos_data$VAXSTAGE <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 1)
 face_pos_data$AENAME <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 2)
+# Renames the PARAM column to AENAME for normalization.
+adsympt_pos_data <- rename(adsympt_pos_data, AENAME = PARAM)
 
 # Isolates the phase 1 subjects, and excludes them from the 3 tables.
 phase_2_3_subjects <- adsl_selected_data[adsl_selected_data$PHASE != 'Phase 1', ]
 phase_2_3_subjects <- phase_2_3_subjects[phase_2_3_subjects$ARM != 'SCREEN FAILURE' & phase_2_3_subjects$ARM != 'NOT ASSIGNED', ]
+
+# For each subject in phase 2-3, adds a "days of exposure" 
+if (!"DAYSEXPO" %in% names(phase_2_3_subjects)) {
+  phase_2_3_subjects$DAYSEXPO <- 0
+}
+rows_to_delete <- logical(nrow(phase_2_3_subjects))
+for (i in 1:nrow(phase_2_3_subjects)) {
+  rficdt <- phase_2_3_subjects$RFICDT[i]
+  if (!is.na(rficdt) && !grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", rficdt)) {
+    print(paste("Row", i, "has an invalid date format for RFICDT:", rficdt))
+  }
+  dthdt <- phase_2_3_subjects$DTHDT[i]
+
+  subject_cutoff_date <- ''
+  if (is.na(dthdt) || is.null(dthdt)) {
+    subject_cutoff_date <- cut_off_date
+  } else {
+    if (dthdt < cut_off_date) {
+      subject_cutoff_date <- dthdt
+    } else {
+      subject_cutoff_date <- cut_off_date
+    }
+  }
+  
+  # Calculate the number of days between rficdt and subject_cutoff_date
+  DAYSEXPO <- as.integer(difftime(subject_cutoff_date, rficdt, units = "days"))
+  if (DAYSEXPO < 0) {
+    # Mark the row for deletion
+    rows_to_delete[i] <- TRUE
+  } else {
+    phase_2_3_subjects$DAYSEXPO[i] <- DAYSEXPO
+  }
+}
+phase_2_3_subjects <- phase_2_3_subjects[!rows_to_delete, ]
 print(phase_2_3_subjects)
+write.csv(phase_2_3_subjects, "phase_2_3_subjects.csv", row.names = FALSE)
 
 # Filters the dataframes to only include subjects in phase_2_3_subjects
 face_pos_data <- face_pos_data[face_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
 adcevd_pos_data <- adcevd_pos_data[adcevd_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
 adsympt_pos_data <- adsympt_pos_data[adsympt_pos_data$SUBJID %in% phase_2_3_subjects$SUBJID, ]
 
+# Verifying each date format.
+for (i in 1:nrow(adsympt_pos_data)) {
+  adt <- adsympt_pos_data$ADT[i]
+  if (!is.na(adt) && !grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", adt)) {
+    print(paste("Row", i, "has an invalid date format for ADT:", adt))
+  }
+}
+for (i in 1:nrow(face_pos_data)) {
+  fadtc <- face_pos_data$FADTC[i]
+  if (!is.na(fadtc) && !grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", fadtc)) {
+    new_fadtc <- strsplit(fadtc, "T")[[1]][1]
+    face_pos_data$FADTC[i] <- new_fadtc
+    # print(paste("Row", i, "had an invalid date format for FADTC, replaced with:", new_fadtc))
+  }
+}
+for (i in 1:nrow(adcevd_pos_data)) {
+  astdt <- adcevd_pos_data$ASTDT[i]
+  if (!is.na(astdt) && !grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", astdt)) {
+    print(paste("Row", i, "has an invalid date format for ASTDT:", astdt))
+  }
+}
+
+# Converts the cut_off_date to a date object
+cut_off_date <- as.Date("2020-11-14")
+
+# Subset the data frames
+adsympt_pos_data_pre_cutoff <- adsympt_pos_data[adsympt_pos_data$ADT <= cut_off_date, ]
+face_pos_data_pre_cutoff <- face_pos_data[face_pos_data$FADTC <= cut_off_date, ]
+adcevd_pos_data_pre_cutoff <- adcevd_pos_data[adcevd_pos_data$ASTDT <= cut_off_date, ]
+adcevd_pos_data_pre_cutoff <- na.omit(adcevd_pos_data_pre_cutoff)
+
 # Counts the unique SUBJID for each AENAME in each of the datasets.
-adsympt_pos_data <- rename(adsympt_pos_data, AENAME = PARAM)
-face_pos_data_aes_counts <- face_pos_data %>%
+face_pos_data_aes_counts <- face_pos_data_pre_cutoff %>%
   group_by(AENAME) %>%
   summarize(FACEUNIQSUBJS = n_distinct(SUBJID))
-adcevd_pos_data_aes_counts <- adcevd_pos_data %>%
+adcevd_pos_data_aes_counts <- adcevd_pos_data_pre_cutoff %>%
   group_by(AENAME) %>%
   summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
-adsympt_pos_data_aes_counts <- adsympt_pos_data %>%
+adsympt_pos_data_aes_counts <- adsympt_pos_data_pre_cutoff %>%
   group_by(AENAME) %>%
   summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
 
@@ -176,25 +245,25 @@ merged_aes_counts <- full_join(merged_aes_counts,
 # Prints the results
 print(merged_aes_counts, n = 100)
 
+
 distinct_arms  <- unique(phase_2_3_subjects$ARM)
 print(distinct_arms)
 distinct_phases  <- unique(phase_2_3_subjects$PHASE)
 print(distinct_phases)
-print(face_pos_data, n = 100)
 
 # Replaces "BNT162b2 Phase 2/3 (30 mcg)" with "BNT162b2"
 phase_2_3_subjects$ARM[phase_2_3_subjects$ARM == "BNT162b2 Phase 2/3 (30 mcg)"] <- "BNT162b2"
 
 # Counts the unique SUBJID for each AENAME in each of the datasets, grouped by ARM
-face_pos_data_aes_counts_by_arm <- left_join(face_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+face_pos_data_aes_counts_by_arm <- left_join(face_pos_data_pre_cutoff, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
   group_by(AENAME, ARM) %>%
   summarize(FACEUNIQSUBJS = n_distinct(SUBJID))
 
-adcevd_pos_data_aes_counts_by_arm <- left_join(adcevd_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+adcevd_pos_data_aes_counts_by_arm <- left_join(adcevd_pos_data_pre_cutoff, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
   group_by(AENAME, ARM) %>%
   summarize(ADCEVDUNIQSUBJS = n_distinct(SUBJID))
 
-adsympt_pos_data_aes_counts_by_arm <- left_join(adsympt_pos_data, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
+adsympt_pos_data_aes_counts_by_arm <- left_join(adsympt_pos_data_pre_cutoff, phase_2_3_subjects[, c("SUBJID", "ARM")], by = "SUBJID") %>%
   group_by(AENAME, ARM) %>%
   summarize(ADSYMPTUNIQSUBJS = n_distinct(SUBJID))
 
@@ -219,7 +288,7 @@ print(merged_aes_counts_by_arm_final, n = 100)
 write.csv(merged_aes_counts_by_arm_final, "merged_aes_counts_by_arm_final.csv", row.names = FALSE)
 
 # Combines the 3 datasets into one
-all_pos_data <- bind_rows(face_pos_data, adcevd_pos_data, adsympt_pos_data)
+all_pos_data <- bind_rows(face_pos_data_pre_cutoff, adcevd_pos_data_pre_cutoff, adsympt_pos_data_pre_cutoff)
 
 # Joins the all_pos_data with phase_2_3_subjects to get the ARM information
 combined_pos_data <- left_join(all_pos_data, phase_2_3_subjects, by = "SUBJID")
@@ -231,7 +300,24 @@ unique_subjs_by_arms <- combined_pos_data %>%
   summarize(total_unique_subjid = n_distinct(SUBJID)) %>%
   pivot_wider(names_from = ARM, values_from = total_unique_subjid)
 
+# Calculating rates per 100K DOE.
+sum_daysexpo_by_arm <- phase_2_3_subjects %>%
+  group_by(ARM) %>%
+  summarize(sum_daysexpo = sum(DAYSEXPO, na.rm = TRUE))
+unique_subjs_by_arms <- unique_subjs_by_arms %>%
+  mutate(BNT162b2_PER100K = (BNT162b2 / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "BNT162b2"]) * 100000,
+         Placebo_PER100K = (Placebo / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "Placebo"]) * 100000)
+
+print(sum_daysexpo_by_arm, n = 100)
 print(unique_subjs_by_arms, n = 100)
 write.csv(unique_subjs_by_arms, "unique_subjs_by_arms.csv", row.names = FALSE)
 
 
+
+
+
+
+print(phase_2_3_subjects)
+print(adsympt_pos_data_pre_cutoff)
+print(face_pos_data_pre_cutoff)
+print(adcevd_pos_data_pre_cutoff)
