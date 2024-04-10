@@ -9,6 +9,9 @@ library(dplyr)
 library(tidyr)
 library(lubridate)
 
+# Converts the cut_off_date to a date object
+cut_off_date <- as.Date("2020-11-14")
+
 # Verifies if the requireed files have been properly retrieved.
 # ADSL
 adsl_path <- 'xpt_data/FDA-CBER-2021-5683-1066333-1067534_125742_S6_M5_c4591001-A-D-adsl.xpt'
@@ -44,7 +47,7 @@ print(adsl_selected_data)
 
 # Reads & filters the ADAE file.
 adae_data <- read_xpt(adae_path)
-adae_selected_data <- adae_data[c("SUBJID", "USUBJID", "VPHASE", "APERIODC", "AREL", "AEHLGT", "AEHLT", "AESER", "AERELTXT", "ATOXGR", "AESTDTC", "AEENDTC")]
+adae_selected_data <- adae_data[c("SUBJID", "USUBJID", "VPHASE", "APERIODC", "AREL", "AEHLGT", "AEHLT", "AESER", "AERELTXT", "ATOXGR", "AESTDTC", "AEENDTC", "AEDECOD")]
 print(adae_selected_data)
 
 # Reads & filters the ADSYMPT file.
@@ -104,7 +107,7 @@ flag_counts_df <- as.data.frame.table(flag_counts)
 # Renames the columns
 names(flag_counts_df) <- c("ACTARM", "HASADAE", "HASADCEVD", "HASADSYMPT", "HASFACE", "Freq")
 
-## Scopes on rows which only have positive results for symptoms in each file.
+## Scopes on rows which only have positive results for symptoms & AEs in each file.
 adsympt_pos_data <- adsympt_filtered_data[adsympt_filtered_data$AVALC == 'Y', ]
 print(adsympt_pos_data)
 face_pos_data <- face_filtered_data[face_filtered_data$FAORRES == 'Y', ]
@@ -118,6 +121,7 @@ print(adcevd_pos_data)
 distinct_pos_subjid_adcevd <- unique(adcevd_pos_data$SUBJID)
 distinct_pos_subjid_adsympt <- unique(adsympt_pos_data$SUBJID)
 distinct_pos_subjid_face <- unique(face_pos_data$SUBJID)
+distinct_pos_subjid_adae <- unique(adae_selected_data$SUBJID)
 
 ## Adds the 3 flags to adsl_selected_data
 adsl_selected_data$HASPOSADCEVD <- adsl_selected_data$SUBJID %in% distinct_pos_subjid_adcevd
@@ -133,10 +137,6 @@ adsl_selected_data$HASPOSFACE <- ifelse(adsl_selected_data$HASPOSFACE, 'Y', 'N')
 print(adsl_selected_data)
 write.csv(adsl_selected_data, "symptoms_through_files_synthesis_by_subject.csv", row.names = FALSE)
 
-print(adsympt_pos_data)
-print(face_pos_data)
-print(adcevd_pos_data)
-
 # Splits the CELNKGRP column and create the new columns for adcevd_pos_data
 adcevd_pos_data$VAXSTAGE <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 1)
 adcevd_pos_data$AENAME <- sapply(strsplit(adcevd_pos_data$CELNKGRP, "-"), `[`, 2)
@@ -146,6 +146,11 @@ face_pos_data$AENAME <- sapply(strsplit(face_pos_data$FALNKGRP, "-"), `[`, 2)
 # Renames the PARAM column to AENAME for normalization.
 adsympt_pos_data <- rename(adsympt_pos_data, AENAME = PARAM)
 
+print(adsympt_pos_data)
+print(face_pos_data)
+print(adcevd_pos_data)
+print(adae_selected_data)
+ 
 # Isolates the phase 1 subjects, and excludes them from the 3 tables.
 phase_2_3_subjects <- adsl_selected_data[adsl_selected_data$PHASE != 'Phase 1', ]
 phase_2_3_subjects <- phase_2_3_subjects[phase_2_3_subjects$ARM != 'SCREEN FAILURE' & phase_2_3_subjects$ARM != 'NOT ASSIGNED', ]
@@ -212,9 +217,6 @@ for (i in 1:nrow(adcevd_pos_data)) {
     print(paste("Row", i, "has an invalid date format for ASTDT:", astdt))
   }
 }
-
-# Converts the cut_off_date to a date object
-cut_off_date <- as.Date("2020-11-14")
 
 # Subset the data frames
 adsympt_pos_data_pre_cutoff <- adsympt_pos_data[adsympt_pos_data$ADT <= cut_off_date, ]
@@ -300,24 +302,37 @@ unique_subjs_by_arms <- combined_pos_data %>%
   summarize(total_unique_subjid = n_distinct(SUBJID)) %>%
   pivot_wider(names_from = ARM, values_from = total_unique_subjid)
 
-# Calculating rates per 100K DOE.
+# Calculates the total number of subjects in each ARM
+total_subjects_by_arm <- phase_2_3_subjects %>%
+  group_by(ARM) %>%
+  summarize(total_subjects = n_distinct(SUBJID))
+
+# Calculates rates per 100K DOE.
 sum_daysexpo_by_arm <- phase_2_3_subjects %>%
   group_by(ARM) %>%
   summarize(sum_daysexpo = sum(DAYSEXPO, na.rm = TRUE))
 unique_subjs_by_arms <- unique_subjs_by_arms %>%
-  mutate(BNT162b2_PER100K = (BNT162b2 / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "BNT162b2"]) * 100000,
-         Placebo_PER100K = (Placebo / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "Placebo"]) * 100000)
+  mutate(BNT162b2_PER100K_DOE = (BNT162b2 / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "BNT162b2"]) * 100000,
+         Placebo_PER100K_DOE = (Placebo / sum_daysexpo_by_arm$sum_daysexpo[sum_daysexpo_by_arm$ARM == "Placebo"]) * 100000)
+
+# Calculates rates per 100 SUBJECTS.
+unique_subjs_by_arms <- unique_subjs_by_arms %>%
+  mutate(BNT162b2_PER100_SUB = (BNT162b2 / total_subjects_by_arm$total_subjects[total_subjects_by_arm$ARM == "BNT162b2"]) * 100,
+         Placebo_PER100_SUB = (Placebo / total_subjects_by_arm$total_subjects[total_subjects_by_arm$ARM == "Placebo"]) * 100)
 
 print(sum_daysexpo_by_arm, n = 100)
+print(total_subjects_by_arm)
 print(unique_subjs_by_arms, n = 100)
 write.csv(unique_subjs_by_arms, "unique_subjs_by_arms.csv", row.names = FALSE)
 
-
-
-
-
-
+# Prints current dataframes to .CSV files
+write.csv(phase_2_3_subjects, "phase_2_3_subjects.csv", row.names = FALSE)
+write.csv(adsympt_pos_data_pre_cutoff, "adsympt_pos_data_pre_cutoff.csv", row.names = FALSE)
+write.csv(face_pos_data_pre_cutoff, "face_pos_data_pre_cutoff.csv", row.names = FALSE)
+write.csv(adcevd_pos_data_pre_cutoff, "adcevd_pos_data_pre_cutoff.csv", row.names = FALSE)
+write.csv(adae_selected_data, "adae_selected_data.csv", row.names = FALSE)
 print(phase_2_3_subjects)
 print(adsympt_pos_data_pre_cutoff)
 print(face_pos_data_pre_cutoff)
 print(adcevd_pos_data_pre_cutoff)
+print(adae_selected_data)
