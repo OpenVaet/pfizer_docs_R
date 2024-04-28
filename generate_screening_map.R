@@ -5,24 +5,24 @@ library(dplyr)
 # Loads sites data
 sites_data <- read_csv('subjects_screened_by_sites.csv')
 
-# Check for missing columns in any rows
+# Checks for missing columns in any rows
 if (any(colSums(is.na(sites_data)) > 0)) {
-  stop("Data is missing in some rows.")
+  stop("Data is missing in some rows - make sure subjects_by_arms_and_sites.R has been executed first.")
 }
 
-# Summarize the total subjects screened by country
+# Summarizes the total subjects screened by country
 subjects_screened_by_country <- sites_data %>%
   group_by(Country) %>%
   summarize(Total_Subjects = sum(Subjects_Screened, na.rm = TRUE)) %>%
   ungroup()
 
-# Write the summarized data to a CSV file
+# Writes the summarized data to a CSV file
 write_csv(subjects_screened_by_country, 'subjects_screened_by_countries.csv', col_names = TRUE)
 
-# Prepare a list to hold site data
+# Prepares a list to hold site data
 sites <- list()
 
-# Populate the list with site data
+# Populates the list with site data
 for (i in 1:nrow(sites_data)) {
   ORISITEID <- as.character(sites_data$ORISITEID[i])
   sites[[ORISITEID]] <- sites_data[i, ]
@@ -43,10 +43,10 @@ for (trial_site_id in names(sites)) {
   investigator <- sites[[trial_site_id]]$Investigator
   subjects_screened <- sites[[trial_site_id]]$Subjects_Screened
   
-  # Calculate the total area for the subjects screened
+  # Calculates the total area for the subjects screened
   total_area <- 100000000 * subjects_screened # 100.000.000 square meters per subject
   
-  # Calculate the radius based on the area
+  # Calculates the radius based on the area
   radius_size <- as.integer(sqrt(total_area / pi)) # sqrt(Area / pi)
   
   site_name_print <- gsub("'", "\\\\'", site_name, fixed = TRUE)
@@ -65,5 +65,5 @@ for (trial_site_id in names(sites)) {
 
 html_template <- gsub("\\[---DATAPOINTS---\\]", data_points, html_template)
 
-# Write the modified HTML to a new file
-writeLines(html_template, 'subjects_screened.html')
+# Writes the modified HTML to a new file
+writeLines(html_template, 'map_of_subjects_screened.html')

@@ -1,0 +1,1603 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Map Template</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body style="display:flex;flex-wrap: wrap;margin:0;">
+    <div style="width:80%;">
+        <div id="map" style="height: 100vh;width: 100%;z-index: 1;"></div>
+    </div>
+    <div style="width:20%;">
+        <div  id="currentMouseOver">
+
+        </div>
+        <div>
+            
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+<script type="text/javascript">
+
+    var lat = 14.974135;
+    var lng = -79.404801;
+
+    // center of the map
+    var center    = [lat, lng];
+    var zoomLevel = 3;
+
+    // Create the map
+    var map       = L.map('map', {attributionControl: false}).setView(center, zoomLevel);
+    var pinLat;
+    var pinLng;
+    var zoom;
+
+    // Data-points.
+    var circle1001 = L.circle([40.74156, -73.975072], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 68868,
+    site_name: 'NYU Langone Health, Schwartz Health Care Center',
+    investigator: 'Mark Mulligan',
+    subjects_screened: '149',
+    trial_site_id: 1001
+}).addTo(map).on('mouseover', onClick);
+var circle1002 = L.circle([39.289164, -76.62581], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 52624,
+    site_name: 'University of Maryland, Center for Vaccine Development and Global Health',
+    investigator: 'Kathleen Neuzil',
+    subjects_screened: '87',
+    trial_site_id: 1002
+}).addTo(map).on('mouseover', onClick);
+var circle1003 = L.circle([43.192742, -77.585667], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 81563,
+    site_name: 'Rochester Regional Health/Rochester General Hospital, Infectious Desease Department',
+    investigator: 'Edward Walsh',
+    subjects_screened: '209',
+    trial_site_id: 1003
+}).addTo(map).on('mouseover', onClick);
+var circle1005 = L.circle([43.179476, -77.54502], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 118614,
+    site_name: 'Rochester Clinical Research, Inc.',
+    investigator: 'Matthew Davis',
+    subjects_screened: '442',
+    trial_site_id: 1005
+}).addTo(map).on('mouseover', onClick);
+var circle1006 = L.circle([40.721491, -111.811763], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 97066,
+    site_name: 'J. Lewis Research Inc. / Foothill Family Clinic',
+    investigator: 'James Peterson',
+    subjects_screened: '296',
+    trial_site_id: 1006
+}).addTo(map).on('mouseover', onClick);
+var circle1007 = L.circle([39.129639, -84.497039], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 144942,
+    site_name: 'Cincinnati Children\'s Hospital Medical Center',
+    investigator: 'Robert Frenck',
+    subjects_screened: '660',
+    trial_site_id: 1007
+}).addTo(map).on('mouseover', onClick);
+var circle1008 = L.circle([38.669244, -90.634202], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 173161,
+    site_name: 'Clinical Research Professionals',
+    investigator: 'Timothy Jennings',
+    subjects_screened: '942',
+    trial_site_id: 1008
+}).addTo(map).on('mouseover', onClick);
+var circle1009 = L.circle([40.721491, -111.811763], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 114656,
+    site_name: 'J. Lewis Research Inc. / Foothill Family Clinic',
+    investigator: 'Shane Christensen',
+    subjects_screened: '413',
+    trial_site_id: 1009
+}).addTo(map).on('mouseover', onClick);
+var circle1011 = L.circle([39.129639, -84.497039], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 86672,
+    site_name: 'Clinical Neuroscience Solutions, Inc',
+    investigator: 'Michael Dever',
+    subjects_screened: '236',
+    trial_site_id: 1011
+}).addTo(map).on('mouseover', onClick);
+var circle1012 = L.circle([33.510857, -111.997874], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 77357,
+    site_name: 'HOPE Research Institute',
+    investigator: 'Susann Varano',
+    subjects_screened: '188',
+    trial_site_id: 1012
+}).addTo(map).on('mouseover', onClick);
+var circle1013 = L.circle([28.537427, -81.368636], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 167745,
+    site_name: 'Clinical Neuroscience Solutions, Inc',
+    investigator: 'Michael Dever',
+    subjects_screened: '884',
+    trial_site_id: 1013
+}).addTo(map).on('mouseover', onClick);
+var circle1015 = L.circle([42.334403, -71.072164], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 92016,
+    site_name: 'Boston Medical Center',
+    investigator: 'Elizabeth Barnett',
+    subjects_screened: '266',
+    trial_site_id: 1015
+}).addTo(map).on('mouseover', onClick);
+var circle1016 = L.circle([37.80838, -85.470766], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 110845,
+    site_name: 'Kentucky Pediatric / Adult Research',
+    investigator: 'Daniel Finn',
+    subjects_screened: '386',
+    trial_site_id: 1016
+}).addTo(map).on('mouseover', onClick);
+var circle1018 = L.circle([29.709729, -95.474237], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 105700,
+    site_name: 'Texas Center for Drug Development, Inc',
+    investigator: 'Veronica Fragoso',
+    subjects_screened: '351',
+    trial_site_id: 1018
+}).addTo(map).on('mouseover', onClick);
+var circle1019 = L.circle([29.510245, -98.571134], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 101397,
+    site_name: 'Diagnostics Research Group',
+    investigator: 'Charles Andrews',
+    subjects_screened: '323',
+    trial_site_id: 1019
+}).addTo(map).on('mouseover', onClick);
+var circle1021 = L.circle([35.829084, -78.634895], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 89562,
+    site_name: 'PMG Research of Raleigh, LLC',
+    investigator: 'John Rubino',
+    subjects_screened: '252',
+    trial_site_id: 1021
+}).addTo(map).on('mouseover', onClick);
+var circle1022 = L.circle([47.433778, -120.322236], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 75060,
+    site_name: 'Wenatchee Valley Hospital, Clinical Research Department',
+    investigator: 'Steven Kaster',
+    subjects_screened: '177',
+    trial_site_id: 1022
+}).addTo(map).on('mouseover', onClick);
+var circle1024 = L.circle([39.313707, -74.595725], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 64820,
+    site_name: 'South Jersey Infectious Disease',
+    investigator: 'Christopher Lucasti',
+    subjects_screened: '132',
+    trial_site_id: 1024
+}).addTo(map).on('mouseover', onClick);
+var circle1027 = L.circle([36.091044, -79.816062], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 82918,
+    site_name: 'PharmQuest',
+    investigator: 'Alexander Murray',
+    subjects_screened: '216',
+    trial_site_id: 1027
+}).addTo(map).on('mouseover', onClick);
+var circle1028 = L.circle([46.833424, -96.860613], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 97066,
+    site_name: 'Lillestol Research LLC',
+    investigator: 'Michael Lillestol',
+    subjects_screened: '296',
+    trial_site_id: 1028
+}).addTo(map).on('mouseover', onClick);
+var circle1030 = L.circle([41.506408, -81.605679], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 70917,
+    site_name: 'University Hospitals Cleveland Medical Center',
+    investigator: 'Robert Salata',
+    subjects_screened: '158',
+    trial_site_id: 1030
+}).addTo(map).on('mouseover', onClick);
+var circle1036 = L.circle([35.369091, -86.215992], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 67937,
+    site_name: 'Trinity Clinical Research',
+    investigator: 'Marcus Lee',
+    subjects_screened: '145',
+    trial_site_id: 1036
+}).addTo(map).on('mouseover', onClick);
+var circle1037 = L.circle([35.099988, -89.849212], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 107047,
+    site_name: 'Clinical Neuroscience Solutions, Inc.',
+    investigator: 'Lisa Usdan',
+    subjects_screened: '360',
+    trial_site_id: 1037
+}).addTo(map).on('mouseover', onClick);
+var circle1038 = L.circle([36.585121, -82.250162], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 66993,
+    site_name: 'Holston Medical Group',
+    investigator: 'Rick Whiles',
+    subjects_screened: '141',
+    trial_site_id: 1038
+}).addTo(map).on('mouseover', onClick);
+var circle1039 = L.circle([30.417878, -97.849751], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 103109,
+    site_name: 'Arc Clinical Research at Wilson Parke',
+    investigator: 'Gretchen Crook',
+    subjects_screened: '334',
+    trial_site_id: 1039
+}).addTo(map).on('mouseover', onClick);
+var circle1042 = L.circle([32.822397, -97.419301], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 92533,
+    site_name: 'Benchmark Research',
+    investigator: 'William Seger',
+    subjects_screened: '269',
+    trial_site_id: 1042
+}).addTo(map).on('mouseover', onClick);
+var circle1044 = L.circle([37.466735, -77.662634], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 110558,
+    site_name: 'Virginia Research Center, LLC',
+    investigator: 'Aaron Hartman',
+    subjects_screened: '384',
+    trial_site_id: 1044
+}).addTo(map).on('mouseover', onClick);
+var circle1046 = L.circle([34.803263, -86.980871], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 105248,
+    site_name: 'North Alabama Research Center, LLC',
+    investigator: 'Ernest Hendrix',
+    subjects_screened: '348',
+    trial_site_id: 1046
+}).addTo(map).on('mouseover', onClick);
+var circle1047 = L.circle([34.725469, -86.585356], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 102800,
+    site_name: 'Medical Affliated Research Center',
+    investigator: 'James McMurray',
+    subjects_screened: '332',
+    trial_site_id: 1047
+}).addTo(map).on('mouseover', onClick);
+var circle1048 = L.circle([33.624359, -112.1124], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 65065,
+    site_name: 'Medical Affliated Research Center',
+    investigator: 'Adram Burgher',
+    subjects_screened: '133',
+    trial_site_id: 1048
+}).addTo(map).on('mouseover', onClick);
+var circle1052 = L.circle([33.800783, -118.185179], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 75272,
+    site_name: 'Long Beach Clinical Trials Services Inc.',
+    investigator: 'Suzanne Fussell',
+    subjects_screened: '178',
+    trial_site_id: 1052
+}).addTo(map).on('mouseover', onClick);
+var circle1054 = L.circle([34.057204, -118.274872], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 82533,
+    site_name: 'National Research Institute',
+    investigator: 'Mark Leibowitz',
+    subjects_screened: '214',
+    trial_site_id: 1054
+}).addTo(map).on('mouseover', onClick);
+var circle1055 = L.circle([37.922378, -122.030085], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 88669,
+    site_name: 'Diablo Clinical Research, Inc.',
+    investigator: 'Helen Stacey',
+    subjects_screened: '247',
+    trial_site_id: 1055
+}).addTo(map).on('mouseover', onClick);
+var circle1056 = L.circle([25.855318, -80.307033], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 143064,
+    site_name: 'Indago Research & Health Center, Inc.',
+    investigator: 'Jose Cardona',
+    subjects_screened: '643',
+    trial_site_id: 1056
+}).addTo(map).on('mouseover', onClick);
+var circle1057 = L.circle([30.243625, -81.586714], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 120213,
+    site_name: 'Clinical Neurscience Solutions, Inc.',
+    investigator: 'Fadi Chalhoub',
+    subjects_screened: '454',
+    trial_site_id: 1057
+}).addTo(map).on('mouseover', onClick);
+var circle1066 = L.circle([43.641029, -116.375658], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 117535,
+    site_name: 'Solaris Clinical Research',
+    investigator: 'David Butuk',
+    subjects_screened: '434',
+    trial_site_id: 1066
+}).addTo(map).on('mouseover', onClick);
+var circle1068 = L.circle([45.668781, -111.018619], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 61286,
+    site_name: 'Bozeman Health Deaconess Hospital dba Bozeman Health Clinical Research',
+    investigator: 'Andrew Gentry',
+    subjects_screened: '118',
+    trial_site_id: 1068
+}).addTo(map).on('mouseover', onClick);
+var circle1071 = L.circle([41.262811, -96.069489], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 89027,
+    site_name: 'Quality Clinical Research, Inc.',
+    investigator: 'Michael Dunn',
+    subjects_screened: '249',
+    trial_site_id: 1071
+}).addTo(map).on('mouseover', onClick);
+var circle1072 = L.circle([34.673102, -86.535652], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 56700,
+    site_name: 'Optimal Research, LLC',
+    investigator: 'Randle Middleton',
+    subjects_screened: '101',
+    trial_site_id: 1072
+}).addTo(map).on('mouseover', onClick);
+var circle1073 = L.circle([33.412682, -111.942122], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 64327,
+    site_name: 'Alliance for Multispecialty Research, LLC',
+    investigator: 'Corey Anderson',
+    subjects_screened: '130',
+    trial_site_id: 1073
+}).addTo(map).on('mouseover', onClick);
+var circle1077 = L.circle([42.114451, -76.017445], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 97394,
+    site_name: 'Meridian Clinical Research LLC',
+    investigator: 'Suchet Patel',
+    subjects_screened: '298',
+    trial_site_id: 1077
+}).addTo(map).on('mouseover', onClick);
+var circle1079 = L.circle([35.169344, -80.847823], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 100292,
+    site_name: 'PMG Research of Charlotte, LLC',
+    investigator: 'George Raad',
+    subjects_screened: '316',
+    trial_site_id: 1079
+}).addTo(map).on('mouseover', onClick);
+var circle1080 = L.circle([35.737095, -78.7764], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 84251,
+    site_name: 'PMG Research of Raleigh, LLC, d/b/a PMG',
+    investigator: 'Sylvia Shoffner',
+    subjects_screened: '223',
+    trial_site_id: 1080
+}).addTo(map).on('mouseover', onClick);
+var circle1081 = L.circle([39.12314, -84.508043], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 82147,
+    site_name: 'Sterling Research Group, Ltd.',
+    investigator: 'Michael Butcher',
+    subjects_screened: '212',
+    trial_site_id: 1081
+}).addTo(map).on('mouseover', onClick);
+var circle1082 = L.circle([35.941513, -83.945188], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 84440,
+    site_name: 'Alliance for Multispecialty Research, LLC',
+    investigator: 'William Smith',
+    subjects_screened: '224',
+    trial_site_id: 1082
+}).addTo(map).on('mouseover', onClick);
+var circle1083 = L.circle([30.290425, -97.728125], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 94406,
+    site_name: 'Benchmark Research',
+    investigator: 'Laurence Chu',
+    subjects_screened: '280',
+    trial_site_id: 1083
+}).addTo(map).on('mouseover', onClick);
+var circle1084 = L.circle([29.506873, -98.563588], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 137851,
+    site_name: 'Clinical Trials of Texas, Inc.',
+    investigator: 'Douglas Denham',
+    subjects_screened: '597',
+    trial_site_id: 1084
+}).addTo(map).on('mouseover', onClick);
+var circle1085 = L.circle([32.937803, -97.229835], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 109254,
+    site_name: 'Ventavia Research Group, LLC',
+    investigator: 'Gregory Fuller',
+    subjects_screened: '375',
+    trial_site_id: 1085
+}).addTo(map).on('mouseover', onClick);
+var circle1087 = L.circle([34.208389, -77.927732], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 138312,
+    site_name: 'PMG Research of Hickory, LLC',
+    investigator: 'Kevin Cannon',
+    subjects_screened: '601',
+    trial_site_id: 1087
+}).addTo(map).on('mouseover', onClick);
+var circle1088 = L.circle([35.75034, -81.341019], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 91322,
+    site_name: 'PMG Research of Hickory, LLC',
+    investigator: 'John Earl',
+    subjects_screened: '262',
+    trial_site_id: 1088
+}).addTo(map).on('mouseover', onClick);
+var circle1089 = L.circle([35.680044, -80.4713], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 106001,
+    site_name: 'PMG Research of Salisbury, LLC',
+    investigator: 'Cecil Farrington',
+    subjects_screened: '353',
+    trial_site_id: 1089
+}).addTo(map).on('mouseover', onClick);
+var circle1090 = L.circle([35.823982, -78.705544], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 133987,
+    site_name: 'M3 Wake Research, Inc',
+    investigator: 'Lisa Cohen',
+    subjects_screened: '564',
+    trial_site_id: 1090
+}).addTo(map).on('mouseover', onClick);
+var circle1091 = L.circle([39.984484, -82.826839], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 121530,
+    site_name: 'Aventiv Research Inc (Facility and Drug Shipment Address)',
+    investigator: 'Samir Arora',
+    subjects_screened: '464',
+    trial_site_id: 1091
+}).addTo(map).on('mouseover', onClick);
+var circle1092 = L.circle([39.292321, -84.487138], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 93899,
+    site_name: 'Sterling Research Group, Ltd.',
+    investigator: 'Rajesh Davit',
+    subjects_screened: '277',
+    trial_site_id: 1092
+}).addTo(map).on('mouseover', onClick);
+var circle1093 = L.circle([42.455354, -96.345013], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 85003,
+    site_name: 'Meridian Clinical Research, LLC',
+    investigator: 'David Ensz',
+    subjects_screened: '227',
+    trial_site_id: 1093
+}).addTo(map).on('mouseover', onClick);
+var circle1094 = L.circle([29.582949, -95.387597], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 77768,
+    site_name: 'LinQ Research, LLC',
+    investigator: 'Murtaza Mussaji',
+    subjects_screened: '190',
+    trial_site_id: 1094
+}).addTo(map).on('mouseover', onClick);
+var circle1095 = L.circle([30.230984, -97.802824], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 100133,
+    site_name: 'Tekton Research, Inc.',
+    investigator: 'Paul Pickrell',
+    subjects_screened: '315',
+    trial_site_id: 1095
+}).addTo(map).on('mouseover', onClick);
+var circle1096 = L.circle([29.81073, -95.4342], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 111846,
+    site_name: 'Dr Van Tran Family Practice, Hany H. Ahmed MD & Ventavia Research Group, LLC',
+    investigator: 'Van Tran',
+    subjects_screened: '393',
+    trial_site_id: 1096
+}).addTo(map).on('mouseover', onClick);
+var circle1097 = L.circle([33.868737, -78.671005], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 62571,
+    site_name: 'Main Street Physician\'s Care',
+    investigator: 'Tom Christensen',
+    subjects_screened: '123',
+    trial_site_id: 1097
+}).addTo(map).on('mouseover', onClick);
+var circle1098 = L.circle([32.779964, -96.600121], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 91496,
+    site_name: 'SMS Clinical Research, LLC',
+    investigator: 'Salma Saiger',
+    subjects_screened: '263',
+    trial_site_id: 1098
+}).addTo(map).on('mouseover', onClick);
+var circle1101 = L.circle([41.451665, -96.500113], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 61803,
+    site_name: 'Methodist Physicians Clinic / CCT Research',
+    investigator: 'Thomas Wolf',
+    subjects_screened: '120',
+    trial_site_id: 1101
+}).addTo(map).on('mouseover', onClick);
+var circle1107 = L.circle([30.68389, -88.130755], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 83492,
+    site_name: 'Alliance for Multispecialty Research, LLC',
+    investigator: 'Harry Studdard',
+    subjects_screened: '219',
+    trial_site_id: 1107
+}).addTo(map).on('mouseover', onClick);
+var circle1109 = L.circle([29.044612, -81.314699], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 133272,
+    site_name: 'DeLand Clinical Research Unit',
+    investigator: 'Bruce Rankin',
+    subjects_screened: '558',
+    trial_site_id: 1109
+}).addTo(map).on('mouseover', onClick);
+var circle1110 = L.circle([25.753515, -80.262393], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 109980,
+    site_name: 'Alliance for Multispecialty Research, LLC-Miami',
+    investigator: 'Jeffrey Rosen',
+    subjects_screened: '380',
+    trial_site_id: 1110
+}).addTo(map).on('mouseover', onClick);
+var circle1111 = L.circle([30.100353, -81.704563], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 81172,
+    site_name: 'Fleming Island Center for Clinical Research',
+    investigator: 'Michael Stephens',
+    subjects_screened: '207',
+    trial_site_id: 1111
+}).addTo(map).on('mouseover', onClick);
+var circle1112 = L.circle([33.505802, -84.22606], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 105550,
+    site_name: 'Clinical Research Atlanta',
+    investigator: 'Nathan Segall',
+    subjects_screened: '350',
+    trial_site_id: 1112
+}).addTo(map).on('mouseover', onClick);
+var circle1114 = L.circle([38.02249, -97.332772], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 63580,
+    site_name: 'Alliance for Multispeciality Research, LLC',
+    investigator: 'Richard Glover',
+    subjects_screened: '127',
+    trial_site_id: 1114
+}).addTo(map).on('mouseover', onClick);
+var circle1116 = L.circle([30.443989, -89.093605], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 101867,
+    site_name: 'MedPharmics, LLC',
+    investigator: 'Paul Matherne',
+    subjects_screened: '326',
+    trial_site_id: 1116
+}).addTo(map).on('mouseover', onClick);
+var circle1117 = L.circle([38.668863, -90.438865], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 78784,
+    site_name: 'Sundance Clinical Research, LLC',
+    investigator: 'Larkin Wadsworth',
+    subjects_screened: '195',
+    trial_site_id: 1117
+}).addTo(map).on('mouseover', onClick);
+var circle1118 = L.circle([42.160032, -75.893706], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 64327,
+    site_name: 'Meridian Clinical Research, LLC',
+    investigator: 'Frank Eder',
+    subjects_screened: '130',
+    trial_site_id: 1118
+}).addTo(map).on('mouseover', onClick);
+var circle1120 = L.circle([32.00892, -81.106783], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 117535,
+    site_name: 'Meridian Clinical Research, LLC',
+    investigator: 'Paul Bradley',
+    subjects_screened: '434',
+    trial_site_id: 1120
+}).addTo(map).on('mouseover', onClick);
+var circle1121 = L.circle([40.747241, -89.608416], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 62316,
+    site_name: 'Optimal Research, LLC',
+    investigator: 'Daniel Brune',
+    subjects_screened: '122',
+    trial_site_id: 1121
+}).addTo(map).on('mouseover', onClick);
+var circle1122 = L.circle([41.51424, -81.61311], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 42595,
+    site_name: 'VA Northeast Ohio Healthcare System',
+    investigator: 'Curtis Donskey',
+    subjects_screened: '57',
+    trial_site_id: 1122
+}).addTo(map).on('mouseover', onClick);
+var circle1123 = L.circle([41.289274, -96.079164], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 128902,
+    site_name: 'Meridian Clinical Research, LLC',
+    investigator: 'Brandon Essink',
+    subjects_screened: '522',
+    trial_site_id: 1123
+}).addTo(map).on('mouseover', onClick);
+var circle1124 = L.circle([41.724736, -71.478541], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 93560,
+    site_name: 'Omega Medical Research',
+    investigator: 'David Fried',
+    subjects_screened: '275',
+    trial_site_id: 1124
+}).addTo(map).on('mouseover', onClick);
+var circle1125 = L.circle([42.048817, -97.42616], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 90093,
+    site_name: 'Meridian Clinical Research, LLC',
+    investigator: 'Charles Harper',
+    subjects_screened: '255',
+    trial_site_id: 1125
+}).addTo(map).on('mouseover', onClick);
+var circle1126 = L.circle([38.595565, -121.429578], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 101554,
+    site_name: 'Kaiser Permanente Sacramento',
+    investigator: 'Nicola Klein',
+    subjects_screened: '324',
+    trial_site_id: 1126
+}).addTo(map).on('mouseover', onClick);
+var circle1127 = L.circle([38.595276, -121.429798], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 60238,
+    site_name: 'Alliance for Multispecialty Research, LLC',
+    investigator: 'Tracy Klein',
+    subjects_screened: '114',
+    trial_site_id: 1127
+}).addTo(map).on('mouseover', onClick);
+var circle1128 = L.circle([32.73042, -97.342842], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 110701,
+    site_name: 'Ventavia Research Group, LLC',
+    investigator: 'Mark Koch',
+    subjects_screened: '385',
+    trial_site_id: 1128
+}).addTo(map).on('mouseover', onClick);
+var circle1129 = L.circle([30.283314, -81.601679], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 91496,
+    site_name: 'Jacksonville Center for Clinical Research',
+    investigator: 'Michael Koren',
+    subjects_screened: '263',
+    trial_site_id: 1129
+}).addTo(map).on('mouseover', onClick);
+var circle1130 = L.circle([45.550319, -122.68084], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 55851,
+    site_name: 'Kaiser Permanente Northwest-Center for Health',
+    investigator: 'Stephen Fortmann',
+    subjects_screened: '98',
+    trial_site_id: 1130
+}).addTo(map).on('mouseover', onClick);
+var circle1131 = L.circle([39.724205, -84.153467], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 98045,
+    site_name: 'PriMED Clinical Research',
+    investigator: 'William Randall',
+    subjects_screened: '302',
+    trial_site_id: 1131
+}).addTo(map).on('mouseover', onClick);
+var circle1133 = L.circle([26.032258, -80.234138], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 143619,
+    site_name: 'Research Centers of America',
+    investigator: 'Howard Schwartz',
+    subjects_screened: '648',
+    trial_site_id: 1133
+}).addTo(map).on('mouseover', onClick);
+var circle1134 = L.circle([36.077265, -80.295588], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 118210,
+    site_name: 'PMG Research of Winston-Salem, LLC',
+    investigator: 'Jonathan Wilson',
+    subjects_screened: '439',
+    trial_site_id: 1134
+}).addTo(map).on('mouseover', onClick);
+var circle1135 = L.circle([33.85028, -117.924733], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 134698,
+    site_name: 'Anaheim Clinical Trials, LLC',
+    investigator: 'Peter Winkle',
+    subjects_screened: '570',
+    trial_site_id: 1135
+}).addTo(map).on('mouseover', onClick);
+var circle1136 = L.circle([36.145827, -115.140502], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 59441,
+    site_name: 'Wake Research-Clinical Center of Nevada, LLC',
+    investigator: 'Michael Levin',
+    subjects_screened: '111',
+    trial_site_id: 1136
+}).addTo(map).on('mouseover', onClick);
+var circle1139 = L.circle([36.008967, -78.944857], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 91322,
+    site_name: 'Duke Vaccine and Trials Unit',
+    investigator: 'Emmanuel Walter',
+    subjects_screened: '262',
+    trial_site_id: 1139
+}).addTo(map).on('mouseover', onClick);
+var circle1140 = L.circle([43.044949, -76.136962], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 112978,
+    site_name: 'SUNY Upstate Medical University',
+    investigator: 'Stephen Thomas',
+    subjects_screened: '401',
+    trial_site_id: 1140
+}).addTo(map).on('mouseover', onClick);
+var circle1141 = L.circle([41.660436, -91.548543], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 92016,
+    site_name: 'University of Iowa Hospitals & Clinics',
+    investigator: 'Patricia Winokur',
+    subjects_screened: '266',
+    trial_site_id: 1141
+}).addTo(map).on('mouseover', onClick);
+var circle1142 = L.circle([29.314075, -94.774518], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 111418,
+    site_name: 'University of Texas Medical Branch',
+    investigator: 'Richard Rupp',
+    subjects_screened: '390',
+    trial_site_id: 1142
+}).addTo(map).on('mouseover', onClick);
+var circle1145 = L.circle([39.29128, -76.545799], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 59974,
+    site_name: 'Center for Immunization Research Inpatient Unit Johns Hopkins Bayview Medical Center',
+    investigator: 'Kawsar Talaat',
+    subjects_screened: '113',
+    trial_site_id: 1145
+}).addTo(map).on('mouseover', onClick);
+var circle1146 = L.circle([40.568084, -74.630641], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 111988,
+    site_name: 'Amici Clinical Research',
+    investigator: 'Robert Falcone',
+    subjects_screened: '394',
+    trial_site_id: 1146
+}).addTo(map).on('mouseover', onClick);
+var circle1147 = L.circle([29.96243, -90.1456], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 103878,
+    site_name: 'Ochsner Clinic Foundation',
+    investigator: 'Julia Garcia-Diaz',
+    subjects_screened: '339',
+    trial_site_id: 1147
+}).addTo(map).on('mouseover', onClick);
+var circle1149 = L.circle([33.777543, -118.034075], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 104641,
+    site_name: 'Collaborative Neuroscience Research, LLC',
+    investigator: 'Steven Reynolds',
+    subjects_screened: '344',
+    trial_site_id: 1149
+}).addTo(map).on('mouseover', onClick);
+var circle1150 = L.circle([41.504194, -81.51949], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 97394,
+    site_name: 'Senders Pediatrics',
+    investigator: 'Shelly Senders',
+    subjects_screened: '298',
+    trial_site_id: 1150
+}).addTo(map).on('mouseover', onClick);
+var circle1152 = L.circle([32.817426, -117.124983], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 154818,
+    site_name: 'California Research Foundation',
+    investigator: 'Donald Branson',
+    subjects_screened: '753',
+    trial_site_id: 1152
+}).addTo(map).on('mouseover', onClick);
+var circle1156 = L.circle([25.82399, -80.237163], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 109254,
+    site_name: 'Acevedo Clinical Research Associates',
+    investigator: 'Hector Rodriguez',
+    subjects_screened: '375',
+    trial_site_id: 1156
+}).addTo(map).on('mouseover', onClick);
+var circle1157 = L.circle([40.584164, -122.425566], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 75272,
+    site_name: 'Paradigm Clinical Research Center',
+    investigator: 'Jamshid Saleh',
+    subjects_screened: '178',
+    trial_site_id: 1157
+}).addTo(map).on('mouseover', onClick);
+var circle1161 = L.circle([31.416111, -100.470492], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 36996,
+    site_name: 'Benchmark Research',
+    investigator: 'Darrel Herrington',
+    subjects_screened: '43',
+    trial_site_id: 1161
+}).addTo(map).on('mouseover', onClick);
+var circle1162 = L.circle([33.740088, -84.512626], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 136808,
+    site_name: 'Atlanta Center for Medical Research',
+    investigator: 'Robert Riesenberg',
+    subjects_screened: '588',
+    trial_site_id: 1162
+}).addTo(map).on('mouseover', onClick);
+var circle1163 = L.circle([30.006103, -90.184251], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 68171,
+    site_name: 'Benchmark Research',
+    investigator: 'George Bauer',
+    subjects_screened: '146',
+    trial_site_id: 1163
+}).addTo(map).on('mouseover', onClick);
+var circle1166 = L.circle([41.461777, -81.49397], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 58360,
+    site_name: 'Rapid Medical Research, Inc.',
+    investigator: 'Mary Beth Manning',
+    subjects_screened: '107',
+    trial_site_id: 1166
+}).addTo(map).on('mouseover', onClick);
+var circle1167 = L.circle([36.557416, -82.552999], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 85934,
+    site_name: 'Holston Medical Group',
+    investigator: 'Emily Morawski',
+    subjects_screened: '232',
+    trial_site_id: 1167
+}).addTo(map).on('mouseover', onClick);
+var circle1168 = L.circle([35.209973, -97.476766], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 87403,
+    site_name: 'Lynn Institute of Norman',
+    investigator: 'Steven Cox',
+    subjects_screened: '240',
+    trial_site_id: 1168
+}).addTo(map).on('mouseover', onClick);
+var circle1169 = L.circle([40.600758, -75.494202], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 48860,
+    site_name: 'Lehigh Valley Health Network / Network Office of Research and Innovation',
+    investigator: 'Joseph Yozviak',
+    subjects_screened: '75',
+    trial_site_id: 1169
+}).addTo(map).on('mouseover', onClick);
+var circle1170 = L.circle([32.788375, -96.779399], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 125650,
+    site_name: 'North Texas Infectious Deseases Consultants, P.A.',
+    investigator: 'Mezgebe Berhe',
+    subjects_screened: '496',
+    trial_site_id: 1170
+}).addTo(map).on('mouseover', onClick);
+var circle1171 = L.circle([30.084754, -95.623484], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 98692,
+    site_name: 'DM Clinical Research',
+    investigator: 'Earl Martin',
+    subjects_screened: '306',
+    trial_site_id: 1171
+}).addTo(map).on('mouseover', onClick);
+var circle1174 = L.circle([38.854249, -77.223548], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 47539,
+    site_name: 'Infectious Diseases Physicians, LLC',
+    investigator: 'Donald Poretz',
+    subjects_screened: '71',
+    trial_site_id: 1174
+}).addTo(map).on('mouseover', onClick);
+var circle1177 = L.circle([21.291175, -157.840296], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 134106,
+    site_name: 'East-West Medical Reseach Institute',
+    investigator: 'David Fitz-Patrick',
+    subjects_screened: '565',
+    trial_site_id: 1177
+}).addTo(map).on('mouseover', onClick);
+var circle1178 = L.circle([32.750371, -96.803811], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 100451,
+    site_name: 'Clinical Research Associates, Inc.',
+    investigator: 'Stephan Sharp',
+    subjects_screened: '317',
+    trial_site_id: 1178
+}).addTo(map).on('mouseover', onClick);
+var circle1179 = L.circle([42.519643, -83.359298], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 74421,
+    site_name: 'Michigan Center for Medical Research',
+    investigator: 'Steven Katzman',
+    subjects_screened: '174',
+    trial_site_id: 1179
+}).addTo(map).on('mouseover', onClick);
+var circle1185 = L.circle([53.547077, 9.964825], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 46180,
+    site_name: 'Universitatsklinikum Hamburg-Eppendorf',
+    investigator: 'Marylyn Addo',
+    subjects_screened: '67',
+    trial_site_id: 1185
+}).addTo(map).on('mouseover', onClick);
+var circle1194 = L.circle([50.100141, 8.668858], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 58086,
+    site_name: 'IKF Pneumologie GmbH & Co KG',
+    investigator: 'Steven Katzman',
+    subjects_screened: '106',
+    trial_site_id: 1194
+}).addTo(map).on('mouseover', onClick);
+var circle1195 = L.circle([51.475626, 6.951541], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 70917,
+    site_name: 'Medizentrum Essen Borbeck',
+    investigator: 'Axel Schaefer',
+    subjects_screened: '158',
+    trial_site_id: 1195
+}).addTo(map).on('mouseover', onClick);
+var circle1197 = L.circle([53.008653, 8.783205], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 56418,
+    site_name: 'Studienzentrum Brinkum Dr. Lars Pohlmeier und Torsten Drescher',
+    investigator: 'Matthias Luttermann',
+    subjects_screened: '100',
+    trial_site_id: 1197
+}).addTo(map).on('mouseover', onClick);
+var circle1202 = L.circle([49.500255, 8.488605], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 20342,
+    site_name: 'CRS Clinical Research Services Mannheim GmbH',
+    investigator: 'Armin Schultz',
+    subjects_screened: '13',
+    trial_site_id: 1202
+}).addTo(map).on('mouseover', onClick);
+var circle1203 = L.circle([52.53959, 13.370117], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 47203,
+    site_name: 'CRS Clinical Research Services Berlin GmbH',
+    investigator: 'Sybille Baumann',
+    subjects_screened: '70',
+    trial_site_id: 1203
+}).addTo(map).on('mouseover', onClick);
+var circle1204 = L.circle([40.791404, -73.952085], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 96243,
+    site_name: 'Icahn School of Medicine at Mount Sinai',
+    investigator: 'Judith Aberg',
+    subjects_screened: '291',
+    trial_site_id: 1204
+}).addTo(map).on('mouseover', onClick);
+var circle1205 = L.circle([39.931674, 32.863173], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 50462,
+    site_name: 'Hacettepe Universitesi Tip Fakultesi',
+    investigator: 'Serhat Unal',
+    subjects_screened: '80',
+    trial_site_id: 1205
+}).addTo(map).on('mouseover', onClick);
+var circle1207 = L.circle([39.933943, 32.882137], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 46865,
+    site_name: 'Ankara Universitesi Tip Fakultesi, Ibni Sina Hastanesi',
+    investigator: 'Ismail Balik',
+    subjects_screened: '69',
+    trial_site_id: 1207
+}).addTo(map).on('mouseover', onClick);
+var circle1208 = L.circle([41.034447, 28.7787], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 41841,
+    site_name: 'Acibadem Atakent Hastanesi, Enfeksiyon Hastaliklari ye Klinik Mikrobiyoloji',
+    investigator: 'Iflihar Koksal',
+    subjects_screened: '55',
+    trial_site_id: 1208
+}).addTo(map).on('mouseover', onClick);
+var circle1209 = L.circle([41.001984, 28.915308], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 25854,
+    site_name: 'Istanbul Yedikule Gogus Hastaliklari ve Gogus',
+    investigator: 'Sedat Altin',
+    subjects_screened: '21',
+    trial_site_id: 1209
+}).addTo(map).on('mouseover', onClick);
+var circle1210 = L.circle([41.058056, 28.84273], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 44424,
+    site_name: 'Medipol Mega Uniyersite Hastanesi',
+    investigator: 'Ali Mert',
+    subjects_screened: '62',
+    trial_site_id: 1210
+}).addTo(map).on('mouseover', onClick);
+var circle1212 = L.circle([40.756266, 30.390759], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 33851,
+    site_name: 'Sakarya Universitesi Egitim ye Arastirma',
+    investigator: 'Oguz Karabay',
+    subjects_screened: '36',
+    trial_site_id: 1212
+}).addTo(map).on('mouseover', onClick);
+var circle1213 = L.circle([41.004328, 28.939809], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 43701,
+    site_name: 'Istanbul Universitesi-Cerrahpasa, Cerrahpasa Tip Fakultesi',
+    investigator: 'Omer Tabak',
+    subjects_screened: '60',
+    trial_site_id: 1213
+}).addTo(map).on('mouseover', onClick);
+var circle1214 = L.circle([41.004526, 28.940009], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 41841,
+    site_name: 'Istanbul Universitesi Istanbul Tip Fakultesi',
+    investigator: 'Serap Simsek-Yavuz',
+    subjects_screened: '55',
+    trial_site_id: 1214
+}).addTo(map).on('mouseover', onClick);
+var circle1217 = L.circle([40.824714, 29.919205], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 44424,
+    site_name: 'Kocaeli Universitesi Tip Fakultesi',
+    investigator: 'Sila Akhan',
+    subjects_screened: '62',
+    trial_site_id: 1217
+}).addTo(map).on('mouseover', onClick);
+var circle1218 = L.circle([33.878486, -109.961128], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 42967,
+    site_name: 'Johns Hopkins Center for American Indian Health',
+    investigator: 'Laura Hammitt',
+    subjects_screened: '58',
+    trial_site_id: 1218
+}).addTo(map).on('mouseover', onClick);
+var circle1219 = L.circle([36.152499, -109.556408], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 43701,
+    site_name: 'Johns Hopkins Center for American Indian Health',
+    investigator: 'Laura Hammitt',
+    subjects_screened: '60',
+    trial_site_id: 1219
+}).addTo(map).on('mouseover', onClick);
+var circle1220 = L.circle([36.804719, -108.691378], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 45486,
+    site_name: 'Northern Navajo Medical Center',
+    investigator: 'Laura Hammitt',
+    subjects_screened: '65',
+    trial_site_id: 1220
+}).addTo(map).on('mouseover', onClick);
+var circle1221 = L.circle([35.508026, -108.72996], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 54700,
+    site_name: 'Gallup Indian Medical Center',
+    investigator: 'Laura Hammitt',
+    subjects_screened: '94',
+    trial_site_id: 1221
+}).addTo(map).on('mouseover', onClick);
+var circle1223 = L.circle([41.301948, -72.930261], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 94911,
+    site_name: 'Yale Center for Clinical Investigations',
+    investigator: 'Onyema Ogbuagu',
+    subjects_screened: '283',
+    trial_site_id: 1223
+}).addTo(map).on('mouseover', onClick);
+var circle1224 = L.circle([39.691116, -104.833078], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 76945,
+    site_name: 'Lynn Institute of Denver',
+    investigator: 'Larry Odekirk',
+    subjects_screened: '186',
+    trial_site_id: 1224
+}).addTo(map).on('mouseover', onClick);
+var circle1226 = L.circle([-23.589737, -46.611078], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 207909,
+    site_name: 'CEPIC - Centro Paulista de Investigacao Clinica e Servicos Medicos Ltda (Casa Blanca)',
+    investigator: 'Cristiano Zerbini',
+    subjects_screened: '1358',
+    trial_site_id: 1226
+}).addTo(map).on('mouseover', onClick);
+var circle1229 = L.circle([-26.203004, 28.036724], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 83110,
+    site_name: 'Newtown Clinical Research Centre',
+    investigator: 'Essack Mitha',
+    subjects_screened: '217',
+    trial_site_id: 1229
+}).addTo(map).on('mouseover', onClick);
+var circle1230 = L.circle([-24.59137, 27.406048], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 84440,
+    site_name: 'Limpopo Clinical Research Initiative, Tamboti Medical Centre',
+    investigator: 'Leon Fouche',
+    subjects_screened: '224',
+    trial_site_id: 1230
+}).addTo(map).on('mouseover', onClick);
+var circle1231 = L.circle([-34.569624, -58.437341], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 433215,
+    site_name: 'Hospital Militar Central Cirujano Mayor Dr',
+    investigator: 'Fernando Polack',
+    subjects_screened: '5896',
+    trial_site_id: 1231
+}).addTo(map).on('mouseover', onClick);
+var circle1232 = L.circle([32.483183, -84.982224], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 117535,
+    site_name: 'IACT Health',
+    investigator: 'Jeffrey Kingsley',
+    subjects_screened: '434',
+    trial_site_id: 1232
+}).addTo(map).on('mouseover', onClick);
+var circle1235 = L.circle([32.494217, -93.751993], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 89384,
+    site_name: 'LSUHSC-Shreveport',
+    investigator: 'John Vanchiere',
+    subjects_screened: '251',
+    trial_site_id: 1235
+}).addTo(map).on('mouseover', onClick);
+var circle1241 = L.circle([-12.934974, -38.506831], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 223407,
+    site_name: 'Hospital Santo Antonio Associacao Obras Sociais',
+    investigator: 'Edson Moreira',
+    subjects_screened: '1568',
+    trial_site_id: 1241
+}).addTo(map).on('mouseover', onClick);
+var circle1246 = L.circle([-25.748881, 28.149101], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 66993,
+    site_name: 'Jongaie Research',
+    investigator: 'Dany Musungaie',
+    subjects_screened: '141',
+    trial_site_id: 1246
+}).addTo(map).on('mouseover', onClick);
+var circle1247 = L.circle([-33.871827, 18.637222], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 90972,
+    site_name: 'Tiervlei Trial Centre, Basement Level, Karl Bremer Hospital',
+    investigator: 'Haylene Nell',
+    subjects_screened: '260',
+    trial_site_id: 1247
+}).addTo(map).on('mouseover', onClick);
+var circle1248 = L.circle([39.289088, -76.628981], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 89562,
+    site_name: 'Pharmaron CPC, Inc.',
+    investigator: 'Mohamed Al-Ibrahim',
+    subjects_screened: '252',
+    trial_site_id: 1248
+}).addTo(map).on('mouseover', onClick);
+var circle1251 = L.circle([33.444924, -86.789571], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 91669,
+    site_name: 'Birmingham Clinical Research Unit',
+    investigator: 'Hayes Williams',
+    subjects_screened: '264',
+    trial_site_id: 1251
+}).addTo(map).on('mouseover', onClick);
+var circle1252 = L.circle([34.05659, -78.898022], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 35682,
+    site_name: 'Main Street Physician\'s Care',
+    investigator: 'Stephen Grubb',
+    subjects_screened: '40',
+    trial_site_id: 1252
+}).addTo(map).on('mouseover', onClick);
+var circle1254 = L.circle([34.156794, -118.408083], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 82340,
+    site_name: 'Bayview Research Group',
+    investigator: 'Robert Heller',
+    subjects_screened: '213',
+    trial_site_id: 1254
+}).addTo(map).on('mouseover', onClick);
+var circle1258 = L.circle([39.774991, -84.216896], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 48533,
+    site_name: 'Dayton Clinical Research',
+    investigator: 'Martin Schear',
+    subjects_screened: '74',
+    trial_site_id: 1258
+}).addTo(map).on('mouseover', onClick);
+var circle1260 = L.circle([42.275392, -71.762984], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 64820,
+    site_name: 'UMass Memorial Medical Center - University',
+    investigator: 'Robert Finberg',
+    subjects_screened: '132',
+    trial_site_id: 1260
+}).addTo(map).on('mouseover', onClick);
+var circle1261 = L.circle([42.275392, -71.762984], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 51089,
+    site_name: 'Benaroya Research Institute at Virginia Mason',
+    investigator: 'Carla Greenbaum',
+    subjects_screened: '82',
+    trial_site_id: 1261
+}).addTo(map).on('mouseover', onClick);
+var circle1264 = L.circle([38.55426, -121.455454], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 85003,
+    site_name: 'UC Davis Medical Center',
+    investigator: 'Timothy Albertson',
+    subjects_screened: '227',
+    trial_site_id: 1264
+}).addTo(map).on('mouseover', onClick);
+var circle1265 = L.circle([34.098208, -118.295618], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 76322,
+    site_name: 'Kaiser Petmanente Los Angeles Medical Center',
+    investigator: 'William Towner',
+    subjects_screened: '183',
+    trial_site_id: 1265
+}).addTo(map).on('mouseover', onClick);
+var circle1269 = L.circle([34.187014, -118.396461], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 67230,
+    site_name: 'Providence Clinical Research',
+    investigator: 'Teresa Sligh',
+    subjects_screened: '142',
+    trial_site_id: 1269
+}).addTo(map).on('mouseover', onClick);
+var circle1270 = L.circle([37.336446, -121.996307], {
+    color: '#2596be',
+    fillColor: '#2596be',
+    fillOpacity: 0.9,
+    radius: 88129,
+    site_name: 'Kaiser Petmanente Santa Clara',
+    investigator: 'Nicola Klein',
+    subjects_screened: '244',
+    trial_site_id: 1270
+}).addTo(map).on('mouseover', onClick);
+
+
+    // Set up the OSM layer
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Data © <a href="http://osm.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18
+    }).addTo(map);
+
+    $( document ).ready(function() {
+        var flags = document.querySelectorAll('.leaflet-bottom leaflet-right');
+        console.log(flags);
+        flags.forEach(flag => {
+            flag.remove();
+            alert('removed');
+        });
+    });
+
+    function onClick(e) {
+        let trial_site_id = this.options.trial_site_id;
+        let site_name = this.options.site_name;
+        let subjects_screened = this.options.subjects_screened;
+        let investigator = this.options.investigator;
+        // alert(this.getLatLng() + ', site_name : ' + site_name + ', trial_site_id : ' + trial_site_id + ', subjects_screened : ' + subjects_screened);
+        $('#currentMouseOver').html('<div style="width:calc(100% - 15px);padding-left:15px;font-size:18px;font-weight:bold;">' + site_name + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;"><b>Site Code :</b>' + trial_site_id  + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;"><b>Investigator :</b>' + investigator + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;font-size:15px;font-weight:bold;">' + subjects_screened + ' Subjects</div>')
+    }
+</script>

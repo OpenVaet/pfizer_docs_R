@@ -1,0 +1,154 @@
+"ORISITEID","Country","Site_Name","Investigator","Latitude","Longitude","Subjects_Screened"
+"1001","USA","NYU Langone Health, Schwartz Health Care Center","Mark Mulligan","40.741560","-73.975072",149
+"1002","USA","University of Maryland, Center for Vaccine Development and Global Health","Kathleen Neuzil","39.289164","-76.625810",87
+"1003","USA","Rochester Regional Health/Rochester General Hospital, Infectious Desease Department","Edward Walsh","43.192742","-77.585667",209
+"1005","USA","Rochester Clinical Research, Inc.","Matthew Davis","43.179476","-77.545020",442
+"1006","USA","J. Lewis Research Inc. / Foothill Family Clinic","James Peterson","40.721491","-111.811763",296
+"1007","USA","Cincinnati Children's Hospital Medical Center","Robert Frenck","39.129639","-84.497039",660
+"1008","USA","Clinical Research Professionals","Timothy Jennings","38.669244","-90.634202",942
+"1009","USA","J. Lewis Research Inc. / Foothill Family Clinic","Shane Christensen","40.721491","-111.811763",413
+"1011","USA","Clinical Neuroscience Solutions, Inc","Michael Dever","39.129639","-84.497039",236
+"1012","USA","HOPE Research Institute","Susann Varano","33.510857","-111.997874",188
+"1013","USA","Clinical Neuroscience Solutions, Inc","Michael Dever","28.537427","-81.368636",884
+"1015","USA","Boston Medical Center","Elizabeth Barnett","42.334403","-71.072164",266
+"1016","USA","Kentucky Pediatric / Adult Research","Daniel Finn","37.808380","-85.470766",386
+"1018","USA","Texas Center for Drug Development, Inc","Veronica Fragoso","29.709729","-95.474237",351
+"1019","USA","Diagnostics Research Group","Charles Andrews","29.510245","-98.571134",323
+"1021","USA","PMG Research of Raleigh, LLC","John Rubino","35.829084","-78.634895",252
+"1022","USA","Wenatchee Valley Hospital, Clinical Research Department","Steven Kaster","47.433778","-120.322236",177
+"1024","USA","South Jersey Infectious Disease","Christopher Lucasti","39.313707","-74.595725",132
+"1027","USA","PharmQuest","Alexander Murray","36.091044","-79.816062",216
+"1028","USA","Lillestol Research LLC","Michael Lillestol","46.833424","-96.860613",296
+"1030","USA","University Hospitals Cleveland Medical Center","Robert Salata","41.506408","-81.605679",158
+"1036","USA","Trinity Clinical Research","Marcus Lee","35.369091","-86.215992",145
+"1037","USA","Clinical Neuroscience Solutions, Inc.","Lisa Usdan","35.099988","-89.849212",360
+"1038","USA","Holston Medical Group","Rick Whiles","36.585121","-82.250162",141
+"1039","USA","Arc Clinical Research at Wilson Parke","Gretchen Crook","30.417878","-97.849751",334
+"1042","USA","Benchmark Research","William Seger","32.822397","-97.419301",269
+"1044","USA","Virginia Research Center, LLC","Aaron Hartman","37.466735","-77.662634",384
+"1046","USA","North Alabama Research Center, LLC","Ernest Hendrix","34.803263","-86.980871",348
+"1047","USA","Medical Affliated Research Center","James McMurray","34.725469","-86.585356",332
+"1048","USA","Medical Affliated Research Center","Adram Burgher","33.624359","-112.112400",133
+"1052","USA","Long Beach Clinical Trials Services Inc.","Suzanne Fussell","33.800783","-118.185179",178
+"1054","USA","National Research Institute","Mark Leibowitz","34.057204","-118.274872",214
+"1055","USA","Diablo Clinical Research, Inc.","Helen Stacey","37.922378","-122.030085",247
+"1056","USA","Indago Research & Health Center, Inc.","Jose Cardona","25.855318","-80.307033",643
+"1057","USA","Clinical Neurscience Solutions, Inc.","Fadi Chalhoub","30.243625","-81.586714",454
+"1066","USA","Solaris Clinical Research","David Butuk","43.641029","-116.375658",434
+"1068","USA","Bozeman Health Deaconess Hospital dba Bozeman Health Clinical Research","Andrew Gentry","45.668781","-111.018619",118
+"1071","USA","Quality Clinical Research, Inc.","Michael Dunn","41.262811","-96.069489",249
+"1072","USA","Optimal Research, LLC","Randle Middleton","34.673102","-86.535652",101
+"1073","USA","Alliance for Multispecialty Research, LLC","Corey Anderson","33.412682","-111.942122",130
+"1077","USA","Meridian Clinical Research LLC","Suchet Patel","42.114451","-76.017445",298
+"1079","USA","PMG Research of Charlotte, LLC","George Raad","35.169344","-80.847823",316
+"1080","USA","PMG Research of Raleigh, LLC, d/b/a PMG","Sylvia Shoffner","35.737095","-78.776400",223
+"1081","USA","Sterling Research Group, Ltd.","Michael Butcher","39.123140","-84.508043",212
+"1082","USA","Alliance for Multispecialty Research, LLC","William Smith","35.941513","-83.945188",224
+"1083","USA","Benchmark Research","Laurence Chu","30.290425","-97.728125",280
+"1084","USA","Clinical Trials of Texas, Inc.","Douglas Denham","29.506873","-98.563588",597
+"1085","USA","Ventavia Research Group, LLC","Gregory Fuller","32.937803","-97.229835",375
+"1087","USA","PMG Research of Hickory, LLC","Kevin Cannon","34.208389","-77.927732",601
+"1088","USA","PMG Research of Hickory, LLC","John Earl","35.750340","-81.341019",262
+"1089","USA","PMG Research of Salisbury, LLC","Cecil Farrington","35.680044","-80.471300",353
+"1090","USA","M3 Wake Research, Inc","Lisa Cohen","35.823982","-78.705544",564
+"1091","USA","Aventiv Research Inc (Facility and Drug Shipment Address)","Samir Arora","39.984484","-82.826839",464
+"1092","USA","Sterling Research Group, Ltd.","Rajesh Davit","39.292321","-84.487138",277
+"1093","USA","Meridian Clinical Research, LLC","David Ensz","42.455354","-96.345013",227
+"1094","USA","LinQ Research, LLC","Murtaza Mussaji","29.582949","-95.387597",190
+"1095","USA","Tekton Research, Inc.","Paul Pickrell","30.230984","-97.802824",315
+"1096","USA","Dr Van Tran Family Practice, Hany H. Ahmed MD & Ventavia Research Group, LLC","Van Tran","29.810730","-95.434200",393
+"1097","USA","Main Street Physician's Care","Tom Christensen","33.868737","-78.671005",123
+"1098","USA","SMS Clinical Research, LLC","Salma Saiger","32.779964","-96.600121",263
+"1101","USA","Methodist Physicians Clinic / CCT Research","Thomas Wolf","41.451665","-96.500113",120
+"1107","USA","Alliance for Multispecialty Research, LLC","Harry Studdard","30.683890","-88.130755",219
+"1109","USA","DeLand Clinical Research Unit","Bruce Rankin","29.044612","-81.314699",558
+"1110","USA","Alliance for Multispecialty Research, LLC-Miami","Jeffrey Rosen","25.753515","-80.262393",380
+"1111","USA","Fleming Island Center for Clinical Research","Michael Stephens","30.100353","-81.704563",207
+"1112","USA","Clinical Research Atlanta","Nathan Segall","33.505802","-84.226060",350
+"1114","USA","Alliance for Multispeciality Research, LLC","Richard Glover","38.022490","-97.332772",127
+"1116","USA","MedPharmics, LLC","Paul Matherne","30.443989","-89.093605",326
+"1117","USA","Sundance Clinical Research, LLC","Larkin Wadsworth","38.668863","-90.438865",195
+"1118","USA","Meridian Clinical Research, LLC","Frank Eder","42.160032","-75.893706",130
+"1120","USA","Meridian Clinical Research, LLC","Paul Bradley","32.008920","-81.106783",434
+"1121","USA","Optimal Research, LLC","Daniel Brune","40.747241","-89.608416",122
+"1122","USA","VA Northeast Ohio Healthcare System","Curtis Donskey","41.514240","-81.613110",57
+"1123","USA","Meridian Clinical Research, LLC","Brandon Essink","41.289274","-96.079164",522
+"1124","USA","Omega Medical Research","David Fried","41.724736","-71.478541",275
+"1125","USA","Meridian Clinical Research, LLC","Charles Harper","42.048817","-97.426160",255
+"1126","USA","Kaiser Permanente Sacramento","Nicola Klein","38.595565","-121.429578",324
+"1127","USA","Alliance for Multispecialty Research, LLC","Tracy Klein","38.595276","-121.429798",114
+"1128","USA","Ventavia Research Group, LLC","Mark Koch","32.730420","-97.342842",385
+"1129","USA","Jacksonville Center for Clinical Research","Michael Koren","30.283314","-81.601679",263
+"1130","USA","Kaiser Permanente Northwest-Center for Health","Stephen Fortmann","45.550319","-122.680840",98
+"1131","USA","PriMED Clinical Research","William Randall","39.724205","-84.153467",302
+"1133","USA","Research Centers of America","Howard Schwartz","26.032258","-80.234138",648
+"1134","USA","PMG Research of Winston-Salem, LLC","Jonathan Wilson","36.077265","-80.295588",439
+"1135","USA","Anaheim Clinical Trials, LLC","Peter Winkle","33.850280","-117.924733",570
+"1136","USA","Wake Research-Clinical Center of Nevada, LLC","Michael Levin","36.145827","-115.140502",111
+"1139","USA","Duke Vaccine and Trials Unit","Emmanuel Walter","36.008967","-78.944857",262
+"1140","USA","SUNY Upstate Medical University","Stephen Thomas","43.044949","-76.136962",401
+"1141","USA","University of Iowa Hospitals & Clinics","Patricia Winokur","41.660436","-91.548543",266
+"1142","USA","University of Texas Medical Branch","Richard Rupp","29.314075","-94.774518",390
+"1145","USA","Center for Immunization Research Inpatient Unit Johns Hopkins Bayview Medical Center","Kawsar Talaat","39.291280","-76.545799",113
+"1146","USA","Amici Clinical Research","Robert Falcone","40.568084","-74.630641",394
+"1147","USA","Ochsner Clinic Foundation","Julia Garcia-Diaz","29.962430","-90.145600",339
+"1149","USA","Collaborative Neuroscience Research, LLC","Steven Reynolds","33.777543","-118.034075",344
+"1150","USA","Senders Pediatrics","Shelly Senders","41.504194","-81.519490",298
+"1152","USA","California Research Foundation","Donald Branson","32.817426","-117.124983",753
+"1156","USA","Acevedo Clinical Research Associates","Hector Rodriguez","25.823990","-80.237163",375
+"1157","USA","Paradigm Clinical Research Center","Jamshid Saleh","40.584164","-122.425566",178
+"1161","USA","Benchmark Research","Darrel Herrington","31.416111","-100.470492",43
+"1162","USA","Atlanta Center for Medical Research","Robert Riesenberg","33.740088","-84.512626",588
+"1163","USA","Benchmark Research","George Bauer","30.006103","-90.184251",146
+"1166","USA","Rapid Medical Research, Inc.","Mary Beth Manning","41.461777","-81.493970",107
+"1167","USA","Holston Medical Group","Emily Morawski","36.557416","-82.552999",232
+"1168","USA","Lynn Institute of Norman","Steven Cox","35.209973","-97.476766",240
+"1169","USA","Lehigh Valley Health Network / Network Office of Research and Innovation","Joseph Yozviak","40.600758","-75.494202",75
+"1170","USA","North Texas Infectious Deseases Consultants, P.A.","Mezgebe Berhe","32.788375","-96.779399",496
+"1171","USA","DM Clinical Research","Earl Martin","30.084754","-95.623484",306
+"1174","USA","Infectious Diseases Physicians, LLC","Donald Poretz","38.854249","-77.223548",71
+"1177","USA","East-West Medical Reseach Institute","David Fitz-Patrick","21.291175","-157.840296",565
+"1178","USA","Clinical Research Associates, Inc.","Stephan Sharp","32.750371","-96.803811",317
+"1179","USA","Michigan Center for Medical Research","Steven Katzman","42.519643","-83.359298",174
+"1185","Germany","Universitatsklinikum Hamburg-Eppendorf","Marylyn Addo","53.547077","9.964825",67
+"1194","Germany","IKF Pneumologie GmbH & Co KG","Steven Katzman","50.100141","8.668858",106
+"1195","Germany","Medizentrum Essen Borbeck","Axel Schaefer","51.475626","6.951541",158
+"1197","Germany","Studienzentrum Brinkum Dr. Lars Pohlmeier und Torsten Drescher","Matthias Luttermann","53.008653","8.783205",100
+"1202","Germany","CRS Clinical Research Services Mannheim GmbH","Armin Schultz","49.500255","8.488605",13
+"1203","Germany","CRS Clinical Research Services Berlin GmbH","Sybille Baumann","52.539590","13.370117",70
+"1204","USA","Icahn School of Medicine at Mount Sinai","Judith Aberg","40.791404","-73.952085",291
+"1205","Turkey","Hacettepe Universitesi Tip Fakultesi","Serhat Unal","39.931674","32.863173",80
+"1207","Turkey","Ankara Universitesi Tip Fakultesi, Ibni Sina Hastanesi","Ismail Balik","39.933943","32.882137",69
+"1208","Turkey","Acibadem Atakent Hastanesi, Enfeksiyon Hastaliklari ye Klinik Mikrobiyoloji","Iflihar Koksal","41.034447","28.778700",55
+"1209","Turkey","Istanbul Yedikule Gogus Hastaliklari ve Gogus","Sedat Altin","41.001984","28.915308",21
+"1210","Turkey","Medipol Mega Uniyersite Hastanesi","Ali Mert","41.058056","28.842730",62
+"1212","Turkey","Sakarya Universitesi Egitim ye Arastirma","Oguz Karabay","40.756266","30.390759",36
+"1213","Turkey","Istanbul Universitesi-Cerrahpasa, Cerrahpasa Tip Fakultesi","Omer Tabak","41.004328","28.939809",60
+"1214","Turkey","Istanbul Universitesi Istanbul Tip Fakultesi","Serap Simsek-Yavuz","41.004526","28.940009",55
+"1217","Turkey","Kocaeli Universitesi Tip Fakultesi","Sila Akhan","40.824714","29.919205",62
+"1218","USA","Johns Hopkins Center for American Indian Health","Laura Hammitt","33.878486","-109.961128",58
+"1219","USA","Johns Hopkins Center for American Indian Health","Laura Hammitt","36.152499","-109.556408",60
+"1220","USA","Northern Navajo Medical Center","Laura Hammitt","36.804719","-108.691378",65
+"1221","USA","Gallup Indian Medical Center","Laura Hammitt","35.508026","-108.729960",94
+"1223","USA","Yale Center for Clinical Investigations","Onyema Ogbuagu","41.301948","-72.930261",283
+"1224","USA","Lynn Institute of Denver","Larry Odekirk","39.691116","-104.833078",186
+"1226","Brazil","CEPIC - Centro Paulista de Investigacao Clinica e Servicos Medicos Ltda (Casa Blanca)","Cristiano Zerbini","-23.589737","-46.611078",1358
+"1229","South Africa","Newtown Clinical Research Centre","Essack Mitha","-26.203004","28.036724",217
+"1230","South Africa","Limpopo Clinical Research Initiative, Tamboti Medical Centre","Leon Fouche","-24.591370","27.406048",224
+"1231","Argentina","Hospital Militar Central Cirujano Mayor Dr","Fernando Polack","-34.569624","-58.437341",5896
+"1232","USA","IACT Health","Jeffrey Kingsley","32.483183","-84.982224",434
+"1235","USA","LSUHSC-Shreveport","John Vanchiere","32.494217","-93.751993",251
+"1241","Brazil","Hospital Santo Antonio Associacao Obras Sociais","Edson Moreira","-12.934974","-38.506831",1568
+"1246","South Africa","Jongaie Research","Dany Musungaie","-25.748881","28.149101",141
+"1247","South Africa","Tiervlei Trial Centre, Basement Level, Karl Bremer Hospital","Haylene Nell","-33.871827","18.637222",260
+"1248","USA","Pharmaron CPC, Inc.","Mohamed Al-Ibrahim","39.289088","-76.628981",252
+"1251","USA","Birmingham Clinical Research Unit","Hayes Williams","33.444924","-86.789571",264
+"1252","USA","Main Street Physician's Care","Stephen Grubb","34.056590","-78.898022",40
+"1254","USA","Bayview Research Group","Robert Heller","34.156794","-118.408083",213
+"1258","USA","Dayton Clinical Research","Martin Schear","39.774991","-84.216896",74
+"1260","USA","UMass Memorial Medical Center - University","Robert Finberg","42.275392","-71.762984",132
+"1261","USA","Benaroya Research Institute at Virginia Mason","Carla Greenbaum","42.275392","-71.762984",82
+"1264","USA","UC Davis Medical Center","Timothy Albertson","38.554260","-121.455454",227
+"1265","USA","Kaiser Petmanente Los Angeles Medical Center","William Towner","34.098208","-118.295618",183
+"1269","USA","Providence Clinical Research","Teresa Sligh","34.187014","-118.396461",142
+"1270","USA","Kaiser Petmanente Santa Clara","Nicola Klein","37.336446","-121.996307",244
