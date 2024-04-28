@@ -80,15 +80,16 @@ if (!file.exists(file_path)) {
   stop("ADSL file not found", call. = FALSE)
 }
 
-# Reads the XPT file & loads USUBJID (Unique Subject Id including Study ID & Current Trial Site Id)
+# Reads the XPT file & loads SUBJID (Unique Subject Id)j, ARM (BNT162b2 Phase 2/3 (30 mcg) or Placebo),
+# DTHDT (Date of death), VAX201DT (Dose 1 of 2nd regimen, IE placebo who received at least one BNT dose)
 library(haven)
 data <- read_xpt(file_path)
-print(colnames(data))
 selected_data <- data[c("USUBJID", "ARM", "DTHDT", "VAX201DT")]
+# Only sustains subjects who died
 deaths_only <- selected_data[!is.na(selected_data$DTHDT), ]
 
-# Adjusts the ARM column based on VAX201DT (only Placebo subjects were receiving BNT)
+# Adjusts the ARM column based on VAX201DT (only Placebo subjects were receiving BNT as third dose)
 deaths_only$ARM[!is.na(deaths_only$VAX201DT)] <- "Placebo -> BNT162b2"
 
-# Count the total rows by ARM
+# Counts the total rows by ARM
 table(deaths_only$ARM)

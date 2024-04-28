@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Map Template</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.2/dist/leaflet.css" integrity="sha256-sA+zWATbFveLLNqWO2gtiw3HL/lh1giY/Inf1BJ0z14=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.2/dist/leaflet.js" integrity="sha256-o9N1jGDZrf5tS+Ft4gbIK7mYMipq9lqpVJ91xHSyKhg=" crossorigin=""></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.2.3/leaflet.draw.css">
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body style="display:flex;flex-wrap: wrap;margin:0;">
+    <div style="width:80%;">
+        <div id="map" style="height: 100vh;width: 100%;z-index: 1;"></div>
+    </div>
+    <div style="width:20%;">
+        <div  id="currentMouseOver">
+
+        </div>
+        <div>
+            
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+<script type="text/javascript">
+
+    var lat = 14.974135;
+    var lng = -79.404801;
+
+    // center of the map
+    var center    = [lat, lng];
+    var zoomLevel = 3;
+
+    // Create the map
+    var map       = L.map('map', {attributionControl: false}).setView(center, zoomLevel);
+    var pinLat;
+    var pinLng;
+    var zoom;
+
+    // Data-points.
+    [---DATAPOINTS---]
+
+    // Set up the OSM layer
+    L.tileLayer(
+        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Data © <a href="http://osm.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18
+    }).addTo(map);
+
+    $( document ).ready(function() {
+        var flags = document.querySelectorAll('.leaflet-bottom leaflet-right');
+        console.log(flags);
+        flags.forEach(flag => {
+            flag.remove();
+            alert('removed');
+        });
+    });
+
+    function onClick(e) {
+        let trial_site_id = this.options.trial_site_id;
+        let site_name = this.options.site_name;
+        let subjects_screened = this.options.subjects_screened;
+        let investigator = this.options.investigator;
+        // alert(this.getLatLng() + ', site_name : ' + site_name + ', trial_site_id : ' + trial_site_id + ', subjects_screened : ' + subjects_screened);
+        $('#currentMouseOver').html('<div style="width:calc(100% - 15px);padding-left:15px;font-size:18px;font-weight:bold;">' + site_name + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;"><b>Site Code :</b>' + trial_site_id  + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;"><b>Investigator :</b>' + investigator + '</div><div style="width:calc(100% - 15px);padding-left:15px;margin-top:15px;font-size:15px;font-weight:bold;">' + subjects_screened + ' Subjects</div>')
+    }
+</script>

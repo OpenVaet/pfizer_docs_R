@@ -1,6 +1,9 @@
 library(httr)
 library(rvest)
 library(xml2)
+library(haven)
+library(ggplot2)
+library(dplyr)
 
 # Creates zip_data directory
 zip_path <- "zip_data"
@@ -84,50 +87,37 @@ if (!file.exists(file_path)) {
   stop("ADSL file not found", call. = FALSE)
 }
 
-# Reads the XPT file & loads USUBJID (Unique Subject Id including Study ID & Current Trial Site Id)
-library(haven)
+# Reads the XPT file.
 data <- read_xpt(file_path)
-selected_data <- data[c("USUBJID", "RFICDT")]
-
-# Extracts the subject_id (unique identifier by subject which doesn't change as the subject changes sites) from the USUBJID
-selected_data$subject_id <- sub(".*C4591001 \\d{4} (\\d{8}).*", "\\1", selected_data$USUBJID)
-
-# Extracts the trial_site_id (the site which actually recruited the subject in the study - not the current trial site)
-selected_data$trial_site_id <- as.numeric(sub("(....)....", "\\1", selected_data$subject_id))
-
-# Extracts the subject incremental identifier (attributed to the subject when he is screened by the site).
-selected_data$subject_trial_site_incremental_number <- as.numeric(sub("....(....)", "\\1", selected_data$subject_id))
-
+print(colnames(data))
+selected_data <- data[c("SUBJID", "RFICDT", "PHASEN")]
 print(selected_data)
 
-# Organizes the subject_trial_site_incremental_number by trial_site_id
-missing_subjects <- data.frame(trial_site_id = character(), missing_id = integer(), stringsAsFactors = FALSE)
+selected_data <- selected_data %>%
+  mutate(PHASEN = ifelse(PHASEN > 3, 3, PHASEN))
 
-# Loops over each site
-unique_sites <- unique(selected_data$trial_site_id)
-for (site in unique_sites) {
-  # Gets all the subject_trial_site_incremental_numbers for this trial_site_id
-  site_data <- selected_data[selected_data$trial_site_id == site, ]
-  existing_ids <- sort(as.numeric(site_data$subject_trial_site_incremental_number))
-  
-  # Gets the latest subject_trial_site_incremental_number
-  latest_id <- max(existing_ids)
-  
-  # Creates a sequence from 1001 to the latest ID
-  full_seq <- 1001:latest_id
-  
-  # Finds missing IDs
-  missing_ids <- setdiff(full_seq, existing_ids)
-  
-  # Prints missing incremental numbers and add them to the missing_subjects dataframe
-  for (missing_id in missing_ids) {
-    cat(paste("Missing incremental number detected:", missing_id, "in trial site", site, "\n"))
-    # Add the missing ID to the dataframe
-    missing_subjects <- rbind(missing_subjects, data.frame(trial_site_id = site, missing_id = missing_id, stringsAsFactors = FALSE))
-  }
-}
+# Converts "PHASEN=4" to "3"
+Phasen_counts <- selected_data %>%
+  group_by(PHASEN) %>%
+  tally(name = "Total_Subjects")
+print(Phasen_counts)
 
-# Prints the total number of missing subjects
-total_missing_subjects <- nrow(missing_subjects)
-cat(paste("Total subjects missing identified:", total_missing_subjects, "\n"))
+# Adds WEEKNUM and YEAR columns
+selected_data$RFICDT <- as.Date(selected_data$RFICDT)
+selected_data$YEAR <- format(selected_data$RFICDT, "%Y")
+selected_data$WEEKNUM <- format(selected_data$RFICDT, "%U")
+
+# Groups by YEAR, WEEKNUM, and PHASEN, and count the number of subjects recruited weekly
+weekly_recruitment <- selected_data %>%
+  mutate(YEAR_WEEKNUM = paste(YEAR, WEEKNUM, sep = "-")) %>%
+  group_by(YEAR_WEEKNUM, PHASEN) %>%
+  tally(name = "Subjects") %>%
+  arrange(YEAR_WEEKNUM, PHASEN)
+
+# Outputs a column chart
+ggplot(weekly_recruitment, aes(x = YEAR_WEEKNUM, y = Subjects, fill = factor(PHASEN))) + 
+  geom_col(position = "dodge") + 
+  scale_fill_discrete(breaks = c("1", "2", "3"), labels = c("1", "2", "3")) + 
+  labs(x = "Year-Week Number", y = "Number of Subjects", fill = "Phase") + 
+  theme_classic()
 
