@@ -1,0 +1,116 @@
+"SUBJID","VISIT","ISDTC","PARAM","Result_A","Result_B","Difference A - B"
+"10031037","V4_WEEK3_VAX2_S","2020-07-07","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2141.783","2180.82",-39.0370000000003
+"10031037","V4_WEEK3_VAX2_S","2020-07-07","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","31.45838203","34.82964255",-3.37126052
+"10031037","V7_MONTH1_S","2020-08-07","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","22091.375","23292.845",-1201.47
+"10031037","V7_MONTH1_S","2020-08-07","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","403.3513481","571.0096321",-167.658284
+"10031037","V7_MONTH1_S","2020-08-07","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","159.1022917","171.5381548",-12.4358631
+"10031047","V4_WEEK3_VAX2_S","2020-07-07","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","1751.532","1688.232",63.3
+"10031047","V7_MONTH1_S","2020-08-07","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","9349.196","12166.241",-2817.045
+"10031047","V7_MONTH1_S","2020-08-07","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","89.04640644","104.5079901",-15.46158366
+"10031047","V7_MONTH1_S","2020-08-07","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","38.75950112","58.22699374",-19.46749262
+"10031051","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","687.383","270.239",417.144
+"10031051","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5523.432","4352.603",1170.829
+"10031051","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","390.5581647","343.2582264",47.2999383
+"10031051","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","110.8186386","114.733306",-3.9146674
+"10031056","V1_DAY1_VAX1_S","2020-06-18","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2.015","1.591",0.424
+"10031056","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2.451","1.809",0.642
+"10031056","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","3.258","2.55",0.708
+"10031057","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","530.363","1785.167",-1254.804
+"10031057","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","127.8440456","10",117.8440456
+"10031057","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","31.1924775","10",21.1924775
+"10031057","V7_MONTH1_S","2020-08-14","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2786.473","2531.69",254.783
+"10031057","V7_MONTH1_S","2020-08-14","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","135.4467054","75.48391352",59.96279188
+"10031057","V7_MONTH1_S","2020-08-14","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","33.40950205","47.62319183",-14.21368978
+"10031058","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","34.257","19.576",14.681
+"10031058","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2330.549","2106.577",223.972
+"10031058","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","10","69.85836528",-59.85836528
+"10031058","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","10","20.08133462",-10.08133462
+"10031059","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","1848.867","2387.36",-538.493
+"10031059","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","82.24710572","38.50759925",43.73950647
+"10031059","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","30.38820757","25.20303553",5.18517204
+"10031059","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5829.146","9069.142",-3239.996
+"10031059","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","257.6834104","197.8174411",59.8659693
+"10031059","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","110.8413502","103.6008277",7.2405225
+"10031061","V4_WEEK3_VAX2_S","2020-07-13","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","427.932","2034.2",-1606.268
+"10031061","V4_WEEK3_VAX2_S","2020-07-13","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","72.73938136","24.11684681",48.62253455
+"10031061","V4_WEEK3_VAX2_S","2020-07-13","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","21.45372155","10",11.45372155
+"10031061","V7_MONTH1_S","2020-08-10","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5660.364","4777.738",882.625999999999
+"10031061","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","175.8528931","125.9186245",49.9342686
+"10031061","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","42.16136892","33.57530045",8.58606847
+"10031065","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","925.76","1077.345",-151.585
+"10031065","V7_MONTH1_S","2020-08-19","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","13393.623","6680.664",6712.959
+"10031065","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","962.6754386","270.0921139",692.5833247
+"10031065","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","221.7633376","96.99782214",124.76551546
+"10031066","V4_WEEK3_VAX2_S","2020-07-13","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","399.817","1234.764",-834.947
+"10031066","V4_WEEK3_VAX2_S","2020-07-13","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","78.30385878","25.56708822",52.73677056
+"10031066","V7_MONTH1_S","2020-08-13","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","9897.22","6535.662",3361.558
+"10031066","V7_MONTH1_S","2020-08-13","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","122.6582651","168.365911",-45.7076459
+"10031066","V7_MONTH1_S","2020-08-13","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","45.99341928","64.55286206",-18.55944278
+"10031069","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","115.815","57.541",58.274
+"10031069","V7_MONTH1_S","2020-08-10","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","1525.019","2856.606",-1331.587
+"10031069","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","48.50710876","50.80037401",-2.29326525
+"10031069","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","10","24.73117466",-14.73117466
+"10031070","V1_DAY1_VAX1_S","2020-06-24","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","0.63325","1.822",-1.18875
+"10031070","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","0.63325","1.914",-1.28075
+"10031070","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","0.63325","1.376",-0.74275
+"10031072","V4_WEEK3_VAX2_S","2020-07-16","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","553.482","872.91",-319.428
+"10031072","V7_MONTH1_S","2020-08-19","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5257.297","3216.962",2040.335
+"10031072","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","92.03547142","111.4311447",-19.39567328
+"10031072","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","39.40033089","43.33235973",-3.93202884
+"10071034","V4_WEEK3_VAX2_S","2020-07-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","151.88","191.29",-39.41
+"10071034","V4_WEEK3_VAX2_S","2020-07-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","36.28502308","10",26.28502308
+"10071034","V7_MONTH1_S","2020-08-03","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2728.832","5194.56",-2465.728
+"10071034","V7_MONTH1_S","2020-08-03","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","207.0287903","154.9862897",52.0425006
+"10071034","V7_MONTH1_S","2020-08-03","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","67.43032949","41.7997512",25.63057829
+"10071037","V4_WEEK3_VAX2_S","2020-07-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","362.55","661.947",-299.397
+"10071037","V7_MONTH1_S","2020-08-05","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5440.505","6252.281",-811.776
+"10071037","V7_MONTH1_S","2020-08-05","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","293.3418484","170.0461996",123.2956488
+"10071037","V7_MONTH1_S","2020-08-05","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","81.66533858","79.9230092",1.74232938
+"10071043","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","339.124","344.012",-4.88799999999998
+"10071043","V4_WEEK3_VAX2_S","2020-07-09","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","24.18467697","10",14.18467697
+"10071043","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","7277.572","6808.143",469.429
+"10071043","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","433.3706843","434.5991486",-1.22846429999998
+"10071043","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","103.6465329","137.5689852",-33.9224523
+"10071044","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","1307.168","1276.247",30.9209999999998
+"10071044","V4_WEEK3_VAX2_S","2020-07-09","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","52.37986254","21.67421048",30.70565206
+"10071044","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","16973.01","6769.744",10203.266
+"10071044","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","1457.446397","446.1791793",1011.2672177
+"10071044","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","372.0038129","72.60237875",299.40143415
+"10071045","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","497.692","308.218",189.474
+"10071045","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5663.073","3679.26",1983.813
+"10071045","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","123.9909271","69.81040324",54.18052386
+"10071045","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","37.03766138","35.07242507",1.96523631
+"10071046","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","475.638","543.918",-68.28
+"10071046","V7_MONTH1_S","2020-08-10","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","7642.997","5448.022",2194.975
+"10071046","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","75.7841903","83.42098777",-7.63679746999999
+"10071046","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","35.04355997","31.68067392",3.36288605
+"10071049","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","198.941","157.137",41.804
+"10071049","V4_WEEK3_VAX2_S","2020-07-09","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","20.92852121","10",10.92852121
+"10071049","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","2318.744","1970.511",348.233
+"10071049","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","33.97571191","47.67056954",-13.69485763
+"10071050","V4_WEEK3_VAX2_S","2020-07-13","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","1295.29","1947.042",-651.752
+"10071050","V4_WEEK3_VAX2_S","2020-07-13","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","88.60664874","10",78.60664874
+"10071050","V7_MONTH1_S","2020-08-10","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","8857.72","9931.257",-1073.537
+"10071050","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","191.1690352","129.8321994",61.3368358
+"10071050","V7_MONTH1_S","2020-08-10","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","77.23029236","75.35195419",1.87833817000001
+"10071053","V4_WEEK3_VAX2_S","2020-07-09","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","733.863","525.076",208.787
+"10071053","V7_MONTH1_S","2020-08-06","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","3235.365","2893.851",341.514
+"10071053","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","78.62958476","86.21970077",-7.59011601
+"10071053","V7_MONTH1_S","2020-08-06","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","24.00183288","51.79407109",-27.79223821
+"10071058","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","646.145","2349.64",-1703.495
+"10071058","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","70.07606581","33.2989189",36.77714691
+"10071058","V4_WEEK3_VAX2_S","2020-07-15","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","25.85456587","10",15.85456587
+"10071058","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","6451.389","5873.677",577.712
+"10071058","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","642.0909126","298.3661509",343.7247617
+"10071058","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","150.1216961","77.12703806",72.99465804
+"10071063","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","573.795","1279.126",-705.331
+"10071063","V7_MONTH1_S","2020-08-19","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","4024.352","5869.388",-1845.036
+"10071063","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","128.6180392","82.5051562",46.112883
+"10071063","V7_MONTH1_S","2020-08-19","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","41.67565751","41.1595068",0.516150709999998
+"10071064","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","135.052","588.493",-453.441
+"10071064","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","5119.635","7225.49",-2105.855
+"10071064","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","204.0355851","213.8560263",-9.8204412
+"10071066","V4_WEEK3_VAX2_S","2020-07-15","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","403.233","889.173",-485.94
+"10071066","V7_MONTH1_S","2020-08-12","COVID-19 S1 IgG (U/mL) - Luminex Immunoassay","4858.413","4396.021",462.392
+"10071066","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay","71.73880122","128.061493",-56.32269178
+"10071066","V7_MONTH1_S","2020-08-12","SARS-CoV-2 serum neutralizing titer 90 (titer) - Virus Neutralization Assay","33.89379161","38.9438827",-5.05009109

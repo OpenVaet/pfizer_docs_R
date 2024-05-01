@@ -1,38 +1,44 @@
-# Load necessary packages
+# Loads necessary packages
 library(haven)
 library(dplyr)
 
-# Read the phase 1 subjects data to get the list of subject IDs
+# Reads the phase 1 subjects data to get the list of subject IDs
 phase_1_subjects <- read.csv("phase_1_subjects_adsl_data.csv")
 phase_1_subjids <- phase_1_subjects$SUBJID
 
-# Read the new XPT file
+# Reads the new XPT file
 adva_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0123168 to -0126026_125742_S1_M5_c4591001-A-D-adva.xpt')
 
-# Filter the ADVA data to include only subjects present in the phase 1 subjects data
+# Removes PARAM = "N-binding antibody - N-binding Antibody Assay" from adva_data
+adva_data <- adva_data %>%
+  filter(PARAM != "N-binding antibody - N-binding Antibody Assay")
+print(adva_data)
+
+# Filters the ADVA data to include only subjects present in the phase 1 subjects data
 adva_data_filtered <- adva_data %>% 
   filter(SUBJID %in% phase_1_subjids)
 
-# Count the total of unique SUBJID for each VISIT
-visit_counts <- adva_data_filtered %>%
+# Sustains only the relevant columns.
+adva_data_selected <- adva_data_filtered[c("SUBJID", "VISIT", "AVISIT", "ISDTC", "PARAM", "AVALC")]
+print(adva_data_selected)
+
+# Ensures unique entries for each subject (SUBJID), for each VISIT and each ISDTC, and for each PARAM
+unique_adva_data <- adva_data_selected %>% 
+  distinct(SUBJID, VISIT, ISDTC, PARAM, AVALC, .keep_all = TRUE)
+print(unique_adva_data)
+
+# Counts the total of unique SUBJID for each VISIT
+visit_counts <- adva_data_selected %>%
   group_by(VISIT) %>%
   summarise(Unique_Subjects = n_distinct(SUBJID))
 
-# Print the visit counts to the console
+# Prints the visit counts to the console
 print(visit_counts)
 
-# Write the visit counts to a CSV file
+# Writes the visit counts to a CSV file
 write.csv(visit_counts, "phase_1_visits_adva.csv", row.names = FALSE)
 
-# Ensure unique entries for each subject (SUBJID), for each VISIT and each ISDTC, and for each PARAM
-unique_adva_data <- adva_data_filtered %>% 
-  distinct(SUBJID, VISIT, ISDTC, PARAM, AVALC, .keep_all = TRUE)
-
-# Remove PARAM = "N-binding antibody - N-binding Antibody Assay" from unique_adva_data
-unique_adva_data <- unique_adva_data %>%
-  filter(PARAM != "N-binding antibody - N-binding Antibody Assay")
-
-# Detect and print the "SUBJID - VISIT - ISDTC - PARAM" sequences with different results "AVALC"
+# Detects and print the "SUBJID - VISIT - ISDTC - PARAM" sequences with different results "AVALC"
 different_results <- unique_adva_data %>%
   group_by(SUBJID, VISIT, ISDTC, PARAM) %>%
   filter(n_distinct(AVALC) > 1) %>%
@@ -43,7 +49,7 @@ different_results <- unique_adva_data %>%
     .groups = 'drop'
   )
 
-# Check if there are any different results and write them to a CSV file
+# Checks if there are any different results and write them to a CSV file
 if (nrow(different_results) > 0) {
   print('different_results : ')
   print(different_results)
@@ -52,9 +58,7 @@ if (nrow(different_results) > 0) {
   print("No different results found for the same 'SUBJID - VISIT - ISDTC - PARAM' sequence.")
 }
 
-
-
-# Initialize an empty data frame to store the results
+# Initializes an empty data frame to store the results
 averages_df <- data.frame(
   VISIT = character(),
   PARAM = character(),
@@ -63,8 +67,10 @@ averages_df <- data.frame(
   stringsAsFactors = FALSE
 )
 
+write.csv(unique_adva_data, "unique_adva_data.csv", row.names = FALSE)
+print(unique_adva_data)
 
-# Loop over each unique combination of SUBJID, VISIT, ISDTC, and PARAM
+# Loops over each unique combination of SUBJID, VISIT, ISDTC, and PARAM
 unique_combinations <- unique(unique_adva_data[c("SUBJID", "VISIT", "ISDTC", "PARAM")])
 
 for (i in 1:nrow(unique_combinations)) {
@@ -74,7 +80,7 @@ for (i in 1:nrow(unique_combinations)) {
 
   # Filter the data for the current combination
   current_data <- subset(unique_adva_data, SUBJID == current_combination$SUBJID & VISIT == current_combination$VISIT & ISDTC == current_combination$ISDTC & PARAM == current_combination$PARAM)
-  # print(current_data)
+  print(current_data)
 
   # Calculate the sum for AVALC where AVISIT is complete
   data_with_avisit_complete <- current_data[(!is.na(current_data$AVISIT) & current_data$AVISIT != "") | current_data$AVISIT != "", ]
