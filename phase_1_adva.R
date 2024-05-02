@@ -1,10 +1,13 @@
 # Loads necessary packages
 library(haven)
 library(dplyr)
+library(ggplot2)
+library(tidyr)
 
 # Reads the phase 1 subjects data to get the list of subject IDs
 phase_1_subjects <- read.csv("phase_1_subjects_adsl_data.csv")
 phase_1_subjids <- phase_1_subjects$SUBJID
+print(phase_1_subjects)
 
 # Reads the new XPT file
 adva_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0123168 to -0126026_125742_S1_M5_c4591001-A-D-adva.xpt')
@@ -19,28 +22,23 @@ adva_data_filtered <- adva_data %>%
   filter(SUBJID %in% phase_1_subjids)
 
 # Sustains only the relevant columns.
-adva_data_selected <- adva_data_filtered[c("SUBJID", "VISIT", "AVISIT", "ISDTC", "PARAM", "AVALC")]
+adva_data_selected <- adva_data_filtered[c("SUBJID", "ARM", "VISIT", "AVISIT", "ISDTC", "PARAM", "AVALC")]
 print(adva_data_selected)
-
-# Ensures unique entries for each subject (SUBJID), for each VISIT and each ISDTC, and for each PARAM
-unique_adva_data <- adva_data_selected %>% 
-  distinct(SUBJID, VISIT, ISDTC, PARAM, AVALC, .keep_all = TRUE)
-print(unique_adva_data)
 
 # Counts the total of unique SUBJID for each VISIT
 visit_counts <- adva_data_selected %>%
-  group_by(VISIT) %>%
+  group_by(ARM, VISIT) %>%
   summarise(Unique_Subjects = n_distinct(SUBJID))
 
 # Prints the visit counts to the console
-print(visit_counts)
+print(visit_counts, n=200)
 
 # Writes the visit counts to a CSV file
 write.csv(visit_counts, "phase_1_visits_adva.csv", row.names = FALSE)
 
 # Detects and print the "SUBJID - VISIT - ISDTC - PARAM" sequences with different results "AVALC"
-different_results <- unique_adva_data %>%
-  group_by(SUBJID, VISIT, ISDTC, PARAM) %>%
+different_results <- adva_data_selected %>%
+  group_by(SUBJID, ARM, VISIT, ISDTC, PARAM) %>%
   filter(n_distinct(AVALC) > 1) %>%
   summarise(
     Result_A = first(AVALC[AVISIT != ""]),
@@ -58,60 +56,70 @@ if (nrow(different_results) > 0) {
   print("No different results found for the same 'SUBJID - VISIT - ISDTC - PARAM' sequence.")
 }
 
-# Initializes an empty data frame to store the results
-averages_df <- data.frame(
-  VISIT = character(),
-  PARAM = character(),
-  Average_AVALC_with_AVISIT_complete = numeric(),
-  Average_AVALC_with_AVISIT_incomplete = numeric(),
-  stringsAsFactors = FALSE
-)
+# Filters data frame on tested arm & param.
+unique_adva_data_bntb2_50 <- adva_data_selected %>%
+  filter(PARAM == "SARS-CoV-2 serum neutralizing titer 50 (titer) - Virus Neutralization Assay",
+         ARM  == "BNT162b2 Phase 1 (30 mcg)")
 
-write.csv(unique_adva_data, "unique_adva_data.csv", row.names = FALSE)
-print(unique_adva_data)
+print(unique_adva_data_bntb2_50, n=100)
 
-# Loops over each unique combination of SUBJID, VISIT, ISDTC, and PARAM
-unique_combinations <- unique(unique_adva_data[c("SUBJID", "VISIT", "ISDTC", "PARAM")])
+# Computes the average of all AVALC results when AVISIT != ""
+avg_avisit_not_empty <- unique_adva_data_bntb2_50 %>%
+  group_by(ARM, VISIT, PARAM) %>%
+  summarize(avg_avalc_avisit_not_empty = mean(as.numeric(AVALC[AVISIT != ""])), .groups = 'drop')
 
-for (i in 1:nrow(unique_combinations)) {
-  # Extract the current combination
-  current_combination <- unique_combinations[i, ]
-  # print(current_combination$SUBJID)
+print(avg_avisit_not_empty)
 
-  # Filter the data for the current combination
-  current_data <- subset(unique_adva_data, SUBJID == current_combination$SUBJID & VISIT == current_combination$VISIT & ISDTC == current_combination$ISDTC & PARAM == current_combination$PARAM)
-  print(current_data)
+# Computes the average of all AVALC results when AVISIT == "" or AVISIT != "" if AVISIT == "" is not available
+avg_avisit_empty_or_not_empty <- unique_adva_data_bntb2_50 %>%
+  group_by(ARM, VISIT, PARAM) %>%
+  summarize(
+    avg_avalc_avisit_empty_or_not_empty = 
+      ifelse(any(AVISIT == ""), 
+             mean(as.numeric(AVALC[AVISIT == ""])),
+             mean(as.numeric(AVALC[AVISIT != ""])))
+    , .groups = 'drop')
 
-  # Calculate the sum for AVALC where AVISIT is complete
-  data_with_avisit_complete <- current_data[(!is.na(current_data$AVISIT) & current_data$AVISIT != "") | current_data$AVISIT != "", ]
-  avalc_with_avisit_complete <- as.numeric(data_with_avisit_complete$AVALC)
+print(avg_avisit_empty_or_not_empty)
 
-  # Calculate the sum for AVALC where AVISIT is incomplete
-  data_with_avisit_incomplete <- current_data[current_data$AVISIT == "" | current_data$AVISIT != "", ]
-  avalc_with_avisit_incomplete <- as.numeric(data_with_avisit_incomplete$AVALC)
-  print(avalc_with_avisit_complete)
-  print(avalc_with_avisit_incomplete)
-  if (avalc_with_avisit_complete != avalc_with_avisit_incomplete) {
-    break
-  }
-}
+# Merges the two data frames
+comparison_results <- left_join(avg_avisit_not_empty, avg_avisit_empty_or_not_empty, by = c("ARM", "VISIT", "PARAM"))
 
-# Calculate the average of sums for each VISIT and PARAM
-for (i in seq_along(sums_list)) {
-  sums <- sums_list[[i]]
-  num_subjects <- nrow(filter(unique_adva_data, VISIT == sums$VISIT & PARAM == sums$PARAM))
-  
-  averages_df <- rbind(averages_df, data.frame(
-    VISIT = sums$VISIT,
-    PARAM = sums$PARAM,
-    Average_AVALC_with_AVISIT_complete = sums$Sum_AVALC_with_AVISIT_complete / num_subjects,
-    Average_AVALC_with_AVISIT_incomplete = sums$Sum_AVALC_with_AVISIT_incomplete / num_subjects
-  ))
-}
+# Prints the results
+print(comparison_results)
 
-# Write the averages dataframe to a CSV file
-write.csv(averages_df, "phase_1_visit_param_stats.csv", row.names = FALSE)
-print(averages_df)
+# Renames the columns
+comparison_results <- comparison_results %>%
+  rename("Official measures" = avg_avalc_avisit_not_empty,
+         "First measures" = avg_avalc_avisit_empty_or_not_empty)
+print(comparison_results)
+write.csv(comparison_results, "phase_1_comparison_avisit_by_visit.csv", row.names = FALSE)
 
+# Reshapes the data into long format
+comparison_results_long <- comparison_results %>%
+  gather(key = "Measure", value = "Value", -VISIT, -PARAM, -ARM)
+print(comparison_results_long)
 
+# Creates the line chart
+ggplot(comparison_results_long, aes(x = VISIT, y = Value, color = Measure, label = round(Value, 2))) +
+  geom_point() +
+  stat_summary(aes(group = Measure, linetype = Measure), 
+               fun = "mean", 
+               geom = "line",
+               size = 1.5) +
+  geom_text(data = comparison_results_long[comparison_results_long$Value %in% unique(comparison_results_long$Value), ],
+            aes(y = Value * 1.02), # Adjust the vertical position
+            vjust = 0, size = 3.5) +
+  scale_linetype_manual(values = c("Official measures" = "dashed", "First measures" = "solid")) +
+  labs(title = "SARS-CoV-2 serum neutralizing titer 50% by Visit",
+       x = "Visit",
+       y = "Titer",
+       color = "Measure") +
+  theme_minimal()
+
+# Saves the plot to a file
+ggsave("phase_1_comparison_avisit_by_visit.png", width = 8, height = 6, dpi = 300)
+
+# Writes the updated data to a CSV file
+write.csv(comparison_results_long, "phase_1_comparison_avisit_by_visit.csv", row.names = FALSE)
 
