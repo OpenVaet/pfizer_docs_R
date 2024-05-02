@@ -180,7 +180,7 @@ print(subjects_sympto_visits)
 # Writes the result to a CSV file
 write.csv(subjects_sympto_visits, "phase_3_subjects_sympto_visits.csv", row.names = FALSE)
 
-# Group by ARM and count the number of visits with and without central and local tests
+# Groups by ARM and count the number of visits with and without central and local tests
 arm_summary <- subjects_sympto_visits %>%
   group_by(ARM) %>%
   summarize(
@@ -189,15 +189,15 @@ arm_summary <- subjects_sympto_visits %>%
     local_test_visits = sum(!is.na(EARLIESTLOCALDT))
   )
 
-# Print the result
+# Prints the result
 print(arm_summary)
 
-# Calculate the number of symptomatic visits with Central and Local tests for each ARM
+# Calculates the number of symptomatic visits with Central and Local tests for each ARM
 arm_test_counts <- subjects_sympto_visits %>%
   group_by(ARM, has_central_test = !is.na(EARLIESTCENTRALDT), has_local_test = !is.na(EARLIESTLOCALDT)) %>%
   tally()
 
-# Calculate percentages of visits resulting in tests
+# Calculates percentages of visits resulting in tests
 central_test_percentages <- arm_test_counts %>%
   group_by(ARM) %>%
   summarise(
@@ -214,21 +214,120 @@ local_test_percentages <- arm_test_counts %>%
     local_test_percentage = (sum(n[has_local_test]) / sum(n)) * 100
   )
 
-print(central_test_percentages)
-print(local_test_percentages)
 
-# Calculate chi-square statistic and p-value for central test
-central_test_table <- matrix(c(3854, 4421 - 3854, 5118, 5798 - 5118), nrow = 2, byrow = TRUE)
+# Calculates chi-square statistic and p-value for central test
+central_test_table <- matrix(c(
+  central_test_percentages$central_test_visits[1],
+  central_test_percentages$total_visits[1] - central_test_percentages$central_test_visits[1],
+  central_test_percentages$central_test_visits[2],
+  central_test_percentages$total_visits[2] - central_test_percentages$central_test_visits[2]
+), nrow = 2, byrow = TRUE)
 rownames(central_test_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
 colnames(central_test_table) <- c("Central Test", "No Central Test")
 central_test_chi_sq <- chisq.test(central_test_table)
 
-# Calculate chi-square statistic and p-value for local test
-local_test_table <- matrix(c(1921, 4421 - 1921, 2943, 5798 - 2943), nrow = 2, byrow = TRUE)
+# Calculates chi-square statistic and p-value for local test
+local_test_table <- matrix(c(
+  local_test_percentages$local_test_visits[1],
+  local_test_percentages$total_visits[1] - local_test_percentages$local_test_visits[1],
+  local_test_percentages$local_test_visits[2],
+  local_test_percentages$total_visits[2] - local_test_percentages$local_test_visits[2]
+), nrow = 2, byrow = TRUE)
 rownames(local_test_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
 colnames(local_test_table) <- c("Local Test", "No Local Test")
 local_test_chi_sq <- chisq.test(local_test_table)
+
+print(central_test_percentages)
 print(central_test_table)
 print(central_test_chi_sq)
+print(local_test_percentages)
 print(local_test_table)
 print(local_test_chi_sq)
+
+# Filters out rows where EARLIESTDT is after 2020-11-14
+subjects_sympto_visits_nov_14 <- subjects_sympto_visits %>%
+  filter(ymd(EARLIESTDT) <= ymd("2020-11-14"))
+
+subjects_sympto_visits_nov_14 <- subjects_sympto_visits_nov_14 %>%
+  mutate(
+    EARLIESTCENTRALDT = ifelse(ymd(EARLIESTCENTRALDT) > ymd("2020-11-14"), NA, EARLIESTCENTRALDT),
+    EARLIESTCENTRALPOSDT = ifelse(ymd(EARLIESTCENTRALPOSDT) > ymd("2020-11-14"), NA, EARLIESTCENTRALPOSDT),
+    EARLIESTLOCALDT = ifelse(ymd(EARLIESTLOCALDT) > ymd("2020-11-14"), NA, EARLIESTLOCALDT),
+    EARLIESTLOCALPOSDT = ifelse(ymd(EARLIESTLOCALPOSDT) > ymd("2020-11-14"), NA, EARLIESTLOCALPOSDT)
+  )
+subjects_sympto_visits_nov_14 <- subjects_sympto_visits_nov_14 %>%
+  mutate(
+    EARLIESTCENTRALDAYSTOSYMPT = ifelse(!is.na(EARLIESTCENTRALDT), as.numeric(as.Date(EARLIESTCENTRALDT) - as.Date(EARLIESTDT)), NA),
+    EARLIESTCENTRALPOSDAYSTOSYMPT = ifelse(!is.na(EARLIESTCENTRALPOSDT), as.numeric(as.Date(EARLIESTCENTRALPOSDT) - as.Date(EARLIESTDT)), NA),
+    EARLIESTLOCALDAYSTOSYMPT = ifelse(!is.na(EARLIESTLOCALDT), as.numeric(as.Date(EARLIESTLOCALDT) - as.Date(EARLIESTDT)), NA),
+    EARLIESTLOCALPOSDAYSTOSYMPT = ifelse(!is.na(EARLIESTLOCALPOSDT), as.numeric(as.Date(EARLIESTLOCALPOSDT) - as.Date(EARLIESTDT)), NA)
+  )
+print(subjects_sympto_visits_nov_14)
+
+# Writes the result to a CSV file
+write.csv(subjects_sympto_visits_nov_14, "phase_3_subjects_sympto_visits_nov_14.csv", row.names = FALSE)
+
+# Groups by ARM and count the number of visits with and without central and local tests
+arm_summary_nov_14 <- subjects_sympto_visits_nov_14 %>%
+  group_by(ARM) %>%
+  summarize(
+    total_visits = n(),
+    central_test_visits = sum(!is.na(EARLIESTCENTRALDT)),
+    local_test_visits = sum(!is.na(EARLIESTLOCALDT))
+  )
+
+# Prints the result
+print(arm_summary_nov_14)
+
+
+# Calculates the number of symptomatic visits with Central and Local tests for each ARM
+arm_test_counts_nov_14 <- subjects_sympto_visits_nov_14 %>%
+  group_by(ARM, has_central_test = !is.na(EARLIESTCENTRALDT), has_local_test = !is.na(EARLIESTLOCALDT)) %>%
+  tally()
+
+# Calculates percentages of visits resulting in tests
+central_test_percentages_nov_14 <- arm_test_counts_nov_14 %>%
+  group_by(ARM) %>%
+  summarise(
+    total_visits = sum(n),
+    central_test_visits = sum(n[has_central_test]),
+    central_test_percentage = (sum(n[has_central_test]) / sum(n)) * 100
+  )
+
+local_test_percentages_nov_14 <- arm_test_counts_nov_14 %>%
+  group_by(ARM) %>%
+  summarise(
+    total_visits = sum(n),
+    local_test_visits = sum(n[has_local_test]),
+    local_test_percentage = (sum(n[has_local_test]) / sum(n)) * 100
+  )
+
+
+# Calculates chi-square statistic and p-value for central test
+central_test_table_nov_14 <- matrix(c(
+  central_test_percentages_nov_14$central_test_visits[1],
+  central_test_percentages_nov_14$total_visits[1] - central_test_percentages_nov_14$central_test_visits[1],
+  central_test_percentages_nov_14$central_test_visits[2],
+  central_test_percentages_nov_14$total_visits[2] - central_test_percentages_nov_14$central_test_visits[2]
+), nrow = 2, byrow = TRUE)
+rownames(central_test_table_nov_14) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
+colnames(central_test_table_nov_14) <- c("Central Test", "No Central Test")
+central_test_chi_sq_nov_14 <- chisq.test(central_test_table_nov_14)
+
+# Calculates chi-square statistic and p-value for local test
+local_test_table_nov_14 <- matrix(c(
+  local_test_percentages_nov_14$local_test_visits[1],
+  local_test_percentages_nov_14$total_visits[1] - local_test_percentages_nov_14$local_test_visits[1],
+  local_test_percentages_nov_14$local_test_visits[2],
+  local_test_percentages_nov_14$total_visits[2] - local_test_percentages_nov_14$local_test_visits[2]
+), nrow = 2, byrow = TRUE)
+rownames(local_test_table_nov_14) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
+colnames(local_test_table_nov_14) <- c("Local Test", "No Local Test")
+local_test_chi_sq_nov_14 <- chisq.test(local_test_table_nov_14)
+
+print(central_test_percentages_nov_14)
+print(central_test_table_nov_14)
+print(central_test_chi_sq_nov_14)
+print(local_test_percentages_nov_14)
+print(local_test_table_nov_14)
+print(local_test_chi_sq_nov_14)
