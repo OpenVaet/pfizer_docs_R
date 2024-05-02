@@ -64,17 +64,16 @@ print(filtered_data)
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
 randomized_pop <- read.csv(randomized_pop_file)
 
-# Filter the filtered_data to only include subjects in the randomized population
+# Filters the filtered_data to only include subjects in the randomized population
 filtered_data <- filtered_data[filtered_data$SUBJID %in% randomized_pop$SUBJID, ]
 
-# Calculate the total of SUBJID in randomized_pop for each ARM
+# Calculates the total of SUBJID in randomized_pop for each ARM
 arm_counts <- randomized_pop %>%
   group_by(ARM) %>%
   summarize(total_subjects = n_distinct(SUBJID))
 
-print(arm_counts)
-
 # Counts the unique SUBJID for each CONCATTERM and ARM
+deviation_counts <- list()
 deviation_counts <- filtered_data %>%
   distinct(SUBJID, CONCATTERM, ARM) %>%
   group_by(CONCATTERM) %>%
@@ -90,6 +89,27 @@ deviation_counts <- filtered_data %>%
 deviation_counts <- deviation_counts %>%
   filter(TOTAL_SUBJECTS >= 100)
 
+# Performs chi-square tests for each CONCATTERM
+for (i in 1:nrow(deviation_counts)) {
+  bnt_subjects <- deviation_counts$BNT_SUBJECTS[i]
+  placebo_subjects <- deviation_counts$PLACEBO_SUBJECTS[i]
+  
+  bnt_other <- arm_counts$total_subjects[arm_counts$ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - bnt_subjects
+  placebo_other <- arm_counts$total_subjects[arm_counts$ARM == "Placebo"] - placebo_subjects
+  
+  contingency_table <- matrix(c(bnt_subjects, bnt_other, placebo_subjects, placebo_other), nrow = 2, ncol = 2)
+  
+  chisq_result <- chisq.test(contingency_table)
+  
+  deviation_counts$chi_square[i] <- chisq_result$statistic
+  deviation_counts$p_value[i] <- chisq_result$p.value
+}
+print(deviation_counts, n=120)
+deviation_counts <- deviation_counts %>%
+  filter(p_value <= 0.05)
+
 # Writes the result to a CSV file
-write.csv(deviation_counts, "deviations.csv", row.names = FALSE)
+write.csv(deviation_counts, "deviations_statistics.csv", row.names = FALSE)
+
+print(arm_counts)
 print(deviation_counts, n=120)
