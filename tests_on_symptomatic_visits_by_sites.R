@@ -178,16 +178,14 @@ subjects_sympto_visits <- subjects_sympto_visits %>%
   )
 print(subjects_sympto_visits)
 
-# Writes the result to a CSV file
-write.csv(subjects_sympto_visits, "phase_3_subjects_sympto_visits.csv", row.names = FALSE)
-
 # Groups by ARM and count the number of visits with and without central and local tests
 arm_summary <- subjects_sympto_visits %>%
-  group_by(ARM) %>%
+  group_by(SITEID, ARM) %>%
   summarize(
     total_visits = n(),
     central_test_visits = sum(!is.na(EARLIESTCENTRALDT)),
-    local_test_visits = sum(!is.na(EARLIESTLOCALDT))
+    local_test_visits = sum(!is.na(EARLIESTLOCALDT)),
+    .groups = "drop"
   )
 
 # Prints the result
@@ -195,140 +193,113 @@ print(arm_summary)
 
 # Calculates the number of symptomatic visits with Central and Local tests for each ARM
 arm_test_counts <- subjects_sympto_visits %>%
-  group_by(ARM, has_central_test = !is.na(EARLIESTCENTRALDT), has_local_test = !is.na(EARLIESTLOCALDT)) %>%
+  group_by(SITEID, ARM, has_central_test = !is.na(EARLIESTCENTRALDT), has_local_test = !is.na(EARLIESTLOCALDT)) %>%
   tally()
 
 # Calculates percentages of visits resulting in tests
 central_test_percentages <- arm_test_counts %>%
-  group_by(ARM) %>%
+  group_by(SITEID, ARM) %>%
   summarise(
     total_visits = sum(n),
     central_test_visits = sum(n[has_central_test]),
-    central_test_percentage = (sum(n[has_central_test]) / sum(n)) * 100
+    central_test_percentage = (sum(n[has_central_test]) / sum(n)) * 100,
+    .groups = "drop"
   )
 
 local_test_percentages <- arm_test_counts %>%
-  group_by(ARM) %>%
+  group_by(SITEID, ARM) %>%
   summarise(
     total_visits = sum(n),
     local_test_visits = sum(n[has_local_test]),
-    local_test_percentage = (sum(n[has_local_test]) / sum(n)) * 100
+    local_test_percentage = (sum(n[has_local_test]) / sum(n)) * 100,
+    .groups = "drop"
   )
-
-
-# Calculates chi-square statistic and p-value for central test
-central_test_table <- matrix(c(
-  central_test_percentages$central_test_visits[1],
-  central_test_percentages$total_visits[1] - central_test_percentages$central_test_visits[1],
-  central_test_percentages$central_test_visits[2],
-  central_test_percentages$total_visits[2] - central_test_percentages$central_test_visits[2]
-), nrow = 2, byrow = TRUE)
-rownames(central_test_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
-colnames(central_test_table) <- c("Central Test", "No Central Test")
-central_test_chi_sq <- chisq.test(central_test_table)
-
-# Calculates chi-square statistic and p-value for local test
-local_test_table <- matrix(c(
-  local_test_percentages$local_test_visits[1],
-  local_test_percentages$total_visits[1] - local_test_percentages$local_test_visits[1],
-  local_test_percentages$local_test_visits[2],
-  local_test_percentages$total_visits[2] - local_test_percentages$local_test_visits[2]
-), nrow = 2, byrow = TRUE)
-rownames(local_test_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
-colnames(local_test_table) <- c("Local Test", "No Local Test")
-local_test_chi_sq <- chisq.test(local_test_table)
-
 print(central_test_percentages)
-print(central_test_table)
-print(central_test_chi_sq)
 print(local_test_percentages)
-print(local_test_table)
-print(local_test_chi_sq)
 
-# Filters out rows where EARLIESTDT is after 2020-11-14
-subjects_sympto_visits_nov_14 <- subjects_sympto_visits %>%
-  filter(ymd(EARLIESTDT) <= ymd("2020-11-14"))
+# Filter Central data to only include SITEIDs with at least 50 subjects tested
+central_filtered_data <- central_test_percentages %>%
+  group_by(SITEID) %>%
+  filter(sum(total_visits) >= 50)
 
-subjects_sympto_visits_nov_14 <- subjects_sympto_visits_nov_14 %>%
-  mutate(
-    EARLIESTCENTRALDT = ifelse(ymd(EARLIESTCENTRALDT) > ymd("2020-11-14"), NA, EARLIESTCENTRALDT),
-    EARLIESTCENTRALPOSDT = ifelse(ymd(EARLIESTCENTRALPOSDT) > ymd("2020-11-14"), NA, EARLIESTCENTRALPOSDT),
-    EARLIESTLOCALDT = ifelse(ymd(EARLIESTLOCALDT) > ymd("2020-11-14"), NA, EARLIESTLOCALDT),
-    EARLIESTLOCALPOSDT = ifelse(ymd(EARLIESTLOCALPOSDT) > ymd("2020-11-14"), NA, EARLIESTLOCALPOSDT)
+# Perform chi-squared test for each SITEID
+central_results <- central_filtered_data %>%
+  group_by(SITEID) %>%
+  summarise(
+    chi_square_statistic = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                                        total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                                        central_test_visits[ARM == "Placebo"],
+                                        total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$statistic,
+    df = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                      total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                      central_test_visits[ARM == "Placebo"],
+                      total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$parameter,
+    p_value = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                           total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                           central_test_visits[ARM == "Placebo"],
+                           total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$p.value,
+    BNT162b2_tested = central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+    BNT162b2_not_tested = total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+    Placebo_tested = central_test_visits[ARM == "Placebo"],
+    Placebo_not_tested = total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"],
+    BNT162b2_test_pct = (central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] / total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"]) * 100,
+    Placebo_test_pct = (central_test_visits[ARM == "Placebo"] / total_visits[ARM == "Placebo"]) * 100
   )
-subjects_sympto_visits_nov_14 <- subjects_sympto_visits_nov_14 %>%
-  mutate(
-    EARLIESTCENTRALDAYSTOSYMPT = ifelse(!is.na(EARLIESTCENTRALDT), as.numeric(as.Date(EARLIESTCENTRALDT) - as.Date(EARLIESTDT)), NA),
-    EARLIESTCENTRALPOSDAYSTOSYMPT = ifelse(!is.na(EARLIESTCENTRALPOSDT), as.numeric(as.Date(EARLIESTCENTRALPOSDT) - as.Date(EARLIESTDT)), NA),
-    EARLIESTLOCALDAYSTOSYMPT = ifelse(!is.na(EARLIESTLOCALDT), as.numeric(as.Date(EARLIESTLOCALDT) - as.Date(EARLIESTDT)), NA),
-    EARLIESTLOCALPOSDAYSTOSYMPT = ifelse(!is.na(EARLIESTLOCALPOSDT), as.numeric(as.Date(EARLIESTLOCALPOSDT) - as.Date(EARLIESTDT)), NA)
+
+
+# Print the results
+print(central_results, n=120)
+
+# Filter Local data to only include SITEIDs with at least 50 subjects tested
+local_filtered_data <- local_test_percentages %>%
+  group_by(SITEID) %>%
+  filter(sum(total_visits) >= 50)
+print(local_filtered_data, n=200)
+
+# Perform chi-squared test for each SITEID
+local_results <- local_filtered_data %>%
+  group_by(SITEID) %>%
+  summarise(
+    BNT162b2_tested = local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+    BNT162b2_not_tested = total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+    BNT162b2_test_pct = (local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] / total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"]) * 100,
+    Placebo_tested = local_test_visits[ARM == "Placebo"],
+    Placebo_not_tested = total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"],
+    Placebo_test_pct = (local_test_visits[ARM == "Placebo"] / total_visits[ARM == "Placebo"]) * 100,
+    chi_square_statistic = chisq.test(c(local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                                        total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                                        local_test_visits[ARM == "Placebo"],
+                                        total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"]))$statistic,
+    p_value = chisq.test(c(local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                           total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
+                           local_test_visits[ARM == "Placebo"],
+                           total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"]))$p.value
   )
-print(subjects_sympto_visits_nov_14)
 
 # Writes the result to a CSV file
-write.csv(subjects_sympto_visits_nov_14, "phase_3_subjects_sympto_visits_nov_14.csv", row.names = FALSE)
+local_significant_results <- local_results %>%
+  filter(p_value <= 0.05)
 
-# Groups by ARM and count the number of visits with and without central and local tests
-arm_summary_nov_14 <- subjects_sympto_visits_nov_14 %>%
-  group_by(ARM) %>%
-  summarize(
-    total_visits = n(),
-    central_test_visits = sum(!is.na(EARLIESTCENTRALDT)),
-    local_test_visits = sum(!is.na(EARLIESTLOCALDT))
-  )
+# Print the results
+print(local_results, n=120)
 
-# Prints the result
-print(arm_summary_nov_14)
+write.csv(local_significant_results, "phase_3_local_tests_by_sites.csv", row.names = FALSE)
 
 
-# Calculates the number of symptomatic visits with Central and Local tests for each ARM
-arm_test_counts_nov_14 <- subjects_sympto_visits_nov_14 %>%
-  group_by(ARM, has_central_test = !is.na(EARLIESTCENTRALDT), has_local_test = !is.na(EARLIESTLOCALDT)) %>%
-  tally()
+# Define the data
+bnt_tested <- 750
+bnt_not_tested <- 27
+placebo_tested <- 868
+placebo_not_tested <- 30
 
-# Calculates percentages of visits resulting in tests
-central_test_percentages_nov_14 <- arm_test_counts_nov_14 %>%
-  group_by(ARM) %>%
-  summarise(
-    total_visits = sum(n),
-    central_test_visits = sum(n[has_central_test]),
-    central_test_percentage = (sum(n[has_central_test]) / sum(n)) * 100
-  )
+# Create a contingency table
+contingency_table <- matrix(c(bnt_tested, bnt_not_tested, placebo_tested, placebo_not_tested), nrow = 2, ncol = 2)
+colnames(contingency_table) <- c("Tested", "Not Tested")
+rownames(contingency_table) <- c("BNT", "Placebo")
 
-local_test_percentages_nov_14 <- arm_test_counts_nov_14 %>%
-  group_by(ARM) %>%
-  summarise(
-    total_visits = sum(n),
-    local_test_visits = sum(n[has_local_test]),
-    local_test_percentage = (sum(n[has_local_test]) / sum(n)) * 100
-  )
+# Perform the chi-square test
+chi_square_test <- chisq.test(contingency_table)
 
-
-# Calculates chi-square statistic and p-value for central test
-central_test_table_nov_14 <- matrix(c(
-  central_test_percentages_nov_14$central_test_visits[1],
-  central_test_percentages_nov_14$total_visits[1] - central_test_percentages_nov_14$central_test_visits[1],
-  central_test_percentages_nov_14$central_test_visits[2],
-  central_test_percentages_nov_14$total_visits[2] - central_test_percentages_nov_14$central_test_visits[2]
-), nrow = 2, byrow = TRUE)
-rownames(central_test_table_nov_14) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
-colnames(central_test_table_nov_14) <- c("Central Test", "No Central Test")
-central_test_chi_sq_nov_14 <- chisq.test(central_test_table_nov_14)
-
-# Calculates chi-square statistic and p-value for local test
-local_test_table_nov_14 <- matrix(c(
-  local_test_percentages_nov_14$local_test_visits[1],
-  local_test_percentages_nov_14$total_visits[1] - local_test_percentages_nov_14$local_test_visits[1],
-  local_test_percentages_nov_14$local_test_visits[2],
-  local_test_percentages_nov_14$total_visits[2] - local_test_percentages_nov_14$local_test_visits[2]
-), nrow = 2, byrow = TRUE)
-rownames(local_test_table_nov_14) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
-colnames(local_test_table_nov_14) <- c("Local Test", "No Local Test")
-local_test_chi_sq_nov_14 <- chisq.test(local_test_table_nov_14)
-
-print(central_test_percentages_nov_14)
-print(central_test_table_nov_14)
-print(central_test_chi_sq_nov_14)
-print(local_test_percentages_nov_14)
-print(local_test_table_nov_14)
-print(local_test_chi_sq_nov_14)
+# Print the results
+print(contingency_table)
+print(chi_square_test)

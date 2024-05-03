@@ -2,6 +2,7 @@ library(haven)
 library(dplyr)
 library(lubridate)
 library(furrr)
+library(stringr)
 
 # Loads the Phase 3 population randomized.
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
