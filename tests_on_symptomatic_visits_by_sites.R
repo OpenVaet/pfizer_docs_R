@@ -217,89 +217,69 @@ local_test_percentages <- arm_test_counts %>%
 print(central_test_percentages)
 print(local_test_percentages)
 
-# Filter Central data to only include SITEIDs with at least 50 subjects tested
-central_filtered_data <- central_test_percentages %>%
-  group_by(SITEID) %>%
-  filter(sum(total_visits) >= 50)
-
-# Perform chi-squared test for each SITEID
-central_results <- central_filtered_data %>%
-  group_by(SITEID) %>%
-  summarise(
-    chi_square_statistic = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                                        total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                                        central_test_visits[ARM == "Placebo"],
-                                        total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$statistic,
-    df = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                      total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                      central_test_visits[ARM == "Placebo"],
-                      total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$parameter,
-    p_value = chisq.test(c(central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                           total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                           central_test_visits[ARM == "Placebo"],
-                           total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"]))$p.value,
-    BNT162b2_tested = central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-    BNT162b2_not_tested = total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-    Placebo_tested = central_test_visits[ARM == "Placebo"],
-    Placebo_not_tested = total_visits[ARM == "Placebo"] - central_test_visits[ARM == "Placebo"],
-    BNT162b2_test_pct = (central_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] / total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"]) * 100,
-    Placebo_test_pct = (central_test_visits[ARM == "Placebo"] / total_visits[ARM == "Placebo"]) * 100
-  )
-
-
-# Print the results
-print(central_results, n=120)
-
 # Filter Local data to only include SITEIDs with at least 50 subjects tested
 local_filtered_data <- local_test_percentages %>%
   group_by(SITEID) %>%
   filter(sum(total_visits) >= 50)
 print(local_filtered_data, n=200)
 
-# Perform chi-squared test for each SITEID
-local_results <- local_filtered_data %>%
-  group_by(SITEID) %>%
-  summarise(
-    BNT162b2_tested = local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-    BNT162b2_not_tested = total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-    BNT162b2_test_pct = (local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] / total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"]) * 100,
-    Placebo_tested = local_test_visits[ARM == "Placebo"],
-    Placebo_not_tested = total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"],
-    Placebo_test_pct = (local_test_visits[ARM == "Placebo"] / total_visits[ARM == "Placebo"]) * 100,
-    chi_square_statistic = chisq.test(c(local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                                        total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                                        local_test_visits[ARM == "Placebo"],
-                                        total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"]))$statistic,
-    p_value = chisq.test(c(local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                           total_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"] - local_test_visits[ARM == "BNT162b2 Phase 2/3 (30 mcg)"],
-                           local_test_visits[ARM == "Placebo"],
-                           total_visits[ARM == "Placebo"] - local_test_visits[ARM == "Placebo"]))$p.value
-  )
+# Initialize an empty dataframe to store the results
+local_significant_results <- data.frame(
+  SITEID = character(),
+  bnt162b2_tested = numeric(),
+  bnt162b2_not_tested = numeric(),
+  bnt162b2_tested_pct = numeric(),
+  placebo_tested = numeric(),
+  placebo_not_tested = numeric(),
+  placebo_tested_pct = numeric(),
+  chi_square_statistic = numeric(),
+  chi_square_pvalue = numeric()
+)
 
-# Writes the result to a CSV file
-local_significant_results <- local_results %>%
-  filter(p_value <= 0.05)
+# Iterate over each SITEID
+for (site_id in unique(local_filtered_data$SITEID)) {
+  # Retrieve the values for the current SITEID
+  bnt162b2_total_visits <- local_filtered_data$total_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
+  bnt162b2_tested <- local_filtered_data$local_test_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
+  bnt162b2_not_tested <- bnt162b2_total_visits - bnt162b2_tested
+  bnt162b2_tested_pct <- bnt162b2_tested / bnt162b2_total_visits * 100
+  
+  placebo_total_visits <- local_filtered_data$total_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "Placebo"]
+  placebo_tested <- local_filtered_data$local_test_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "Placebo"]
+  placebo_not_tested <- placebo_total_visits - placebo_tested
+  placebo_tested_pct <- placebo_tested / placebo_total_visits * 100
+  
+  # Create a contingency table
+  contingency_table <- matrix(c(bnt162b2_tested, bnt162b2_not_tested, placebo_tested, placebo_not_tested), nrow = 2, ncol = 2)
+  colnames(contingency_table) <- c("Tested", "Not Tested")
+  rownames(contingency_table) <- c("BNT", "Placebo")
+  
+  # Perform the chi-square test
+  chi_square_test <- chisq.test(contingency_table)
+  print(paste('Site : ', site_id))
+  print(contingency_table)
+  print(chi_square_test)
+  
+  # Add the results to the dataframe
+  if (chi_square_test$p.value <= 0.05) {
+    local_significant_results <- rbind(local_significant_results, data.frame(
+      SITEID = site_id,
+      bnt162b2_tested = bnt162b2_tested,
+      bnt162b2_not_tested = bnt162b2_not_tested,
+      bnt162b2_tested_pct = bnt162b2_tested_pct,
+      placebo_tested = placebo_tested,
+      placebo_not_tested = placebo_not_tested,
+      placebo_tested_pct = placebo_tested_pct,
+      chi_square_statistic = chi_square_test$statistic,
+      chi_square_pvalue = chi_square_test$p.value
+    ))
+  }
+}
 
-# Print the results
-print(local_results, n=120)
+print(local_significant_results)
 
+# Write the dataframe to a CSV file
 write.csv(local_significant_results, "phase_3_local_tests_by_sites.csv", row.names = FALSE)
 
 
-# Define the data
-bnt_tested <- 750
-bnt_not_tested <- 27
-placebo_tested <- 868
-placebo_not_tested <- 30
 
-# Create a contingency table
-contingency_table <- matrix(c(bnt_tested, bnt_not_tested, placebo_tested, placebo_not_tested), nrow = 2, ncol = 2)
-colnames(contingency_table) <- c("Tested", "Not Tested")
-rownames(contingency_table) <- c("BNT", "Placebo")
-
-# Perform the chi-square test
-chi_square_test <- chisq.test(contingency_table)
-
-# Print the results
-print(contingency_table)
-print(chi_square_test)
