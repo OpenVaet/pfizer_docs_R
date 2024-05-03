@@ -232,8 +232,7 @@ local_significant_results <- data.frame(
   placebo_tested = numeric(),
   placebo_not_tested = numeric(),
   placebo_tested_pct = numeric(),
-  chi_square_statistic = numeric(),
-  chi_square_pvalue = numeric()
+  fisher_exact_pvalue = numeric()
 )
 
 # Iterate over each SITEID
@@ -242,26 +241,29 @@ for (site_id in unique(local_filtered_data$SITEID)) {
   bnt162b2_total_visits <- local_filtered_data$total_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
   bnt162b2_tested <- local_filtered_data$local_test_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
   bnt162b2_not_tested <- bnt162b2_total_visits - bnt162b2_tested
-  bnt162b2_tested_pct <- bnt162b2_tested / bnt162b2_total_visits * 100
+  bnt162b2_tested_pct <- round(bnt162b2_tested / bnt162b2_total_visits * 100, 2)
   
   placebo_total_visits <- local_filtered_data$total_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "Placebo"]
   placebo_tested <- local_filtered_data$local_test_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "Placebo"]
   placebo_not_tested <- placebo_total_visits - placebo_tested
-  placebo_tested_pct <- placebo_tested / placebo_total_visits * 100
+  placebo_tested_pct <- round(placebo_tested / placebo_total_visits * 100, 2)
   
   # Create a contingency table
   contingency_table <- matrix(c(bnt162b2_tested, bnt162b2_not_tested, placebo_tested, placebo_not_tested), nrow = 2, ncol = 2)
   colnames(contingency_table) <- c("Tested", "Not Tested")
   rownames(contingency_table) <- c("BNT", "Placebo")
   
-  # Perform the chi-square test
-  chi_square_test <- chisq.test(contingency_table)
+  # Perform the Fisher's exact test
+  fisher_exact_test <- fisher.test(contingency_table)
+  
   print(paste('Site : ', site_id))
   print(contingency_table)
-  print(chi_square_test)
+  print(fisher_exact_test)
+  print(paste('bnt162b2 % : ', bnt162b2_tested_pct))
+  print(paste('placebo % : ', placebo_tested_pct))
   
   # Add the results to the dataframe
-  if (chi_square_test$p.value <= 0.05) {
+  if (fisher_exact_test$p.value <= 0.05) {
     local_significant_results <- rbind(local_significant_results, data.frame(
       SITEID = site_id,
       bnt162b2_tested = bnt162b2_tested,
@@ -270,8 +272,7 @@ for (site_id in unique(local_filtered_data$SITEID)) {
       placebo_tested = placebo_tested,
       placebo_not_tested = placebo_not_tested,
       placebo_tested_pct = placebo_tested_pct,
-      chi_square_statistic = chi_square_test$statistic,
-      chi_square_pvalue = chi_square_test$p.value
+      fisher_exact_pvalue = fisher_exact_test$p.value
     ))
   }
 }
