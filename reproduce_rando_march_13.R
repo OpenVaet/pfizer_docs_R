@@ -5,19 +5,24 @@ file_path <- 'xpt_data/FDA-CBER-2021-5683-1066333-1067534_125742_S6_M5_c4591001-
 
 # Reads the XPT file
 data <- read_xpt(file_path)
+print(data, n=1)
 
 # Filters out the rows where SUBJID is in the list
 excluded_subjids <- c(10561101, 11331382, 11101123, 11331405, 11491117, 12691090, 12691070, 11351357, 11341006, 10891112, 11231105, 10711213)
 filtered_data <- data[!(data$SUBJID %in% excluded_subjids), ]
-
-# Filters out the rows where AGE < 16
-filtered_data <- filtered_data[as.numeric(filtered_data$AGETR01) >= 16, ]
-
-# Filters out the rows where RANDNO == ""
-filtered_data <- filtered_data[filtered_data$RANDNO != "", ]
+print(filtered_data, n=1)
 
 # Filters out the phase 1.
 filtered_data <- filtered_data[filtered_data$PHASE != "Phase 1", ]
+print(filtered_data, n=1)
+
+# Filters out the rows where AGE < 16
+filtered_data <- filtered_data[as.numeric(filtered_data$AGETR01) >= 16, ]
+print(filtered_data, n=1)
+
+# Filters out the rows where RANDNO == ""
+filtered_data <- filtered_data[filtered_data$RANDNO != "", ]
+print(filtered_data, n=1)
 
 # Selects the desired columns
 selected_data <- filtered_data[c(

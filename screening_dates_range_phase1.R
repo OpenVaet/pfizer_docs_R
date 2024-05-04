@@ -10,11 +10,11 @@ adsl_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0772469-0773670_125742_S1_M5_
 # Convert RFICDT column to Date format
 adsl_data$RFICDT <- ymd(adsl_data$RFICDT)
 
-# Filter out subjects without a proper RFICDT date
+# Filter out subjects who aren't phase 1.
 adsl_data <- adsl_data %>% filter(
-	!is.na(RFICDT),
-	PHASEN == 1
+  PHASEN == 1
 )
+print(paste('Total phase 1 subjects : ', nrow(adsl_data)))
 
 # Select the relevant columns for later use.
 selected_data <- adsl_data %>% select(
@@ -22,6 +22,9 @@ selected_data <- adsl_data %>% select(
   VAX101DT, VAX101, VAX102, VAX102DT, VAX201DT, VAX201, VAX202, VAX202DT, 
   UNBLNDDT, PHASE, PHASEN, RANDDT, SAFFL, SEX
 )
+
+selected_data %>% 
+  count(ARM)
 
 # Write the selected data to a CSV file
 write.csv(selected_data, "phase_1_subjects_adsl_data.csv", row.names = FALSE)
@@ -132,3 +135,4 @@ write.csv(chi_square_summary, "phase_1_randomization_chi_square_results.csv", ro
 
 # Output to console for confirmation
 print("The phase_1_randomization_chi_square_results.csv file has been created with the chi-square test results.")
+
