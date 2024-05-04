@@ -101,33 +101,44 @@ selected_data$subject_trial_site_incremental_number <- as.numeric(sub("....(....
 print(selected_data)
 
 # Organizes the subject_trial_site_incremental_number by trial_site_id
-missing_subjects <- data.frame(trial_site_id = character(), missing_id = integer(), stringsAsFactors = FALSE)
-
-# Loops over each site
+# Create an empty data frame with the correct structure
 unique_sites <- unique(selected_data$trial_site_id)
+missing_subjects <- data.frame(USUBJID = character(), RFICDT = character(), subject_id = character(), trial_site_id = integer(), subject_trial_site_incremental_number = integer(), missing = character(), stringsAsFactors = FALSE)
+
 for (site in unique_sites) {
-  # Gets all the subject_trial_site_incremental_numbers for this trial_site_id
   site_data <- selected_data[selected_data$trial_site_id == site, ]
   existing_ids <- sort(as.numeric(site_data$subject_trial_site_incremental_number))
-  
-  # Gets the latest subject_trial_site_incremental_number
   latest_id <- max(existing_ids)
-  
-  # Creates a sequence from 1001 to the latest ID
   full_seq <- 1001:latest_id
-  
-  # Finds missing IDs
   missing_ids <- setdiff(full_seq, existing_ids)
   
-  # Prints missing incremental numbers and add them to the missing_subjects dataframe
-  for (missing_id in missing_ids) {
-    cat(paste("Missing incremental number detected:", missing_id, "in trial site", site, "\n"))
-    # Add the missing ID to the dataframe
-    missing_subjects <- rbind(missing_subjects, data.frame(trial_site_id = site, missing_id = missing_id, stringsAsFactors = FALSE))
+  for (id in missing_ids) {
+    cat(paste("Missing incremental number detected:", id, "in trial site", site, "\n"))
+    new_row <- data.frame(USUBJID = NA, RFICDT = NA, subject_id = paste0(site, sprintf("%04d", id)), trial_site_id = site, subject_trial_site_incremental_number = id, missing = "Yes", stringsAsFactors = FALSE)
+    missing_subjects <- rbind(missing_subjects, new_row)
   }
 }
+print(missing_subjects)
 
 # Prints the total number of missing subjects
 total_missing_subjects <- nrow(missing_subjects)
 cat(paste("Total subjects missing identified:", total_missing_subjects, "\n"))
 
+all_subjects <- selected_data
+all_subjects$missing <- "No"
+all_subjects <- rbind(all_subjects, missing_subjects)
+all_subjects <- all_subjects[order(all_subjects$subject_id), ]
+write.csv(all_subjects[c("subject_id", "RFICDT", "missing")], "all_subjects_missing_or_not.csv", row.names = FALSE)
+
+# Create a summary data frame
+summary_data <- data.frame(
+  trial_site_id = unique(missing_subjects$trial_site_id),
+  total_missing = sapply(unique(missing_subjects$trial_site_id), function(x) sum(missing_subjects$trial_site_id == x)),
+  total_subjects = sapply(unique(missing_subjects$trial_site_id), function(x) sum(selected_data$trial_site_id == x)),
+  percentage_missing_per_site = sapply(unique(missing_subjects$trial_site_id), function(x) sum(missing_subjects$trial_site_id == x) / sum(selected_data$trial_site_id == x) * 100),
+  percentage_missing_total = sapply(unique(missing_subjects$trial_site_id), function(x) sum(missing_subjects$trial_site_id == x) / total_missing_subjects * 100),
+  stringsAsFactors = FALSE
+)
+
+# Write the summary data to a CSV file
+write.csv(summary_data, "missing_subjects_by_sites.csv", row.names = FALSE)

@@ -61,6 +61,17 @@ for (trial_site_id in names(sites)) {
     subjects_screened: '%s',
     trial_site_id: %s
 }).addTo(map).on('mouseover', onClick);\n", trial_site_id, latitude, longitude, radius_size, site_name_print, investigator, subjects_screened, trial_site_id))
+  
+  if (subjects_screened > 700) {
+    data_points <- paste0(data_points, sprintf("
+  var label1001 = L.marker([%s, %s], {
+  icon: L.divIcon({
+    className: 'label',
+    html: '%s',
+    iconSize: [100, 20]
+  })
+}).addTo(map);", latitude, longitude, subjects_screened))
+  }
 }
 
 html_template <- gsub("\\[---DATAPOINTS---\\]", data_points, html_template)
