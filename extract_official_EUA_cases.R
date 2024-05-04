@@ -41,7 +41,7 @@ output_file <- "eua_official_cases.csv"
 if (file.exists(output_file)) {
   file.remove(output_file)
 }
-write(paste('Subject Id', sep = ","), 
+write(paste('SUBJID', sep = ","), 
       file = output_file, append = TRUE)
 
 # Flag to control printing
