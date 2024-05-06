@@ -1,6 +1,8 @@
 library(httr)
 library(rvest)
 library(xml2)
+library(flextable)
+library(dplyr)
 
 # Creates zip_data directory
 zip_path <- "zip_data"
@@ -123,12 +125,94 @@ print(missing_subjects)
 # Prints the total number of missing subjects
 total_missing_subjects <- nrow(missing_subjects)
 cat(paste("Total subjects missing identified:", total_missing_subjects, "\n"))
-
 all_subjects <- selected_data
 all_subjects$missing <- "No"
 all_subjects <- rbind(all_subjects, missing_subjects)
 all_subjects <- all_subjects[order(all_subjects$subject_id), ]
 write.csv(all_subjects[c("subject_id", "RFICDT", "missing")], "all_subjects_missing_or_not.csv", row.names = FALSE)
+print(all_subjects)
+print(unique(all_subjects$missing))
+
+# Filters for site 1231 and date 2020-08-21 to provide an highlight of Augusto Roux's recruitment day
+filtered_subjects <- all_subjects %>% 
+  filter(trial_site_id == 1231)
+print(filtered_subjects)
+
+# Initiates an empty storage of the latest date seen.
+latest_RFICDT <- ''
+latest_site_id <- ''
+missing_indices <- c()
+
+for (i in 1:nrow(filtered_subjects)) {
+  missing <- filtered_subjects$missing[i]
+  subject_id  <- filtered_subjects$subject_id [i]
+  trial_site_id <- filtered_subjects$trial_site_id[i]
+  if (latest_site_id != '') {
+    if (latest_site_id != trial_site_id) {
+      latest_RFICDT <- ''
+    }
+  }
+  if (latest_RFICDT == '2020-08-21') {
+    latest_site_id <- trial_site_id
+    if (missing == "Yes") {
+      print(paste('i : ', i ))
+      print(paste('Subject_id : ', subject_id ))
+      print(paste('missing : ', missing ))
+      print(paste('latest_RFICDT : ', latest_RFICDT ))
+      missing_indices <- c(missing_indices, i)
+    }
+  }
+  if (missing != "Yes") {
+    latest_RFICDT <- filtered_subjects$RFICDT[i]
+  }
+}
+
+# Calculate the center of "Yes" rows
+center_row <- median(missing_indices)
+print(center_row)
+
+# Select the 50 rows around the center row
+subjects_missing_highlight <- filtered_subjects %>% 
+  arrange(subject_trial_site_incremental_number) %>% 
+  slice((center_row - 23):(center_row + 23))
+print(subjects_missing_highlight)
+
+library(rmarkdown)
+
+# Load the template
+template <- readLines("missing_subjects_template.html")
+
+# Initialize the table rows
+table_rows <- ""
+
+# Iterate over each subject and add their HTML data
+for (i in 1:nrow(subjects_missing_highlight)) {
+  row <- subjects_missing_highlight[i, ]
+  missing <- subjects_missing_highlight$missing[i]
+  if (missing == 'Yes') {
+    table_rows <- paste0(table_rows, "
+      <tr>
+        <td>", row$subject_id, "</td>
+        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
+        <td style=\"background:#fa8072\">", row$missing, "</td>
+      </tr>
+  ")
+  } else {
+    table_rows <- paste0(table_rows, "
+      <tr>
+        <td>", row$subject_id, "</td>
+        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
+        <td>", row$missing, "</td>
+      </tr>
+  ")
+  }
+}
+
+# Replace the <--TABLE_ROWS--> placeholder with the actual table rows
+template <- gsub("<--TABLE_ROWS-->", table_rows, template)
+
+# Print the resulting HTML to a file
+writeLines(template, "subjects_missing.html")
 
 # Create a summary data frame
 summary_data <- data.frame(
@@ -139,6 +223,44 @@ summary_data <- data.frame(
   percentage_missing_total = sapply(unique(missing_subjects$trial_site_id), function(x) sum(missing_subjects$trial_site_id == x) / total_missing_subjects * 100),
   stringsAsFactors = FALSE
 )
+print(summary_data)
 
 # Write the summary data to a CSV file
 write.csv(summary_data, "missing_subjects_by_sites.csv", row.names = FALSE)
+
+# Split the data into two data frames
+num_rows <- nrow(summary_data)
+split_index <- ceiling(num_rows / 2)
+output_data_left <- summary_data[1:split_index, 1:5]
+output_data_right <- summary_data[(split_index + 1):(split_index + nrow(output_data_left)), 1:5]
+print(output_data_left)
+output_data_merged <- cbind(output_data_left, output_data_right)
+colnames(output_data_merged) <- c(
+  "trial_site_id.1", "total_missing.1", "total_subjects.1", "percentage_missing_per_site.1", "percentage_missing_total.1",
+  "trial_site_id.2", "total_missing.2", "total_subjects.2", "percentage_missing_per_site.2", "percentage_missing_total.2"
+)
+output_data_merged$trial_site_id.1 <- as.character(output_data_merged$trial_site_id.1)
+output_data_merged$trial_site_id.2 <- as.character(output_data_merged$trial_site_id.2)
+print(output_data_merged)
+# Creates the formatted table
+html_table <- flextable(output_data_merged) %>%
+  set_header_labels(
+    "trial_site_id.1" = "Trial Site ID",
+    "total_missing.1" = "Missing",
+    "total_subjects.1" = "Total",
+    "percentage_missing_per_site.1" = "% / Site",
+    "percentage_missing_total.1" = "% / Total",
+    "trial_site_id.2" = "Trial Site ID",
+    "total_missing.2" = "Missing",
+    "total_subjects.2" = "Total",
+    "percentage_missing_per_site.2" = "% / Site",
+    "percentage_missing_total.2" = "% / Total"
+  ) %>%
+  theme_zebra() %>%  # or another theme with less prominent borders
+  align(align = "center", part = "all") %>%
+  fontsize(size = 14, part = "all") %>%
+  padding(padding = 2) %>%
+  autofit() %>%
+  set_caption("Table 1: Sites with negative screening results")
+
+save_as_html(html_table, path = "sites_with_subjects_missing.html")

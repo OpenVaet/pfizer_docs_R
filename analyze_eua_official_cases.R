@@ -270,12 +270,12 @@ ggplot(plot_data, aes(x = date)) +
   theme_classic() + 
   scale_x_date(breaks = seq(min(plot_data$date), max(plot_data$date), by = "3 day"), 
                date_labels = "%d %b %Y") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12), 
-        axis.text.y = element_text(size = 12), 
-        axis.title.x = element_text(size = 12), 
-        axis.title.y = element_text(size = 12), 
-        legend.text = element_text(size = 12), 
-        legend.title = element_text(size = 12)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 16), 
+        axis.text.y = element_text(size = 16), 
+        axis.title.x = element_text(size = 16), 
+        axis.title.y = element_text(size = 16), 
+        legend.text = element_text(size = 14), 
+        legend.title = element_text(size = 18)) + 
   scale_y_continuous(name = "Number of Cases", limits = c(0, 15), 
                      sec.axis = sec_axis(~ .* 13.33, name = "Accumulated Cases"))
 
@@ -283,3 +283,5 @@ ggplot(plot_data, aes(x = date)) +
 subjects_sympto_visits_filtered <- subjects_sympto_visits %>% 
   filter(SUBJID == 10911203)
 print(subjects_sympto_visits_filtered)
+
+

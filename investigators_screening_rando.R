@@ -198,8 +198,8 @@ html_table <- flextable(output_data_merged) %>%
     "M6.2" = "M6",
     "Offset.M6.FA.2" = "Offset M6-FA"
   ) %>%
-  align(align = "center", part = "all") %>%
   theme_zebra() %>%  # or another theme with less prominent borders
+  align(align = "center", part = "all") %>%
   fontsize(size = 14, part = "all") %>%
   padding(padding = 2) %>%
   autofit() %>%

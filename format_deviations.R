@@ -2,6 +2,8 @@ library(haven)
 library(dplyr)
 library(lubridate)
 library(stats)
+library(stringr)
+library(flextable)
 
 protocol_devs_analysis_file <- 'xpt_data/FDA-CBER-2021-5683-0065774-to-0066700_125742_S1_M5_c4591001-A-D-addv.xpt'
 protocol_devs_sup_file <- 'xpt_data/FDA-CBER-2021-5683-0174607 to -0178318_125742_S1_M5_c4591001-S-D-suppdv.xpt'
@@ -129,8 +131,6 @@ deviation_counts <- deviation_counts %>%
   select(-TOTAL_SUBJECTS, -chi_square)
 print(deviation_counts, n=120)
 
-library(stringr)
-
 # Convert CONCATTERM to a standard encoding
 deviation_counts$CONCATTERM <- iconv(deviation_counts$CONCATTERM, from = "UTF-8", to = "ASCII", sub = "")
 
@@ -170,7 +170,6 @@ imbalanced_deviations <- filtered_data %>%
 print(imbalanced_deviations)
 print(unique(imbalanced_deviations$CONCATTERM))
 
-
 imbalanced_deviations_by_arms <- imbalanced_deviations %>%
   group_by(SITEID, ARM, CONCATTERM) %>%
   summarise(
@@ -178,7 +177,6 @@ imbalanced_deviations_by_arms <- imbalanced_deviations %>%
     .groups = "drop"
   )
 print(imbalanced_deviations_by_arms)
-
 
 # Filter imbalanced_deviations_by_arms to only include SITEIDs with at least 20 dev
 filtered_imbalanced_deviations_by_arms <- imbalanced_deviations_by_arms %>%
