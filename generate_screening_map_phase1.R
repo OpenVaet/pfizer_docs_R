@@ -51,25 +51,27 @@ for (trial_site_id in names(sites)) {
   
   site_name_print <- gsub("'", "\\\\'", site_name, fixed = TRUE)
   
+  
+  
   data_points <- paste0(data_points, sprintf("var circle%s = L.circle([%s, %s], {
-    color: '#2596be',
-    fillColor: '#2596be',
+    color: '#3ebfed',
+    fillColor: '#3ebfed',
     fillOpacity: 0.9,
     radius: %s,
     site_name: '%s',
     investigator: '%s',
     subjects_screened: '%s',
     trial_site_id: %s
-}).addTo(map).on('mouseover', onClick);\n", trial_site_id, latitude, longitude, radius_size, site_name_print, investigator, subjects_screened, trial_site_id))
-
+}).addTo(map).on('mouseover', onClick);\n", i, latitude, longitude, radius_size, site_name_print, investigator, subjects_screened, i))
+  
     data_points <- paste0(data_points, sprintf("
-  var label1001 = L.marker([%s, %s], {
+  var label%s = L.marker([%s, %s], {
   icon: L.divIcon({
     className: 'label',
-    html: '%s',
-    iconSize: [100, 20]
+    html: '<div style=\"font-size: 20px; font-weight: bold; color: black; text-align: center;\">%s</div>',
+    iconSize: [100, 40]
   })
-}).addTo(map);", latitude, longitude, subjects_screened))
+}).addTo(map);", i, latitude, longitude, subjects_screened))
 }
 
 html_template <- gsub("\\[---DATAPOINTS---\\]", data_points, html_template)

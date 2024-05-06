@@ -203,6 +203,14 @@ arm_summary <- subjects_pos_sympto_visits %>%
 # Prints the result
 print(arm_summary)
 
+# Prints subjects which are in the official cases but not in the output.
+eua_official_cases_SUBJID <- official_cases$SUBJID
+subjects_pos_sympto_visits_SUBJID <- subjects_pos_sympto_visits$SUBJID
+
+missing_SUBJID <- setdiff(eua_official_cases_SUBJID, subjects_pos_sympto_visits_SUBJID)
+
+print(missing_SUBJID)
+
 
 # Create a date sequence from the earliest to the latest date in EARLIESTCENTRALPOSDT
 date_seq <- seq(min(as.Date(subjects_pos_sympto_visits$EARLIESTCENTRALPOSDT)), 
@@ -251,19 +259,27 @@ marker_data <- plot_data %>%
 # Create the plot
 ggplot(plot_data, aes(x = date)) + 
   geom_col(aes(y = daily_cases), fill = "skyblue") + 
-  geom_line(aes(y = accumulated_cases / max(plot_data$accumulated_cases) * 15), color = "red", size = 1.2) + 
+  geom_line(aes(y = accumulated_cases / 13.33), color = "red", size = 1.2) + 
   geom_point(data = marker_data, 
-             aes(x = date, y = accumulated_cases / max(plot_data$accumulated_cases) * 15), 
+             aes(x = date, y = accumulated_cases / 13.33), 
              color = "black", size = 3) + 
   geom_text(data = marker_data, 
-            aes(x = date, y = accumulated_cases / max(plot_data$accumulated_cases) * 15, label = accumulated_cases), 
+            aes(x = date, y = accumulated_cases / 13.33, label = accumulated_cases), 
             color = "black", vjust = -0.5) + 
   labs(x = "Date", y = "Number of Cases") + 
   theme_classic() + 
   scale_x_date(breaks = seq(min(plot_data$date), max(plot_data$date), by = "3 day"), 
                date_labels = "%d %b %Y") + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  scale_y_continuous(limits = c(0, 15), name = "Number of Cases") + 
-  scale_y_continuous(name = "Accumulated Cases", 
-                     limits = c(0, 15), 
-                     sec.axis = sec_axis(~ .* max(plot_data$accumulated_cases) / 15, name = "Accumulated Cases"))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12), 
+        axis.text.y = element_text(size = 12), 
+        axis.title.x = element_text(size = 12), 
+        axis.title.y = element_text(size = 12), 
+        legend.text = element_text(size = 12), 
+        legend.title = element_text(size = 12)) + 
+  scale_y_continuous(name = "Number of Cases", limits = c(0, 15), 
+                     sec.axis = sec_axis(~ .* 13.33, name = "Accumulated Cases"))
+
+# Prints 10911203 for analysis
+subjects_sympto_visits_filtered <- subjects_sympto_visits %>% 
+  filter(SUBJID == 10911203)
+print(subjects_sympto_visits_filtered)

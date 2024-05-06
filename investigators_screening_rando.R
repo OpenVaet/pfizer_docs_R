@@ -4,6 +4,9 @@ library(xml2)
 library(pdftools)
 library(htmltools)
 library(stringr)
+library(flextable)
+library(dplyr)
+library(readr)
 
 # UA used to scrap target.
 user_agent <- "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
@@ -157,3 +160,52 @@ total_negative_offsets <- sum(negative_offsets)
 
 # Prints the total of negative offsets
 print(paste("Total of negative offsets:", total_negative_offsets))
+
+# Filter the data to only include entries with Offset.M6.FA < 0
+output_data_filtered <- output_data[output_data$Offset.M6.FA < 0, ]
+
+# Split the data into two data frames
+num_rows <- nrow(output_data_filtered)
+split_index <- ceiling(num_rows / 2)
+
+output_data_left <- output_data_filtered[1:split_index, 1:4]
+output_data_right <- output_data_filtered[(split_index + 1):num_rows, 1:4]
+
+# Merge the left and right data frames
+output_data_merged <- data.frame(
+  "Trial.Site.ID.1" = output_data_left$`Trial.Site.ID`,
+  "FA.1" = output_data_left$FA,
+  "M6.1" = output_data_left$M6,
+  "Offset M6-FA.1" = output_data_left$`Offset.M6.FA`,
+  "Trial.Site.ID.2" = output_data_right$`Trial.Site.ID`,
+  "FA.2" = output_data_right$FA,
+  "M6.2" = output_data_right$M6,
+  "Offset M6-FA.2" = output_data_right$`Offset.M6.FA`
+)
+
+
+print(output_data_merged)
+
+# Create the formatted table
+html_table <- flextable(output_data_merged) %>%
+  set_header_labels(
+    "Trial.Site.ID.1" = "Trial Site ID",
+    "FA.1" = "FA",
+    "M6.1" = "M6",
+    "Offset.M6.FA.1" = "Offset M6-FA",
+    "Trial.Site.ID.2" = "Trial Site ID",
+    "FA.2" = "FA",
+    "M6.2" = "M6",
+    "Offset.M6.FA.2" = "Offset M6-FA"
+  ) %>%
+  align(align = "center", part = "all") %>%
+  theme_zebra() %>%  # or another theme with less prominent borders
+  fontsize(size = 14, part = "all") %>%
+  padding(padding = 2) %>%
+  autofit() %>%
+  set_caption("Table 1: Sites with negative screening results")
+
+save_as_html(html_table, path = "sites_with_negative_screening.html")
+
+# Write the HTML table to a file
+save_as_html(html_table, path = "sites_with_negative_screening.html")

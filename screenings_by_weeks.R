@@ -120,5 +120,13 @@ ggplot(weekly_recruitment, aes(x = YEAR_WEEKNUM, y = Subjects, fill = factor(PHA
   scale_fill_discrete(breaks = c("1", "2", "3"), labels = c("1", "2", "3")) + 
   labs(x = "Year-Week Number", y = "Number of Subjects", fill = "Phase", 
        title = "C4591001 - Weekly recruitment of phases 1, 2 & 3 Subjects") + 
-  theme_classic()
+  theme_classic() +
+  theme(
+    plot.title = element_text(size = 24, face = "bold"),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(angle = 90, size = 16),
+    legend.title = element_text(size = 18),
+    legend.text = element_text(size = 14),
+    strip.text = element_text(size = 16)
+  )
 

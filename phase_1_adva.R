@@ -102,20 +102,29 @@ print(comparison_results_long)
 
 # Creates the line chart
 ggplot(comparison_results_long, aes(x = VISIT, y = Value, color = Measure, label = round(Value, 2))) +
-  geom_point() +
+  geom_point(aes(color = Measure)) +
   stat_summary(aes(group = Measure, linetype = Measure), 
                fun = "mean", 
                geom = "line",
                size = 1.5) +
   geom_text(data = comparison_results_long[comparison_results_long$Value %in% unique(comparison_results_long$Value), ],
             aes(y = Value * 1.02), # Adjust the vertical position
-            vjust = 0, size = 3.5) +
+            vjust = 0, size = 6.5, color = "black") +
   scale_linetype_manual(values = c("Official measures" = "dashed", "First measures" = "solid")) +
+  scale_color_manual(values = c("Official measures" = "#FF6B6B", "First measures" = "#4CAF50")) +
   labs(title = "SARS-CoV-2 serum neutralizing titer 50% by Visit",
        x = "Visit",
        y = "Titer",
        color = "Measure") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    plot.title = element_text(size = 24, face = "bold"),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 16),
+    legend.title = element_text(size = 18),
+    legend.text = element_text(size = 14),
+    strip.text = element_text(size = 16)
+  )
 
 # Saves the plot to a file
 ggsave("phase_1_comparison_avisit_by_visit.png", width = 8, height = 6, dpi = 300)

@@ -3,39 +3,26 @@ library(haven)
 library(dplyr)
 library(readr)
 library(jsonlite)
+library(ggplot2)
 
-# Loading trial sites data.
+# Loads trial sites data.
 trial_sites_file <- 'trial_site_data.json'
 trial_sites_data <- fromJSON(trial_sites_file, simplifyDataFrame = TRUE)
+print(trial_sites_data)
 
-# Check the structure of the JSON data
-str(trial_sites_data)
-
-# If trial_sites_data is not a data frame, you may need to perform additional steps to convert it to a data frame
-# For example, if trial_sites_data is a list of lists, you might need to use a function like bind_rows() to combine them into a data frame
-if (!is.data.frame(trial_sites_data)) {
-  trial_sites_data <- bind_rows(trial_sites_data)
-}
-
-# Read the XPT file
+# Reads the XPT file
 adsl_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0772469-0773670_125742_S1_M5_C4591001-A-D_adsl.xpt')
 
-# Extract recruitment site id and convert 4444 to 1231
+# Extracts recruitment site id and convert 4444 to 1231
 adsl_data <- adsl_data %>% 
   mutate(ORISITEID = substr(SUBJID, 1, 4)) %>%
   mutate(ORISITEID = ifelse(ORISITEID == "4444", "1231", ORISITEID))
 
-# Count the total of subjects screened, by site
+# Counts the total of subjects screened, by site
 subjects_screened_by_site <- adsl_data %>%
   group_by(ORISITEID) %>%
   summarise(Subjects_Screened = n(), .groups = 'drop')
-
-# Ensure subjects_screened_by_site is a data frame
-subjects_screened_by_site <- as.data.frame(subjects_screened_by_site)
-
-# Print out column names to confirm they are correct
-print(colnames(subjects_screened_by_site))
-print(colnames(trial_sites_data))
+print(subjects_screened_by_site)
 
 # Join the trial sites data with the subjects screened by site
 # Make sure that the column names used for joining are correct and present in both data frames
@@ -55,3 +42,36 @@ print(paste("Total unique SITEID entries: ", unique_siteid_count))
 # Count the number of subjects in each arm
 arm_counts <- table(adsl_data$ARM)
 print(arm_counts)
+
+# Count the total of subjects by country
+subjects_by_country <- sites_frame %>%
+  group_by(Country) %>%
+  summarise(Total_Subjects = sum(Subjects_Screened))
+print(subjects_by_country)
+
+# Write the data to a CSV file
+write.csv(subjects_by_country, "subjects_by_country.csv", row.names = FALSE)
+
+# Create the plot
+# Create the plot
+# Create the plot
+ggplot(subjects_by_country, aes(x = reorder(Country, -Total_Subjects), y = Total_Subjects)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = format(Total_Subjects, big.mark = ",")), 
+            position = position_dodge(width = 0.9),
+            vjust = -0.5, 
+            size = 5,
+            color = "black") +
+  labs(x = "Country", y = "Total Subjects Screened", title = "C4591001 - Subjects Screened by Country") +
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white"),
+        panel.background = element_rect(fill = "white"),
+        plot.title = element_text(size = 24, face = "bold"),
+        axis.title = element_text(size = 18),
+        axis.text = element_text(angle = 90, size = 16),
+        legend.title = element_text(size = 18),
+        legend.text = element_text(size = 14),
+        strip.text = element_text(size = 16))
+
+# Save the plot as a PNG
+ggsave("subjects_by_country.png", width = 8, height = 6, dpi = 300)
