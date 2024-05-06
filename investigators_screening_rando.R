@@ -186,7 +186,7 @@ output_data_merged <- data.frame(
 
 print(output_data_merged)
 
-# Create the formatted table
+# Creates the formatted table
 html_table <- flextable(output_data_merged) %>%
   set_header_labels(
     "Trial.Site.ID.1" = "Trial Site ID",
@@ -205,7 +205,4 @@ html_table <- flextable(output_data_merged) %>%
   autofit() %>%
   set_caption("Table 1: Sites with negative screening results")
 
-save_as_html(html_table, path = "sites_with_negative_screening.html")
-
-# Write the HTML table to a file
 save_as_html(html_table, path = "sites_with_negative_screening.html")

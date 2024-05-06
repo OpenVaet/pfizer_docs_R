@@ -67,6 +67,8 @@ randomized_pop <- read.csv(randomized_pop_file)
 # Filters the filtered_data to only include subjects in the randomized population
 filtered_data <- filtered_data[filtered_data$SUBJID %in% randomized_pop$SUBJID, ]
 
+print(filtered_data)
+
 # Calculates the total of SUBJID in randomized_pop for each ARM
 arm_counts <- randomized_pop %>%
   group_by(ARM) %>%
@@ -108,8 +110,194 @@ print(deviation_counts, n=120)
 deviation_counts <- deviation_counts %>%
   filter(p_value <= 0.05)
 
+deviation_counts <- deviation_counts %>% 
+  mutate(p_value = case_when(
+    p_value < 0.000001 ~ "<0.000001",
+    p_value < 0.00001 ~ "<0.00001",
+    p_value < 0.0001 ~ "<0.0001",
+    p_value < 0.001 ~ "<0.001",
+    p_value < 0.01 ~ "<0.01",
+    TRUE ~ "<0.1"
+  ))
+
 # Writes the result to a CSV file
 write.csv(deviation_counts, "deviations_statistics.csv", row.names = FALSE)
 
 print(arm_counts)
 print(deviation_counts, n=120)
+deviation_counts <- deviation_counts %>% 
+  select(-TOTAL_SUBJECTS, -chi_square)
+print(deviation_counts, n=120)
+
+library(stringr)
+
+# Convert CONCATTERM to a standard encoding
+deviation_counts$CONCATTERM <- iconv(deviation_counts$CONCATTERM, from = "UTF-8", to = "ASCII", sub = "")
+
+# Remove en dash characters from CONCATTERM
+deviation_counts <- deviation_counts %>% 
+  mutate(CONCATTERM = gsub("–", "-", CONCATTERM))
+
+# Create the formatted table
+html_table <- flextable(deviation_counts) %>%
+  set_header_labels(
+    "CONCATTERM" = "Deviation",
+    "BNT_SUBJECTS" = "BNT162b2",
+    "PLACEBO_SUBJECTS" = "Placebo",
+    "p_value" = "p-value"
+  ) %>%
+  align(align = "center", part = "all") %>%
+  theme_zebra() %>%
+  fontsize(size = 16, part = "all") %>%
+  padding(padding = 3) %>%
+  autofit() %>%
+  set_caption("Table 2: Deviations significantly disbalanced")
+
+# Save the HTML table to a file
+save_as_html(html_table, path = "imbalanced_deviations.html")
+
+# Filters on the significantly imbalanced deviations.
+filtered_data %>% 
+  distinct(CONCATTERM)
+imbalanced_deviations <- filtered_data %>%
+  filter(CONCATTERM %in% c(
+    "Assessment of acute reaction for protocol specified timeframe after study intervention administration not performed at the vaccination visits. ",
+    "Nasal swab not collected by site staff prior to vaccination. ",
+    "Nasal swab not collected for the visit where it is required ",
+    "Procedure/Test not performed per protocol ",
+    "Urine pregnancy test not performed. "
+  ))
+print(imbalanced_deviations)
+print(unique(imbalanced_deviations$CONCATTERM))
+
+
+imbalanced_deviations_by_arms <- imbalanced_deviations %>%
+  group_by(SITEID, ARM, CONCATTERM) %>%
+  summarise(
+    total_devs = n(),
+    .groups = "drop"
+  )
+print(imbalanced_deviations_by_arms)
+
+
+# Filter imbalanced_deviations_by_arms to only include SITEIDs with at least 20 dev
+filtered_imbalanced_deviations_by_arms <- imbalanced_deviations_by_arms %>%
+  group_by(SITEID, CONCATTERM) %>%
+  filter(sum(total_devs) >= 20)
+print(filtered_imbalanced_deviations_by_arms, n = 100)
+
+# Loads the Phase 3 population randomized.
+randomized_pop_file <- 'phase_3_randomized_pop.csv'
+randomized_pop <- read.csv(randomized_pop_file)
+
+randomized_pop_by_arms <- randomized_pop %>%
+  group_by(SITEID, ARM) %>%
+  summarise(
+    total_devs = n(),
+    .groups = "drop"
+  )
+
+# Filter randomized_pop_by_arms to only include SITEIDs also in filtered_imbalanced_deviations_by_arms
+randomized_pop_by_arms <- randomized_pop_by_arms %>%
+  filter(SITEID %in% filtered_imbalanced_deviations_by_arms$SITEID)
+print(randomized_pop_by_arms, n = 100)
+
+# Initialize an empty dataframe to store the results
+deviations_significant_results <- data.frame(
+  SITEID = character(),
+  CONCATTERM = character(),
+  bnt162b2_deviations = numeric(),
+  bnt162b2_no_deviations = numeric(),
+  placebo_deviations = numeric(),
+  placebo_no_deviations = numeric(),
+  fisher_exact_pvalue = numeric()
+)
+
+# Loop through each SITEID
+for (site_id in unique(filtered_imbalanced_deviations_by_arms$SITEID)) {
+  for (dev_term in unique(filtered_imbalanced_deviations_by_arms$CONCATTERM)) {
+    # Filter data for current SITEID
+    site_data_imbalanced <- filtered_imbalanced_deviations_by_arms %>% 
+      filter(SITEID == site_id, CONCATTERM == dev_term)
+    site_data_randomized <- randomized_pop_by_arms %>% 
+      filter(SITEID == site_id)
+    
+    # Retrieve deviations and totals for current SITEID
+    bnt162b2_deviations <- sum(site_data_imbalanced %>% 
+                                 filter(ARM == "BNT162b2 Phase 2/3 (30 mcg)") %>% 
+                                 pull(total_devs))
+    placebo_deviations <- sum(site_data_imbalanced %>% 
+                                filter(ARM == "Placebo") %>% 
+                                pull(total_devs))
+    bnt162b2_total <- sum(site_data_randomized %>% 
+                            filter(ARM == "BNT162b2 Phase 2/3 (30 mcg)") %>% 
+                            pull(total_devs))
+    placebo_total <- sum(site_data_randomized %>% 
+                           filter(ARM == "Placebo") %>% 
+                           pull(total_devs))
+    
+    bnt162b2_no_deviations <- bnt162b2_total - bnt162b2_deviations
+    placebo_no_deviations <- placebo_total - placebo_deviations
+    
+    print(paste('Deviations BNT162b2 : ', bnt162b2_deviations, '/', bnt162b2_total))
+    print(paste('Deviations Placebo : ', placebo_deviations, '/', placebo_total))
+    
+    # Create a contingency table
+    contingency_table <- matrix(c(bnt162b2_deviations, bnt162b2_no_deviations, placebo_deviations, placebo_no_deviations), nrow = 2, ncol = 2)
+    colnames(contingency_table) <- c("Deviation", "No deviation")
+    rownames(contingency_table) <- c("BNT", "Placebo")
+    
+    # Perform the Fisher's exact test
+    fisher_exact_test <- fisher.test(contingency_table)
+    
+    print(paste('Site : ', site_id))
+    print(contingency_table)
+    print(fisher_exact_test)
+    
+    # Add the results to the dataframe
+    if (fisher_exact_test$p.value <= 0.05) {
+      deviations_significant_results <- rbind(deviations_significant_results, data.frame(
+        SITEID = site_id,
+        CONCATTERM = dev_term,
+        bnt162b2_deviations = bnt162b2_deviations,
+        bnt162b2_no_deviations = bnt162b2_no_deviations,
+        placebo_deviations = placebo_deviations,
+        placebo_no_deviations = placebo_no_deviations,
+        fisher_exact_pvalue = fisher_exact_test$p.value
+      ))
+    }
+  }
+}
+
+deviations_significant_results <- deviations_significant_results %>% 
+  mutate(fisher_exact_pvalue = case_when(
+    fisher_exact_pvalue < 0.000001 ~ "<0.000001",
+    fisher_exact_pvalue < 0.00001 ~ "<0.00001",
+    fisher_exact_pvalue < 0.0001 ~ "<0.0001",
+    fisher_exact_pvalue < 0.001 ~ "<0.001",
+    fisher_exact_pvalue < 0.01 ~ "<0.01",
+    TRUE ~ "<0.1"
+  ))
+
+# Create the formatted table
+html_table <- flextable(deviations_significant_results) %>%
+  set_header_labels(
+    "SITEID" = "Site Id",
+    "CONCATTERM" = "Deviation",
+    "bnt162b2_deviations" = "BNT162b2 Deviations",
+    "bnt162b2_no_deviations" = "BNT162b2 No Deviations",
+    "placebo_deviations" = "Placebo Deviations",
+    "placebo_no_deviations" = "Placebo No Deviations",
+    "fisher_exact_pvalue" = "p-value"
+  ) %>%
+  align(align = "center", part = "all") %>%
+  theme_zebra() %>%
+  fontsize(size = 16, part = "all") %>%
+  padding(padding = 3) %>%
+  autofit() %>%
+  set_caption("Table 2: Deviations significantly disbalanced")
+
+# Save the HTML table to a file
+save_as_html(html_table, path = "imbalanced_deviations_by_sites.html")
+
+print(deviations_significant_results)

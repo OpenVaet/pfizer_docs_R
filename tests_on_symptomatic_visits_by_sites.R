@@ -235,6 +235,12 @@ local_significant_results <- data.frame(
   fisher_exact_pvalue = numeric()
 )
 
+# Load the HTML template
+html_template <- readLines("testing_comparison_template.html")
+
+# Initialize an empty string to store the table rows
+table_rows <- ""
+
 # Iterate over each SITEID
 for (site_id in unique(local_filtered_data$SITEID)) {
   # Retrieve the values for the current SITEID
@@ -256,14 +262,27 @@ for (site_id in unique(local_filtered_data$SITEID)) {
   # Perform the Fisher's exact test
   fisher_exact_test <- fisher.test(contingency_table)
   
-  print(paste('Site : ', site_id))
-  print(contingency_table)
-  print(fisher_exact_test)
-  print(paste('bnt162b2 % : ', bnt162b2_tested_pct))
-  print(paste('placebo % : ', placebo_tested_pct))
-  
-  # Add the results to the dataframe
   if (fisher_exact_test$p.value <= 0.05) {
+    # Generate the table row
+    p_value_formatted <- case_when(
+      fisher_exact_test$p.value < 0.000001 ~ "<0.000001",
+      fisher_exact_test$p.value < 0.00001 ~ "<0.00001",
+      fisher_exact_test$p.value < 0.0001 ~ "<0.0001",
+      fisher_exact_test$p.value < 0.001 ~ "<0.001",
+      fisher_exact_test$p.value < 0.01 ~ "<0.01",
+      TRUE ~ "<0.1"
+    )
+    table_row <- paste0("<tr>",
+                        "<td>", site_id, "</td>",
+                        "<td>", bnt162b2_tested, "</td>",
+                        "<td>", bnt162b2_not_tested, "</td>",
+                        "<td>", bnt162b2_tested_pct, "%</td>",
+                        "<td>", placebo_tested, "</td>",
+                        "<td>", placebo_not_tested, "</td>",
+                        "<td>", placebo_tested_pct, "%</td>",
+                        "<td>", p_value_formatted, "</td>",
+                        "</tr>")
+    table_rows <- paste0(table_rows, table_row)
     local_significant_results <- rbind(local_significant_results, data.frame(
       SITEID = site_id,
       bnt162b2_tested = bnt162b2_tested,
@@ -278,6 +297,12 @@ for (site_id in unique(local_filtered_data$SITEID)) {
 }
 
 print(local_significant_results)
+
+# Replace <--TABLE_ROWS--> with the generated table rows
+html_output <- gsub("<--TABLE_ROWS-->", table_rows, html_template)
+
+# Write the HTML output to a file
+writeLines(html_output, "phase_3_local_tests_by_sites.html")
 
 # Write the dataframe to a CSV file
 write.csv(local_significant_results, "phase_3_local_tests_by_sites.csv", row.names = FALSE)

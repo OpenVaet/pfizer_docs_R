@@ -245,6 +245,26 @@ print(local_test_percentages)
 print(local_test_table)
 print(local_test_chi_sq)
 
+# Loads the html template
+template <- readLines("chi_square_template.html")
+
+# Replaces COLUMN_A, COLUMN_B, ROW_A_LABEL, ROW_A_VALUE_1 etc by the values of the contingency table
+chi_march_13_template <- template
+chi_march_13_template <- gsub("COLUMN_A", colnames(local_test_table)[1], chi_march_13_template)
+chi_march_13_template <- gsub("COLUMN_B", colnames(local_test_table)[2], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_A_LABEL", rownames(local_test_table)[1], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_A_VALUE_1", local_test_table[1, 1], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_A_VALUE_2", local_test_table[1, 2], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_B_LABEL", rownames(local_test_table)[2], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_B_VALUE_1", local_test_table[2, 1], chi_march_13_template)
+chi_march_13_template <- gsub("ROW_B_VALUE_2", local_test_table[2, 2], chi_march_13_template)
+
+# Replaces P_VALUE with the p-value from the chi-square test
+chi_march_13_template <- gsub("P_VALUE", format.pval(local_test_chi_sq$p.value, digits = 4), chi_march_13_template)
+
+# Writes the modified template
+writeLines(chi_march_13_template, "local_test_chi_sq_march_13.html")
+
 # Filters out rows where EARLIESTDT is after 2020-11-14
 subjects_sympto_visits_nov_14 <- subjects_sympto_visits %>%
   filter(ymd(EARLIESTDT) <= ymd("2020-11-14"))
@@ -332,3 +352,20 @@ print(central_test_chi_sq_nov_14)
 print(local_test_percentages_nov_14)
 print(local_test_table_nov_14)
 print(local_test_chi_sq_nov_14)
+
+# Replaces COLUMN_A, COLUMN_B, ROW_A_LABEL, ROW_A_VALUE_1 etc by the values of the contingency table
+chi_nov_14_template <- template
+chi_nov_14_template <- gsub("COLUMN_A", colnames(local_test_table_nov_14)[1], chi_nov_14_template)
+chi_nov_14_template <- gsub("COLUMN_B", colnames(local_test_table_nov_14)[2], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_A_LABEL", rownames(local_test_table_nov_14)[1], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_A_VALUE_1", local_test_table_nov_14[1, 1], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_A_VALUE_2", local_test_table_nov_14[1, 2], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_B_LABEL", rownames(local_test_table_nov_14)[2], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_B_VALUE_1", local_test_table_nov_14[2, 1], chi_nov_14_template)
+chi_nov_14_template <- gsub("ROW_B_VALUE_2", local_test_table_nov_14[2, 2], chi_nov_14_template)
+
+# Replaces P_VALUE with the p-value from the chi-square test
+chi_nov_14_template <- gsub("P_VALUE", format.pval(local_test_chi_sq_nov_14$p.value, digits = 4), chi_nov_14_template)
+
+# Writes the modified template
+writeLines(chi_nov_14_template, "local_test_chi_sq_nov_14.html")
