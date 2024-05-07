@@ -265,7 +265,7 @@ ggplot(plot_data, aes(x = date)) +
              color = "black", size = 3) + 
   geom_text(data = marker_data, 
             aes(x = date, y = accumulated_cases / 13.33, label = accumulated_cases), 
-            color = "black", vjust = -0.5) + 
+            color = "black", vjust = -0.5, size = 6) +
   labs(x = "Date", y = "Number of Cases") + 
   theme_classic() + 
   scale_x_date(breaks = seq(min(plot_data$date), max(plot_data$date), by = "3 day"), 
@@ -275,6 +275,7 @@ ggplot(plot_data, aes(x = date)) +
         axis.title.x = element_text(size = 16), 
         axis.title.y = element_text(size = 16), 
         legend.text = element_text(size = 14), 
+        text = element_text(size = 18),
         legend.title = element_text(size = 18)) + 
   scale_y_continuous(name = "Number of Cases", limits = c(0, 15), 
                      sec.axis = sec_axis(~ .* 13.33, name = "Accumulated Cases"))

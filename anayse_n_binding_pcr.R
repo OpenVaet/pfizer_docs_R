@@ -4,6 +4,7 @@ library(readr)
 library(dplyr)
 library(purrr)
 library(lubridate)
+library(stringr)
 library(stats)
 
 # Loading ADSL data.
@@ -517,3 +518,79 @@ write.csv(data.frame(
 ), file = "testing_rates_by_sites_nm_vs_anm.csv", row.names = FALSE)
 
 print(stats)
+
+# Fetching values for chi-squares to print.
+no_visit_3_bnt162b2 <- stats$`12_no_visit_3`$`BNT162b2 Phase 2/3 (30 mcg)`$total
+no_visit_3_placebo <- stats$`12_no_visit_3`$Placebo$total
+visit_3_placebo <- stats$`13_visit_3`$Placebo
+visit_3_bnt162b2 <- stats$`13_visit_3`$`BNT162b2 Phase 2/3 (30 mcg)`
+print(paste('visit_3_bnt162b2 : ', visit_3_bnt162b2))
+print(paste('no_visit_3_bnt162b2 : ', no_visit_3_bnt162b2))
+print(paste('visit_3_placebo : ', visit_3_placebo))
+print(paste('no_visit_3_placebo : ', no_visit_3_placebo))
+no_visit_3_no_pcr_bnt162b2 <- stats$`12_no_visit_3`$`BNT162b2 Phase 2/3 (30 mcg)`$`0`
+no_visit_3_no_pcr_placebo <- stats$`12_no_visit_3`$Placebo$`0`
+print(paste('no_visit_3_no_pcr_bnt162b2 : ', no_visit_3_no_pcr_bnt162b2))
+print(paste('no_visit_3_no_pcr_placebo : ', no_visit_3_no_pcr_placebo))
+
+# Printing no-visit chi-square.
+no_visit_3_table <- matrix(c(
+  no_visit_3_bnt162b2,
+  visit_3_bnt162b2,
+  no_visit_3_placebo,
+  visit_3_placebo
+), nrow = 2, byrow = TRUE)
+rownames(no_visit_3_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
+colnames(no_visit_3_table) <- c("No Visit 3", "Visit 3")
+print(no_visit_3_table)
+no_visit_3_chi_sq <- chisq.test(no_visit_3_table)
+
+# Loads the html template
+template <- readLines("chi_square_template.html")
+print(template)
+
+# Replaces COLUMN_A, COLUMN_B, ROW_A_LABEL, ROW_A_VALUE_1 etc by the values of the contingency table
+no_visit_3_template <- template
+no_visit_3_template <- gsub("COLUMN_A", colnames(no_visit_3_table)[1], no_visit_3_template)
+no_visit_3_template <- gsub("COLUMN_B", colnames(no_visit_3_table)[2], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_A_LABEL", rownames(no_visit_3_table)[1], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_A_VALUE_1", no_visit_3_table[1, 1], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_A_VALUE_2", no_visit_3_table[1, 2], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_B_LABEL", rownames(no_visit_3_table)[2], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_B_VALUE_1", no_visit_3_table[2, 1], no_visit_3_template)
+no_visit_3_template <- gsub("ROW_B_VALUE_2", no_visit_3_table[2, 2], no_visit_3_template)
+
+# Replaces P_VALUE with the p-value from the chi-square test
+no_visit_3_template <- gsub("P_VALUE", format.pval(no_visit_3_chi_sq$p.value, digits = 4), no_visit_3_template)
+
+# Writes the modified template
+writeLines(no_visit_3_template, "no_visit_3_chi_sq.html")
+
+# Printing no-visit / no positive PCR chi-square.
+no_visit_3_no_pcr_table <- matrix(c(
+  no_visit_3_no_pcr_bnt162b2,
+  visit_3_bnt162b2,
+  no_visit_3_no_pcr_placebo,
+  visit_3_placebo
+), nrow = 2, byrow = TRUE)
+rownames(no_visit_3_no_pcr_table) <- c("BNT162b2 Phase 2/3 (30 mcg)", "Placebo")
+colnames(no_visit_3_no_pcr_table) <- c("No Visit 3 / No Pos. PCR", "Visit 3")
+print(no_visit_3_no_pcr_table)
+no_visit_3_no_pcr_chi_sq <- chisq.test(no_visit_3_no_pcr_table)
+
+# Replaces COLUMN_A, COLUMN_B, ROW_A_LABEL, ROW_A_VALUE_1 etc by the values of the contingency table
+no_visit_3_no_pcr_template <- template
+no_visit_3_no_pcr_template <- gsub("COLUMN_A", colnames(no_visit_3_no_pcr_table)[1], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("COLUMN_B", colnames(no_visit_3_no_pcr_table)[2], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_A_LABEL", rownames(no_visit_3_no_pcr_table)[1], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_A_VALUE_1", no_visit_3_no_pcr_table[1, 1], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_A_VALUE_2", no_visit_3_no_pcr_table[1, 2], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_B_LABEL", rownames(no_visit_3_no_pcr_table)[2], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_B_VALUE_1", no_visit_3_no_pcr_table[2, 1], no_visit_3_no_pcr_template)
+no_visit_3_no_pcr_template <- gsub("ROW_B_VALUE_2", no_visit_3_no_pcr_table[2, 2], no_visit_3_no_pcr_template)
+
+# Replaces P_VALUE with the p-value from the chi-square test
+no_visit_3_no_pcr_template <- gsub("P_VALUE", format.pval(no_visit_3_no_pcr_chi_sq$p.value, digits = 4), no_visit_3_no_pcr_template)
+
+# Writes the modified template
+writeLines(no_visit_3_no_pcr_template, "no_visit_3_no_pcr_chi_sq.html")

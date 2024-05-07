@@ -3,6 +3,9 @@ library(rvest)
 library(xml2)
 library(flextable)
 library(dplyr)
+library(rmarkdown)
+library(haven)
+library(ggplot2)
 
 # Creates zip_data directory
 zip_path <- "zip_data"
@@ -87,7 +90,6 @@ if (!file.exists(file_path)) {
 }
 
 # Reads the XPT file & loads USUBJID (Unique Subject Id including Study ID & Current Trial Site Id)
-library(haven)
 data <- read_xpt(file_path)
 selected_data <- data[c("USUBJID", "RFICDT")]
 
@@ -133,86 +135,59 @@ write.csv(all_subjects[c("subject_id", "RFICDT", "missing")], "all_subjects_miss
 print(all_subjects)
 print(unique(all_subjects$missing))
 
-# Filters for site 1231 and date 2020-08-21 to provide an highlight of Augusto Roux's recruitment day
-filtered_subjects <- all_subjects %>% 
-  filter(trial_site_id == 1231)
-print(filtered_subjects)
-
-# Initiates an empty storage of the latest date seen.
-latest_RFICDT <- ''
+# Re-initiates an empty storage of the latest date seen.
+current_gap <- 0
 latest_site_id <- ''
-missing_indices <- c()
+gap_counts <- list()
 
-for (i in 1:nrow(filtered_subjects)) {
-  missing <- filtered_subjects$missing[i]
-  subject_id  <- filtered_subjects$subject_id [i]
-  trial_site_id <- filtered_subjects$trial_site_id[i]
-  if (latest_site_id != '') {
-    if (latest_site_id != trial_site_id) {
-      latest_RFICDT <- ''
+for (i in 1:nrow(all_subjects)) {
+  missing <- all_subjects$missing[i]
+  subject_id  <- all_subjects$subject_id [i]
+  trial_site_id <- all_subjects$trial_site_id[i]
+  
+  # Reset current_gap when site ID changes
+  if (latest_site_id != '' && latest_site_id != trial_site_id) {
+    current_gap <- 0
+  }
+  
+  # Increment current_gap when missing is "Yes"
+  if (missing == "Yes") {
+    current_gap <- current_gap + 1
+  }
+  
+  # Store current_gap when missing is not "Yes" and current_gap is not 0
+  if (missing != "Yes" && current_gap != 0) {
+    print(paste('i : ', i ))
+    print(paste('current_gap : ', current_gap ))
+    if(is.null(gap_counts[[as.character(current_gap)]])){
+      gap_counts[[as.character(current_gap)]] <- 0
     }
+    gap_counts[[as.character(current_gap)]] <- gap_counts[[as.character(current_gap)]] + 1
+    current_gap <- 0
   }
-  if (latest_RFICDT == '2020-08-21') {
-    latest_site_id <- trial_site_id
-    if (missing == "Yes") {
-      print(paste('i : ', i ))
-      print(paste('Subject_id : ', subject_id ))
-      print(paste('missing : ', missing ))
-      print(paste('latest_RFICDT : ', latest_RFICDT ))
-      missing_indices <- c(missing_indices, i)
-    }
-  }
-  if (missing != "Yes") {
-    latest_RFICDT <- filtered_subjects$RFICDT[i]
-  }
+  
+  latest_site_id <- trial_site_id
 }
 
-# Calculate the center of "Yes" rows
-center_row <- median(missing_indices)
-print(center_row)
+# Write gap counts to a CSV file
+gap_counts_df <- data.frame(gap_size = names(gap_counts), count = as.numeric(gap_counts))
+print(gap_counts_df)
+write.csv(gap_counts_df, "missing_subjects_sequential_gaps.csv", row.names = FALSE)
 
-# Select the 50 rows around the center row
-subjects_missing_highlight <- filtered_subjects %>% 
-  arrange(subject_trial_site_incremental_number) %>% 
-  slice((center_row - 23):(center_row + 23))
-print(subjects_missing_highlight)
+# Create a formatted table
+html_table <- flextable(gap_counts_df) %>%
+  set_header_labels(
+    "gap_size" = "Gap Size",
+    "count" = "Count"
+  ) %>%
+  align(align = "center", part = "all") %>%
+  theme_zebra() %>%
+  fontsize(size = 16, part = "all") %>%
+  padding(padding = 10) %>%
+  autofit()
 
-library(rmarkdown)
-
-# Load the template
-template <- readLines("missing_subjects_template.html")
-
-# Initialize the table rows
-table_rows <- ""
-
-# Iterate over each subject and add their HTML data
-for (i in 1:nrow(subjects_missing_highlight)) {
-  row <- subjects_missing_highlight[i, ]
-  missing <- subjects_missing_highlight$missing[i]
-  if (missing == 'Yes') {
-    table_rows <- paste0(table_rows, "
-      <tr>
-        <td>", row$subject_id, "</td>
-        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
-        <td style=\"background:#fa8072\">", row$missing, "</td>
-      </tr>
-  ")
-  } else {
-    table_rows <- paste0(table_rows, "
-      <tr>
-        <td>", row$subject_id, "</td>
-        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
-        <td>", row$missing, "</td>
-      </tr>
-  ")
-  }
-}
-
-# Replace the <--TABLE_ROWS--> placeholder with the actual table rows
-template <- gsub("<--TABLE_ROWS-->", table_rows, template)
-
-# Print the resulting HTML to a file
-writeLines(template, "subjects_missing.html")
+# Save the HTML table to a file
+save_as_html(html_table, path = "missing_subjects_gaps_size.html")
 
 # Create a summary data frame
 summary_data <- data.frame(
@@ -264,3 +239,102 @@ html_table <- flextable(output_data_merged) %>%
   set_caption("Table 1: Sites with negative screening results")
 
 save_as_html(html_table, path = "sites_with_subjects_missing.html")
+
+# Filters for site 1231 and date 2020-08-21 to provide an highlight of Augusto Roux's recruitment day
+filtered_subjects <- all_subjects %>% 
+  filter(trial_site_id == 1231)
+print(filtered_subjects)
+
+# Initiates an empty storage of the latest date seen.
+latest_RFICDT <- ''
+latest_site_id <- ''
+missing_indices <- c()
+
+site_1231_subjects_with_RFICDT <- filtered_subjects
+
+for (i in 1:nrow(filtered_subjects)) {
+  missing <- filtered_subjects$missing[i]
+  subject_id  <- filtered_subjects$subject_id [i]
+  trial_site_id <- filtered_subjects$trial_site_id[i]
+  if (latest_site_id != '') {
+    if (latest_site_id != trial_site_id) {
+      latest_RFICDT <- ''
+    }
+  }
+  if (missing == "Yes") {
+    site_1231_subjects_with_RFICDT$RFICDT[i] <- latest_RFICDT
+  }
+  if (latest_RFICDT == '2020-08-21') {
+    latest_site_id <- trial_site_id
+    if (missing == "Yes") {
+      print(paste('i : ', i ))
+      print(paste('Subject_id : ', subject_id ))
+      print(paste('missing : ', missing ))
+      print(paste('latest_RFICDT : ', latest_RFICDT ))
+      missing_indices <- c(missing_indices, i)
+      site_1231_subjects_with_RFICDT$RFICDT[i] <- latest_RFICDT
+    }
+  }
+  if (missing != "Yes") {
+    latest_RFICDT <- filtered_subjects$RFICDT[i]
+  }
+}
+
+# Calculate the center of "Yes" rows
+center_row <- median(missing_indices)
+print(center_row)
+
+# Select the 50 rows around the center row
+subjects_missing_highlight <- filtered_subjects %>% 
+  arrange(subject_trial_site_incremental_number) %>% 
+  slice((center_row - 23):(center_row + 23))
+print(subjects_missing_highlight)
+
+
+# Load the template
+template <- readLines("missing_subjects_template.html")
+
+# Initialize the table rows
+table_rows <- ""
+
+# Iterate over each subject and add their HTML data
+for (i in 1:nrow(subjects_missing_highlight)) {
+  row <- subjects_missing_highlight[i, ]
+  missing <- subjects_missing_highlight$missing[i]
+  if (missing == 'Yes') {
+    table_rows <- paste0(table_rows, "
+      <tr>
+        <td>", row$subject_id, "</td>
+        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
+        <td style=\"background:#fa8072\">", row$missing, "</td>
+      </tr>
+  ")
+  } else {
+    table_rows <- paste0(table_rows, "
+      <tr>
+        <td>", row$subject_id, "</td>
+        <td>", format(row$RFICDT, "%Y-%m-%d"), "</td>
+        <td>", row$missing, "</td>
+      </tr>
+  ")
+  }
+}
+
+# Replace the <--TABLE_ROWS--> placeholder with the actual table rows
+template <- gsub("<--TABLE_ROWS-->", table_rows, template)
+
+# Print the resulting HTML to a file
+writeLines(template, "subjects_missing.html")
+
+# Generates an export of the daily recruitment on site 1231.
+print(site_1231_subjects_with_RFICDT)
+site_1231_subjects_with_RFICDT %>%
+  ggplot(aes(x = RFICDT, fill = missing)) + 
+  geom_bar(position = "stack") + 
+  geom_text(aes(label = ..count..), stat = "count", position = position_stack(vjust = 1.05), color = "black") + 
+  labs(x = "Date", y = "Number of Subjects", fill = "Missing Status") + 
+  theme_classic() + 
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+  scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") + 
+  scale_fill_manual(values = c("#839367", "#9f5148"))
