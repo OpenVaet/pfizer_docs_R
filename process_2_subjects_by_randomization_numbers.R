@@ -14,14 +14,12 @@ randomized_pop$ORISITEID <- as.numeric(sub("(....)....", "\\1", randomized_pop$S
 
 print(randomized_pop)
 
-filtered_data <- randomized_pop %>%
-  filter(VAX101DT >= "2020-10-19", 
-         ORISITEID %in% c(1133, 1135, 1146, 1170))
+filtered_data <- randomized_pop %>% filter(RANDNO >= 400000, RANDNO <= 499999)
 
 print(filtered_data)
 
 # Write filtered_data to a new CSV file
-write.csv(filtered_data, "process_2_recipients_by_date_and_sites.csv", row.names = FALSE)
+write.csv(filtered_data, "process_2_recipients_by_randomization_numbers.csv", row.names = FALSE)
 
 
 agegr1_counts <- filtered_data %>%
