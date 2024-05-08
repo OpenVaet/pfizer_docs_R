@@ -238,45 +238,57 @@ if (!file.exists(us_simu_mort_file)) {
   print(mort_by_date)
 }
 
+# Loads expected mortality data & unify cohort & expected mortality weekly format.
 mort_by_date <- read.csv(us_simu_mort_file)
+mort_by_date$date <- ymd(mort_by_date$date)
 print(mort_by_date)
-
-mort_by_date$date <- ymd(mort_by_date$date)  # convert date column to Date format
-
 weekly_mort <- mort_by_date %>%
-  group_by(week = floor_date(date, "week")) %>%
+  group_by(week = floor_date(date, "week", week_start = 1)) %>%
   summarise(mortality_rate = sum(mortality_rate))
 print(weekly_mort, n=100)
-
-
 cohort_mortality <- randomized_pop %>% filter(!is.na(DTHDT))
 print(cohort_mortality)
-
-cohort_mortality$DTHDT <- ymd(cohort_mortality$DTHDT)  # convert date column to Date format
-
+cohort_mortality$DTHDT <- ymd(cohort_mortality$DTHDT)
 deaths_by_date <- cohort_mortality %>%
   group_by(DTHDT) %>%
   tally()
 print(deaths_by_date, n=100)
-
 deaths_mort <- deaths_by_date %>%
-  group_by(week = floor_date(DTHDT, "week")) %>%
+  group_by(week = floor_date(DTHDT, "week", week_start = 1)) %>%
   summarise(n = sum(n))
-
 print(deaths_mort, n=100)
-
-
 merged_data <- weekly_mort %>% 
   left_join(deaths_mort, by = "week") %>% 
   replace_na(list(n = 0))
-
 print(merged_data, n=100)
+merged_data <- merged_data %>% 
+  mutate(year_week = format(week, "%Y-%W"))
 
-## restricted date range barplot excluding last 5 weeks
-barplot(as.integer(merged_data$mortality_rate), main="C4591001 - Expected vs Actual deaths for the USA population")
-barplot(as.integer(merged_data$n, merged_data$week), col="red", add=TRUE)
 
+# Plots the mortality expected vs actual.
+print(merged_data, n=100)
+ggplot(merged_data, aes(x = year_week)) + 
+  geom_col(aes(y = mortality_rate, fill = "Expected")) + 
+  geom_col(aes(y = n, fill = "Actual")) + 
+  labs(title = "C4591001 - Expected vs Actual deaths for the USA population", 
+       x = "Year-Week", y = "Mortality Rate", fill = "Type") + 
+  theme_classic() + 
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+  scale_fill_manual(values = c("Expected" = "#c1c9b3", "Actual" = "#b75b47"))
+
+# Summarizes a few metrics.
 expected_deaths <- sum(merged_data$mortality_rate)
 actual_deaths <- sum(merged_data$n)
 percentage_diff <- (actual_deaths / expected_deaths) * 100
-cat("Actual deaths are", percentage_diff, "% lower than expected deaths.")
+cat("Actual deaths are at", percentage_diff, "% of the expected deaths.")
+print(paste('expected_deaths : ', expected_deaths))
+print(paste('actual_deaths : ', actual_deaths))
+
+print(nrow(randomized_pop))
+
+# Adjusts the ARM column based on VAX201DT (only Placebo subjects were receiving BNT as third dose)
+cohort_mortality$ARM[!is.na(cohort_mortality$VAX201DT)] <- "Placebo -> BNT162b2"
+arm_counts <- table(cohort_mortality$ARM)
+print(arm_counts)
+
