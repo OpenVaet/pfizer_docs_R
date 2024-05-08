@@ -3,8 +3,11 @@ library(readr)
 library(tidyverse)
 library(jsonlite)
 library(ggplot2)
+library(lubridate)
+library(dplyr)
 
 us_mortality_file <- "us_mortality/daily_chance_to_die_by_states.csv"
+us_simu_mort_file <- "us_mortality/mort_by_date.csv"
 
 # If the daily mortality hasn't been calculated yet, proceeds from Wonder data.
 if (!file.exists(us_mortality_file)) {
@@ -172,6 +175,7 @@ if (length(missing_states) == 0) {
 
 # Filters randomized_pop to only sustain US sites.
 randomized_pop <- randomized_pop[randomized_pop$SITEID %in% trial_sites_data$SITEID, ]
+
 # Create the age_group column in randomized_pop
 randomized_pop$age_group <- cut(randomized_pop$AGE, 
                                 breaks = c(0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, Inf), 
@@ -180,54 +184,99 @@ randomized_pop$age_group <- cut(randomized_pop$AGE,
                                            "65-69 years", "70-74 years", "75-79 years", "80-84 years", "85+ years"))
 print(randomized_pop)
 
-
-# Find the earliest randomized_pop.RFICDT
-earliest_rficdt <- min(as.Date(randomized_pop$RFICDT))
-
-# Initialize the mort_by_date vector with the relevant interval
-end_date <- as.Date("2021-02-28")
-mort_by_date <- rep(0, as.integer((end_date - earliest_rficdt) + 1))
-names(mort_by_date) <- earliest_rficdt + seq(0, length(mort_by_date) - 1)
-print(mort_by_date)
-
-# Iterate over each subject in the randomized_pop data frame
-for (i in 1:nrow(randomized_pop)) {
-  subject_id <- randomized_pop$SUBJID[i]
-  start_date <- as.Date(randomized_pop$RFICDT[i])
-  ag <- randomized_pop$age_group[i]
-  site_id <- randomized_pop$SITEID[i]
-  st <- trial_sites_data$state[trial_sites_data$SITEID == site_id]
-  # print(paste('subject_id : ', subject_id))
-  # print(paste('start_date : ', start_date))
-  # print(paste('ag : ', ag))
-  # print(paste('site_id : ', site_id))
-  # print(paste('st : ', st))
-  
-  # Calculate the number of days the subject is present
-  days_present <- as.integer(end_date - start_date + 1)
-  # print(paste('days_present : ', days_present))
+if (!file.exists(us_simu_mort_file)) {
   
   
-  # Iterate over each day the subject is present
-  for (j in 1:days_present) {
-    current_date <- start_date + (j - 1)
+  # Find the earliest randomized_pop.RFICDT
+  earliest_rficdt <- min(as.Date(randomized_pop$RFICDT))# Initialize the mort_by_date data frame with the relevant interval
+  end_date <- as.Date("2021-02-28")
+  dates <- earliest_rficdt + seq(0, as.integer((end_date - earliest_rficdt) + 1) - 1)
+  mort_by_date <- data.frame(date = dates, mortality_rate = 0)
+  
+  # Iterate over each subject in the randomized_pop data frame
+  total_subjects <- nrow(randomized_pop)
+  current <- 0
+  cpt <- 0
+  for (i in 1:total_subjects) {
+    cpt <- cpt  + 1
+    current <- current  + 1
+    if (cpt == 5) {
+      cpt = 0
+      print(paste('Processing ', current, '/', total_subjects))
+    }
+    subject_id <- randomized_pop$SUBJID[i]
+    start_date <- as.Date(randomized_pop$RFICDT[i])
+    ag <- randomized_pop$age_group[i]
+    site_id <- randomized_pop$SITEID[i]
+    st <- trial_sites_data$state[trial_sites_data$SITEID == site_id]
     
-    # Find the year, month for the current date
-    y <- as.integer(format(current_date, "%Y"))
-    m <- as.integer(format(current_date, "%m"))
-    # print(paste('y : ', y))
-    # print(paste('m : ', m))
+    # Calculate the number of days the subject is present
+    days_present <- as.integer(end_date - start_date + 1)
     
-    # Find the corresponding row in the us_mortality data frame
-    mortality_prob <- us_mortality %>%
-      filter(state == st, year == y, month == m, age_group == ag) %>% 
-      pull(daily_chance_to_die)
-    # print(paste('mortality_prob : ', mortality_prob))
-    
-    # Add the daily chance to die to the mort_by_date vector
-    mort_by_date[as.integer(current_date - as.Date("2021-01-01") + 1)] <- mort_by_date[as.integer(current_date - as.Date("2021-01-01") + 1)] + mortality_prob
+    # Iterate over each day the subject is present
+    for (j in 1:days_present) {
+      current_date <- start_date + (j - 1)
+      
+      # Find the year, month for the current date
+      y <- as.integer(format(current_date, "%Y"))
+      m <- as.integer(format(current_date, "%m"))
+      
+      # Find the corresponding row in the us_mortality data frame
+      mortality_prob <- us_mortality %>%
+        filter(state == st, year == y, month == m, age_group == ag) %>% 
+        pull(daily_chance_to_die)
+      
+      # Add the daily chance to die to the mort_by_date data frame
+      mort_by_date$mortality_rate[mort_by_date$date == current_date] <- 
+        mort_by_date$mortality_rate[mort_by_date$date == current_date] + mortality_prob
+    }
   }
+  
+  # Print the mort_by_date vector
+  print(mort_by_date)
+  write.csv(mort_by_date, us_simu_mort_file)
+  print(mort_by_date)
 }
 
-# Print the mort_by_date vector
+mort_by_date <- read.csv(us_simu_mort_file)
 print(mort_by_date)
+
+mort_by_date$date <- ymd(mort_by_date$date)  # convert date column to Date format
+
+weekly_mort <- mort_by_date %>%
+  group_by(week = floor_date(date, "week")) %>%
+  summarise(mortality_rate = sum(mortality_rate))
+print(weekly_mort, n=100)
+
+
+cohort_mortality <- randomized_pop %>% filter(!is.na(DTHDT))
+print(cohort_mortality)
+
+cohort_mortality$DTHDT <- ymd(cohort_mortality$DTHDT)  # convert date column to Date format
+
+deaths_by_date <- cohort_mortality %>%
+  group_by(DTHDT) %>%
+  tally()
+print(deaths_by_date, n=100)
+
+deaths_mort <- deaths_by_date %>%
+  group_by(week = floor_date(DTHDT, "week")) %>%
+  summarise(n = sum(n))
+
+print(deaths_mort, n=100)
+
+
+merged_data <- weekly_mort %>% 
+  left_join(deaths_mort, by = "week") %>% 
+  replace_na(list(n = 0))
+
+print(merged_data, n=100)
+
+## restricted date range barplot excluding last 5 weeks
+barplot(as.integer(merged_data$mortality_rate), main="C4591001 - Expected vs Actual deaths for the USA population")
+barplot(as.integer(merged_data$n, merged_data$week), col="red", add=TRUE)
+
+expected_deaths <- sum(merged_data$mortality_rate)
+actual_deaths <- sum(merged_data$n)
+percentage_diff <- (actual_deaths / expected_deaths) * 100
+cat("Actual deaths are", percentage_diff, "% lower than expected deaths.")
