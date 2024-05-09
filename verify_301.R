@@ -332,7 +332,8 @@ site_1231_subjects_with_RFICDT %>%
   ggplot(aes(x = RFICDT, fill = missing)) + 
   geom_bar(position = "stack") + 
   geom_text(aes(label = ..count..), stat = "count", position = position_stack(vjust = 1.05), color = "black") + 
-  labs(x = "Date", y = "Number of Subjects", fill = "Missing Status") + 
+  labs(x = "Date", y = "Number of Subjects", fill = "Missing Status", 
+       title = "C4591001 - Subjects Screened and Missing on Site 1231") + 
   theme_classic() + 
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 

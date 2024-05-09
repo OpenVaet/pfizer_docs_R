@@ -112,7 +112,7 @@ ggplot(comparison_results_long, aes(x = VISIT, y = Value, color = Measure, label
             vjust = 0, size = 6.5, color = "black") +
   scale_linetype_manual(values = c("Official measures" = "dashed", "First measures" = "solid")) +
   scale_color_manual(values = c("Official measures" = "#FF6B6B", "First measures" = "#4CAF50")) +
-  labs(title = "SARS-CoV-2 serum neutralizing titer 50% by Visit",
+  labs(title = "C4591001 - Phase 1 - SARS-CoV-2 serum neutralizing titer 50% by Visit",
        x = "Visit",
        y = "Titer",
        color = "Measure") +

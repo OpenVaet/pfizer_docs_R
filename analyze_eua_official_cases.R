@@ -266,7 +266,8 @@ ggplot(plot_data, aes(x = date)) +
   geom_text(data = marker_data, 
             aes(x = date, y = accumulated_cases / 13.33, label = accumulated_cases), 
             color = "black", vjust = -0.5, size = 6) +
-  labs(x = "Date", y = "Number of Cases") + 
+  labs(x = "Date", y = "Number of Cases", 
+       title = "C4591001 - Official EUA COVID-19 Cases accrued to November 14, 2020") + 
   theme_classic() + 
   scale_x_date(breaks = seq(min(plot_data$date), max(plot_data$date), by = "3 day"), 
                date_labels = "%d %b %Y") + 

@@ -117,7 +117,8 @@ weekly_recruitment <- selected_data %>%
 # Outputs a column chart
 ggplot(weekly_recruitment, aes(x = YEAR_WEEKNUM, y = Subjects, fill = factor(PHASEN))) + 
   geom_col(position = "dodge") + 
-  scale_fill_discrete(breaks = c("1", "2", "3"), labels = c("1", "2", "3")) + 
+  scale_fill_manual(values = c("1" = "#c1c9b3", "2" = "#415178", "3" = "#556b2f"), 
+                    breaks = c("1", "2", "3"), labels = c("1", "2", "3")) + 
   labs(x = "Year-Week Number", y = "Number of Subjects", fill = "Phase", 
        title = "C4591001 - Weekly recruitment of phases 1, 2 & 3 Subjects") + 
   theme_classic() +

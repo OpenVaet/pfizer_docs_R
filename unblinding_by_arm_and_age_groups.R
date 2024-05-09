@@ -11,6 +11,8 @@ randomized_pop <- read.csv(randomized_pop_file)
 randomized_pop <- randomized_pop %>%
   filter(VAX101DT <= as.Date("2020-12-14"))
 
+print(paste('Population pool : ', nrow(randomized_pop)))
+
 # Convert UNBLNDDT to Date type
 randomized_pop <- randomized_pop %>%
   mutate(UNBLNDDT = as.Date(UNBLNDDT))
