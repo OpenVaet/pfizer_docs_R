@@ -232,7 +232,7 @@ for (i in seq_along(date_seq)) {
   plot_data$accumulated_cases[i] <- sum(plot_data$daily_cases[1:i])
 }
 
-# Find the dates where the accumulated cases exceed 62, 94, and 162 for the first time
+# Find the dates where the accumulated cases exceed 62, 92, and 164 for the first time
 marker_dates <- plot_data %>%
   mutate(cumsum = cumsum(daily_cases)) %>%
   filter(cumsum >= 62 & cumsum - daily_cases < 62) %>%
@@ -241,12 +241,12 @@ marker_dates <- plot_data %>%
   c(.,
     plot_data %>%
       mutate(cumsum = cumsum(daily_cases)) %>%
-      filter(cumsum >= 94 & cumsum - daily_cases < 94) %>%
+      filter(cumsum >= 92 & cumsum - daily_cases < 92) %>%
       slice(1) %>%
       pull(date),
     plot_data %>%
       mutate(cumsum = cumsum(daily_cases)) %>%
-      filter(cumsum >= 162 & cumsum - daily_cases < 162) %>%
+      filter(cumsum >= 164 & cumsum - daily_cases < 164) %>%
       slice(1) %>%
       pull(date)
   )

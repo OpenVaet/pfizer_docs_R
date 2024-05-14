@@ -62,7 +62,6 @@ adae_selected_merged <- adae_selected_merged %>%
   rename(REPORTDATE = AESTDTC)
 adae_selected_merged$REPORTDATE <- substr(adae_selected_merged$REPORTDATE, 1, 10)
 adae_selected_merged$REPORTDATE <- as.Date(adae_selected_merged$REPORTDATE)
-face_merged$REPORTDATE <- as.Date(face_merged$REPORTDATE)
 print(adae_selected_merged)
 
 # Loads the FAcE data.
@@ -86,6 +85,7 @@ face_merged <- face_merged %>%
   rename(SYMPTOM = FAOBJ)
 face_merged <- face_merged %>% 
   rename(REPORTDATE = FADTC)
+face_merged$REPORTDATE <- as.Date(face_merged$REPORTDATE)
 
 
 print(adae_selected_merged)
@@ -124,11 +124,10 @@ print(summary_df)
 # Creates the line chart
 ggplot(summary_df, aes(x = REPORTDATE, y = Count, color = ARM)) +
   geom_point() +
-  geom_line() +
-  geom_text(aes(label = Count), vjust = 0, size = 6.5, color = "black") +
+  geom_line(size = 1.4) +
   scale_color_manual(values = c("BNT162b2 Phase 2/3 (30 mcg)" = "#FF6B6B", "Placebo" = "black")) +
-  labs(title = "C4591001 - Phase 1 - Phase 2-3 Subjects reporting COVID symptoms",
-       x = "Visit",
+  labs(title = "C4591001 - Phase 2-3 Subjects Reporting COVID symptoms",
+       x = "Date",
        y = "Subjects",
        color = "ARM") +
   theme_minimal() +
@@ -138,11 +137,13 @@ ggplot(summary_df, aes(x = REPORTDATE, y = Count, color = ARM)) +
     axis.text = element_text(size = 16),
     legend.title = element_text(size = 18),
     legend.text = element_text(size = 14),
-    strip.text = element_text(size = 16)
-  )
+    strip.text = element_text(size = 16),
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+  ) + 
+  scale_x_date(date_breaks = "3 day", date_labels = "%Y-%m-%d")
 
 # Saves the plot to a file
-ggsave("phase_1_comparison_avisit_by_visit.png", width = 8, height = 6, dpi = 300)
+ggsave("subjects_with_covid_symptoms.png", width = 8, height = 6, dpi = 300)
 
 # Writes the updated data to a CSV file
-write.csv(summary_df, "phase_1_comparison_avisit_by_visit.csv", row.names = FALSE)
+write.csv(summary_df, "subjects_with_covid_symptoms.csv", row.names = FALSE)
