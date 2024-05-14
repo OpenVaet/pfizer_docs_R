@@ -60,3 +60,5 @@ html_table <- flextable(injec_rows) %>%
 
 save_as_html(html_table, path = "injection_pain_between_d2_to_d3.html")
 
+table(injec_rows$DAYSDIF)
+
