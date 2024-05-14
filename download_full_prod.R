@@ -9,19 +9,19 @@ user_agent <- "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTM
 docs_url <- 'https://phmpt.org/multiple-file-downloads/'
 print(paste("Getting index on", docs_url))
 
-# Send a GET request
+# Sends a GET request
 res <- GET(docs_url, user_agent(user_agent))
 
-# Check if the request is successful
+# Checks if the request is successful
 if(http_error(res)){
   stop(paste("Failed to get", docs_url))
 }
 
-# Parse the content
+# Parses the content
 content <- content(res, as="text")
 tree <- read_html(content)
 
-# Create zip_data and xpt_data directories if they don't exist
+# Creates zip_data and xpt_data directories if they don't exist
 prod_path <- "prod_data"
 if (!dir.exists(prod_path)) {
   dir.create(prod_path)
@@ -51,5 +51,3 @@ for(i in 1:length(trs)){
     }
   }
 }
-
-
