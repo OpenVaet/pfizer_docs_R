@@ -107,7 +107,8 @@ table(deaths_only$ARM)
 
 # Sustains only subjects who died before to be unblinded.
 deaths_before_unblind <- deaths_only %>%
-  filter(is.na(UNBLNDDT))
+  filter(is.na(UNBLNDDT) | UNBLNDDT >= DTHDT)
+print(deaths_before_unblind, n=40)
 
 # Counts the total rows by ARM
 table(deaths_before_unblind$ARM)

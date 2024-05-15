@@ -1,23 +1,23 @@
-# Load required packages
+# Loads required packages
 library(readr)
 library(dplyr)
 library(ggplot2)
 
-# Load the Phase 3 population randomized
+# Loads the Phase 3 population randomized
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
 randomized_pop <- read.csv(randomized_pop_file)
 
-# Filter out the subjects who haven't received dose 1 prior December 14, 2020
+# Filters out the subjects who haven't received dose 1 prior December 14, 2020
 randomized_pop <- randomized_pop %>%
   filter(VAX101DT <= as.Date("2020-12-14"))
 
 print(paste('Population pool : ', nrow(randomized_pop)))
 
-# Convert UNBLNDDT to Date type
+# Converts UNBLNDDT to Date type
 randomized_pop <- randomized_pop %>%
   mutate(UNBLNDDT = as.Date(UNBLNDDT))
 
-# Calculate the cumulative percentage of subjects unblinded by date and age group
+# Calculates the cumulative percentage of subjects unblinded by date and age group
 randomized_pop_cumulative <- randomized_pop %>%
   group_by(AGEGR1, UNBLNDDT) %>%
   summarise(n = n()) %>%
@@ -28,7 +28,7 @@ randomized_pop_cumulative <- randomized_pop_cumulative %>%
 
 print(randomized_pop_cumulative)
 
-# Plot the chart
+# Plots the chart
 ggplot(randomized_pop_cumulative, aes(x = UNBLNDDT, y = cumulative_percent, color = AGEGR1)) + 
   geom_line(size = 1.5) + 
   labs(x = "Date of Unblinding", y = "Cumulative Percentage of Subjects Unblinded", color = "Age Group", 

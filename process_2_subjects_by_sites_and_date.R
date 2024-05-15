@@ -20,7 +20,7 @@ filtered_data <- randomized_pop %>%
 
 print(filtered_data)
 
-# Write filtered_data to a new CSV file
+# Writes filtered_data to a new CSV file
 write.csv(filtered_data, "process_2_recipients_by_date_and_sites.csv", row.names = FALSE)
 
 

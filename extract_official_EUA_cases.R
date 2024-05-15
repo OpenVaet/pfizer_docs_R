@@ -98,21 +98,21 @@ for(i in 1:length(trs)){
         # Removes trailing newline character
         line <- sub("\n$", "", line)
         
-        # Start printing when line exactly matches "16.2.8.2"
+        # Starts printing when line exactly matches "16.2.8.2"
         if (grepl("16\\.2\\.8\\.2", line)) {
           to_print <- 1
         }
         
-        # Stop printing when line exactly matches "16.2.8.3"
+        # Stops printing when line exactly matches "16.2.8.3"
         if (grepl("16\\.2\\.8\\.3", line)) {
           to_print <- 0
         }
         
-        # Write the line to the debug file if the to_print flag is set
+        # Writes the line to the debug file if the to_print flag is set
         if (to_print == 1) {
-          # Check if the line matches the desired format
+          # Checks if the line matches the desired format
           if (grepl("^ {34,}(\\d{8}) .*$", line)) {
-            # Extract the 8-digit number
+            # Extracts the 8-digit number
             number <- sub("^ {34,}(\\d{8}) .*$", "\\1", line)
             write(paste(number, sep = ","), 
                   file = output_file, append = TRUE)

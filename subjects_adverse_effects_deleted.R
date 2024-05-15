@@ -1,4 +1,4 @@
-# Load necessary package
+# Loads necessary package
 library(haven)
 library(dplyr)
 library(tidyr)
@@ -230,11 +230,11 @@ write.csv(missing_aespid_df_unique, "missing_aespid.csv", row.names = FALSE)
 
 
 
-# Remove rows where ADVERSE_EVENT is NA
+# Removes rows where ADVERSE_EVENT is NA
 missing_aespid_with_terms <- missing_aespid_df_unique %>% 
   filter(!is.na(ADVERSE_EVENT))
 
-# List the ADVERSE_EVENT and their corresponding total of rows by ARMS
+# Lists the ADVERSE_EVENT and their corresponding total of rows by ARMS
 adverse_event_summary <- missing_aespid_with_terms %>% 
   group_by(ARM, ADVERSE_EVENT) %>% 
   summarise(total_rows = n()) %>% 

@@ -24,37 +24,35 @@ subjects_screened_by_site <- adsl_data %>%
   summarise(Subjects_Screened = n(), .groups = 'drop')
 print(subjects_screened_by_site)
 
-# Join the trial sites data with the subjects screened by site
-# Make sure that the column names used for joining are correct and present in both data frames
+# Joins the trial sites data with the subjects screened by site
+# Makes sure that the column names used for joining are correct and present in both data frames
 sites_frame <- merge(subjects_screened_by_site, trial_sites_data, by.x = "ORISITEID", by.y = "trial_site_id", all.x = TRUE)
 
-# Select the relevant columns (assuming 'country' and 'name' are the correct column names in your JSON file)
+# Filters columns
 sites_frame <- sites_frame %>%
   select(ORISITEID, Country = country, Site_Name = name, Investigator = investigator, Latitude = latitude, Longitude = longitude, Subjects_Screened)
 
-# Write the data to a CSV file
+# Writes the data to a CSV file
 write.csv(sites_frame, "subjects_screened_by_sites.csv", row.names = FALSE)
 
-# Count the total of unique entries in "SITEID"
+# Counts the total of unique entries in "SITEID"
 unique_siteid_count <- length(unique(adsl_data$SITEID))
 print(paste("Total unique SITEID entries: ", unique_siteid_count))
 
-# Count the number of subjects in each arm
+# Counts the number of subjects in each arm
 arm_counts <- table(adsl_data$ARM)
 print(arm_counts)
 
-# Count the total of subjects by country
+# Counts the total of subjects by country
 subjects_by_country <- sites_frame %>%
   group_by(Country) %>%
   summarise(Total_Subjects = sum(Subjects_Screened))
 print(subjects_by_country)
 
-# Write the data to a CSV file
+# Writes the data to a CSV file
 write.csv(subjects_by_country, "subjects_by_country.csv", row.names = FALSE)
 
-# Create the plot
-# Create the plot
-# Create the plot
+# Creates the plot
 ggplot(subjects_by_country, aes(x = reorder(Country, -Total_Subjects), y = Total_Subjects)) +
   geom_bar(stat = "identity", fill = "steelblue") +
   geom_text(aes(label = format(Total_Subjects, big.mark = ",")), 
@@ -73,5 +71,5 @@ ggplot(subjects_by_country, aes(x = reorder(Country, -Total_Subjects), y = Total
         legend.text = element_text(size = 14),
         strip.text = element_text(size = 16))
 
-# Save the plot as a PNG
+# Saves the plot as a PNG
 ggsave("subjects_by_country.png", width = 8, height = 6, dpi = 300)

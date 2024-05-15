@@ -1,4 +1,4 @@
-# Load necessary package
+# Loads necessary package
 library(haven)
 library(dplyr)
 library(tidyr)

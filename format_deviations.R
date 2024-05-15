@@ -131,14 +131,14 @@ deviation_counts <- deviation_counts %>%
   select(-TOTAL_SUBJECTS, -chi_square)
 print(deviation_counts, n=120)
 
-# Convert CONCATTERM to a standard encoding
+# Converts CONCATTERM to a standard encoding
 deviation_counts$CONCATTERM <- iconv(deviation_counts$CONCATTERM, from = "UTF-8", to = "ASCII", sub = "")
 
-# Remove en dash characters from CONCATTERM
+# Removes en dash characters from CONCATTERM
 deviation_counts <- deviation_counts %>% 
   mutate(CONCATTERM = gsub("–", "-", CONCATTERM))
 
-# Create the formatted table
+# Creates the formatted table
 html_table <- flextable(deviation_counts) %>%
   set_header_labels(
     "CONCATTERM" = "Deviation",
@@ -153,7 +153,7 @@ html_table <- flextable(deviation_counts) %>%
   autofit() %>%
   set_caption("Table 2: Deviations significantly disbalanced")
 
-# Save the HTML table to a file
+# Saves the HTML table to a file
 save_as_html(html_table, path = "imbalanced_deviations.html")
 
 # Filters on the significantly imbalanced deviations.
@@ -195,12 +195,12 @@ randomized_pop_by_arms <- randomized_pop %>%
     .groups = "drop"
   )
 
-# Filter randomized_pop_by_arms to only include SITEIDs also in filtered_imbalanced_deviations_by_arms
+# Filters randomized_pop_by_arms to only include SITEIDs also in filtered_imbalanced_deviations_by_arms
 randomized_pop_by_arms <- randomized_pop_by_arms %>%
   filter(SITEID %in% filtered_imbalanced_deviations_by_arms$SITEID)
 print(randomized_pop_by_arms, n = 100)
 
-# Initialize an empty dataframe to store the results
+# Initializes an empty dataframe to store the results
 deviations_significant_results <- data.frame(
   SITEID = character(),
   CONCATTERM = character(),
@@ -211,16 +211,16 @@ deviations_significant_results <- data.frame(
   fisher_exact_pvalue = numeric()
 )
 
-# Loop through each SITEID
+# Loops through each SITEID
 for (site_id in unique(filtered_imbalanced_deviations_by_arms$SITEID)) {
   for (dev_term in unique(filtered_imbalanced_deviations_by_arms$CONCATTERM)) {
-    # Filter data for current SITEID
+    # Filters data for current SITEID
     site_data_imbalanced <- filtered_imbalanced_deviations_by_arms %>% 
       filter(SITEID == site_id, CONCATTERM == dev_term)
     site_data_randomized <- randomized_pop_by_arms %>% 
       filter(SITEID == site_id)
     
-    # Retrieve deviations and totals for current SITEID
+    # Retrieves deviations and totals for current SITEID
     bnt162b2_deviations <- sum(site_data_imbalanced %>% 
                                  filter(ARM == "BNT162b2 Phase 2/3 (30 mcg)") %>% 
                                  pull(total_devs))
@@ -240,19 +240,19 @@ for (site_id in unique(filtered_imbalanced_deviations_by_arms$SITEID)) {
     print(paste('Deviations BNT162b2 : ', bnt162b2_deviations, '/', bnt162b2_total))
     print(paste('Deviations Placebo : ', placebo_deviations, '/', placebo_total))
     
-    # Create a contingency table
+    # Creates a contingency table
     contingency_table <- matrix(c(bnt162b2_deviations, bnt162b2_no_deviations, placebo_deviations, placebo_no_deviations), nrow = 2, ncol = 2)
     colnames(contingency_table) <- c("Deviation", "No deviation")
     rownames(contingency_table) <- c("BNT", "Placebo")
     
-    # Perform the Fisher's exact test
+    # Performs the Fisher's exact test
     fisher_exact_test <- fisher.test(contingency_table)
     
     print(paste('Site : ', site_id))
     print(contingency_table)
     print(fisher_exact_test)
     
-    # Add the results to the dataframe
+    # Adds the results to the dataframe
     if (fisher_exact_test$p.value <= 0.05) {
       deviations_significant_results <- rbind(deviations_significant_results, data.frame(
         SITEID = site_id,
@@ -277,7 +277,7 @@ deviations_significant_results <- deviations_significant_results %>%
     TRUE ~ "<0.1"
   ))
 
-# Create the formatted table
+# Creates the formatted table
 html_table <- flextable(deviations_significant_results) %>%
   set_header_labels(
     "SITEID" = "Site Id",
@@ -295,7 +295,7 @@ html_table <- flextable(deviations_significant_results) %>%
   autofit() %>%
   set_caption("Table 2: Deviations significantly disbalanced")
 
-# Save the HTML table to a file
+# Saves the HTML table to a file
 save_as_html(html_table, path = "imbalanced_deviations_by_sites.html")
 
 print(deviations_significant_results)

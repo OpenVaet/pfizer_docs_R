@@ -217,13 +217,13 @@ local_test_percentages <- arm_test_counts %>%
 print(central_test_percentages)
 print(local_test_percentages)
 
-# Filter Local data to only include SITEIDs with at least 50 subjects tested
+# Filters Local data to only include SITEIDs with at least 50 subjects tested
 local_filtered_data <- local_test_percentages %>%
   group_by(SITEID) %>%
   filter(sum(total_visits) >= 50)
 print(local_filtered_data, n=200)
 
-# Initialize an empty dataframe to store the results
+# Initializes an empty dataframe to store the results
 local_significant_results <- data.frame(
   SITEID = character(),
   bnt162b2_tested = numeric(),
@@ -235,15 +235,15 @@ local_significant_results <- data.frame(
   fisher_exact_pvalue = numeric()
 )
 
-# Load the HTML template
+# Loads the HTML template
 html_template <- readLines("testing_comparison_template.html")
 
-# Initialize an empty string to store the table rows
+# Initializes an empty string to store the table rows
 table_rows <- ""
 
-# Iterate over each SITEID
+# Iterates over each SITEID
 for (site_id in unique(local_filtered_data$SITEID)) {
-  # Retrieve the values for the current SITEID
+  # Retrieves the values for the current SITEID
   bnt162b2_total_visits <- local_filtered_data$total_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
   bnt162b2_tested <- local_filtered_data$local_test_visits[local_filtered_data$SITEID == site_id & local_filtered_data$ARM == "BNT162b2 Phase 2/3 (30 mcg)"]
   bnt162b2_not_tested <- bnt162b2_total_visits - bnt162b2_tested
@@ -254,16 +254,16 @@ for (site_id in unique(local_filtered_data$SITEID)) {
   placebo_not_tested <- placebo_total_visits - placebo_tested
   placebo_tested_pct <- round(placebo_tested / placebo_total_visits * 100, 2)
   
-  # Create a contingency table
+  # Creates a contingency table
   contingency_table <- matrix(c(bnt162b2_tested, bnt162b2_not_tested, placebo_tested, placebo_not_tested), nrow = 2, ncol = 2)
   colnames(contingency_table) <- c("Tested", "Not Tested")
   rownames(contingency_table) <- c("BNT", "Placebo")
   
-  # Perform the Fisher's exact test
+  # Performs the Fisher's exact test
   fisher_exact_test <- fisher.test(contingency_table)
   
   if (fisher_exact_test$p.value <= 0.05) {
-    # Generate the table row
+    # Generates the table row
     p_value_formatted <- case_when(
       fisher_exact_test$p.value < 0.000001 ~ "<0.000001",
       fisher_exact_test$p.value < 0.00001 ~ "<0.00001",
@@ -298,13 +298,13 @@ for (site_id in unique(local_filtered_data$SITEID)) {
 
 print(local_significant_results)
 
-# Replace <--TABLE_ROWS--> with the generated table rows
+# Replaces <--TABLE_ROWS--> with the generated table rows
 html_output <- gsub("<--TABLE_ROWS-->", table_rows, html_template)
 
-# Write the HTML output to a file
+# Writes the HTML output to a file
 writeLines(html_output, "phase_3_local_tests_by_sites.html")
 
-# Write the dataframe to a CSV file
+# Writes the dataframe to a CSV file
 write.csv(local_significant_results, "phase_3_local_tests_by_sites.csv", row.names = FALSE)
 
 

@@ -5,24 +5,24 @@ library(dplyr)
 # Loads sites data
 sites_data <- read_csv('subjects_screened_by_sites_phase1.csv')
 
-# Check for missing columns in any rows
+# Checks for missing columns in any rows
 if (any(colSums(is.na(sites_data)) > 0)) {
   stop("Data is missing in some rows.")
 }
 
-# Summarize the total subjects screened by country
+# Summarizes the total subjects screened by country
 subjects_screened_by_country <- sites_data %>%
   group_by(Country) %>%
   summarize(Total_Subjects = sum(Subjects_Screened, na.rm = TRUE)) %>%
   ungroup()
 
-# Write the summarized data to a CSV file
+# Writes the summarized data to a CSV file
 write_csv(subjects_screened_by_country, 'subjects_screened_by_countries_phase1.csv', col_names = TRUE)
 
-# Prepare a list to hold site data
+# Prepares a list to hold site data
 sites <- list()
 
-# Populate the list with site data
+# Populates the list with site data
 for (i in 1:nrow(sites_data)) {
   ORISITEID <- as.character(sites_data$ORISITEID[i])
   sites[[ORISITEID]] <- sites_data[i, ]
@@ -42,17 +42,15 @@ for (trial_site_id in names(sites)) {
   longitude <- sites[[trial_site_id]]$Longitude
   investigator <- sites[[trial_site_id]]$Investigator
   subjects_screened <- sites[[trial_site_id]]$Subjects_Screened
-  
+
   # Calculate the total area for the subjects screened
   total_area <- 100000000 * subjects_screened # 100.000.000 square meters per subject
-  
+
   # Calculate the radius based on the area
   radius_size <- as.integer(sqrt(total_area / pi)) # sqrt(Area / pi)
-  
+
   site_name_print <- gsub("'", "\\\\'", site_name, fixed = TRUE)
-  
-  
-  
+
   data_points <- paste0(data_points, sprintf("var circle%s = L.circle([%s, %s], {
     color: '#3ebfed',
     fillColor: '#3ebfed',
@@ -63,7 +61,7 @@ for (trial_site_id in names(sites)) {
     subjects_screened: '%s',
     trial_site_id: %s
 }).addTo(map).on('mouseover', onClick);\n", i, latitude, longitude, radius_size, site_name_print, investigator, subjects_screened, i))
-  
+
     data_points <- paste0(data_points, sprintf("
   var label%s = L.marker([%s, %s], {
   icon: L.divIcon({
@@ -76,5 +74,5 @@ for (trial_site_id in names(sites)) {
 
 html_template <- gsub("\\[---DATAPOINTS---\\]", data_points, html_template)
 
-# Write the modified HTML to a new file
+# Writes the modified HTML to a new file
 writeLines(html_template, 'map_of_phase_1_subjects_screened.html')

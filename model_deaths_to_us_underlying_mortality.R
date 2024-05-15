@@ -1,4 +1,4 @@
-# Load required packages
+# Loads required packages
 library(readr)
 library(tidyverse)
 library(jsonlite)
@@ -11,7 +11,7 @@ us_simu_mort_file <- "us_mortality/mort_by_date.csv"
 
 # If the daily mortality hasn't been calculated yet, proceeds from Wonder data.
 if (!file.exists(us_mortality_file)) {
-  # Read the text file
+  # Reads the text file
   cdc_data <- read_delim("us_mortality/Underlying Cause of Death, 2018-2022, Single Race.txt", 
                          delim = "\t", 
                          escape_double = FALSE, 
@@ -20,7 +20,7 @@ if (!file.exists(us_mortality_file)) {
                          comment = "---")
   
   cdc_df <- suppressWarnings(cdc_data %>%
-                               # Rename the columns
+                               # Renames the columns
                                rename(state = "State",
                                       state_code = "State Code",
                                       age_group = "Five-Year Age Groups",
@@ -32,7 +32,7 @@ if (!file.exists(us_mortality_file)) {
                                       deaths = "Deaths",
                                       population = "Population",
                                       crude_rate = "Crude Rate") %>%
-                               # Convert relevant columns to appropriate data types
+                               # Converts relevant columns to appropriate data types
                                mutate(state_code = as.integer(state_code),
                                       age_group_code = case_when(
                                         age_group_code %in% c("1", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99") ~ as.integer(age_group_code),
@@ -43,11 +43,11 @@ if (!file.exists(us_mortality_file)) {
                                       population = as.integer(population),
                                       crude_rate = as.numeric(crude_rate)) %>%
                                mutate(across(where(is.numeric), ~replace_na(., 0))))
-  # Convert month column from "YYYY/MM" to "MM"
+  # Converts month column from "YYYY/MM" to "MM"
   cdc_df$month_code <- substr(cdc_df$month_code, 6, 7)
   print(cdc_df)
   
-  # Read the yearly population text file
+  # Reads the yearly population text file
   cdc_pop_data <- read_delim("us_mortality/Single-Race Population Estimates 2020-2022.txt", 
                          delim = "\t", 
                          escape_double = FALSE, 
@@ -57,7 +57,7 @@ if (!file.exists(us_mortality_file)) {
   print(cdc_pop_data)
   
   cdc_pop_df <- suppressWarnings(cdc_pop_data %>%
-                               # Rename the columns
+                               # Renames the columns
                                rename(state = "State",
                                       state_code = "State Code",
                                       age_group = "Age Group",
@@ -65,7 +65,7 @@ if (!file.exists(us_mortality_file)) {
                                       year = "Yearly July 1st Estimates",
                                       year_code = "Yearly July 1st Estimates Code",
                                       population = "Population") %>%
-                               # Convert relevant columns to appropriate data types
+                               # Converts relevant columns to appropriate data types
                                mutate(state_code = as.integer(state_code),
                                       age_group_code = case_when(
                                         age_group_code %in% c("1", "5-9", "10-14", "15-19", "20-24", "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60-64", "65-69", "70-74", "75-79", "80-84", "85-89", "90-94", "95-99") ~ as.integer(age_group_code),
@@ -77,7 +77,7 @@ if (!file.exists(us_mortality_file)) {
   print(cdc_pop_df)
   print(cdc_df)
   
-  # Convert age groups above or equal to "85-89 years" to "85+ years" in cdc_df
+  # Converts age groups above or equal to "85-89 years" to "85+ years" in cdc_df
   cdc_df <- cdc_df %>%
     mutate(age_group = case_when(
       age_group %in% c("85-89 years", "90-94 years", "95-99 years", "100+ years") ~ "85+ years",
@@ -91,10 +91,10 @@ if (!file.exists(us_mortality_file)) {
   print(unique(cdc_df$state))
   
   
-  # Create an empty data frame to store the results
+  # Creates an empty data frame to store the results
   result_df <- data.frame()
   
-  # Iterate over each state, year, month, and age group in cdc_df
+  # Iterates over each state, year, month, and age group in cdc_df
   for (st in unique(cdc_df$state)) {
     if (is.na(st) | st == 0 | st == 'Alaska') {
       next
@@ -108,7 +108,7 @@ if (!file.exists(us_mortality_file)) {
           if (is.na(ag) | ag == 'Not Stated' | ag == '< 1 year' | ag == '1-4 years' | ag == '5-9 years') {
             next
           }
-          # Filter cdc_df to get the deaths for the current state, year, month_code, and age group
+          # Filters cdc_df to get the deaths for the current state, year, month_code, and age group
           deaths <- cdc_df %>% 
             filter(state == st, year == y, month_code == m, age_group == ag) %>% 
             pull(deaths)
@@ -118,23 +118,23 @@ if (!file.exists(us_mortality_file)) {
             deaths <- 0
           }
           
-          # Filter cdc_pop_df to get the population for the current state, year, and age group
+          # Filters cdc_pop_df to get the population for the current state, year, and age group
           population <- cdc_pop_df %>% 
             filter(state == st, year == y, age_group == ag) %>% 
             pull(population)
           
-          # Calculate the number of days in the month
+          # Calculates the number of days in the month
           days_in_month <- ifelse(m %in% c("02", "02"), 
                                   ifelse(y %% 4 == 0, 29, 28), 
                                   ifelse(m %in% c("04", "06", "09", "11"), 30, 31))
           
-          # Calculate the daily chance to die
+          # Calculates the daily chance to die
           daily_chance_to_die <- deaths / (population * days_in_month)
           
-          # Create a data frame with the results
+          # Creates a data frame with the results
           temp_df <- data.frame(state = st, year = y, month = m, age_group = ag, deaths = deaths, population = population, daily_chance_to_die = daily_chance_to_die, days_in_month = days_in_month)
           
-          # Add the results to the main data frame
+          # Adds the results to the main data frame
           result_df <- rbind(result_df, temp_df)
         }
       }
@@ -163,7 +163,7 @@ print(trial_sites_data)
 print(unique(trial_sites_data$state))
 print(unique(us_mortality$age_group ))
 
-# Check if all states in trial_sites_data are present in us_mortality
+# Checks if all states in trial_sites_data are present in us_mortality
 missing_states <- setdiff(trial_sites_data$state, us_mortality$state)
 
 if (length(missing_states) == 0) {
@@ -176,7 +176,7 @@ if (length(missing_states) == 0) {
 # Filters randomized_pop to only sustain US sites.
 randomized_pop <- randomized_pop[randomized_pop$SITEID %in% trial_sites_data$SITEID, ]
 
-# Create the age_group column in randomized_pop
+# Creates the age_group column in randomized_pop
 randomized_pop$age_group <- cut(randomized_pop$AGE, 
                                 breaks = c(0, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, Inf), 
                                 labels = c("< 10 years", "10-14 years", "15-19 years", "20-24 years", "25-29 years", "30-34 years", 
@@ -187,13 +187,13 @@ print(randomized_pop)
 if (!file.exists(us_simu_mort_file)) {
   
   
-  # Find the earliest randomized_pop.RFICDT
+  # Finds the earliest randomized_pop.RFICDT
   earliest_rficdt <- min(as.Date(randomized_pop$RFICDT))# Initialize the mort_by_date data frame with the relevant interval
   end_date <- as.Date("2021-02-28")
   dates <- earliest_rficdt + seq(0, as.integer((end_date - earliest_rficdt) + 1) - 1)
   mort_by_date <- data.frame(date = dates, mortality_rate = 0)
   
-  # Iterate over each subject in the randomized_pop data frame
+  # Iterates over each subject in the randomized_pop data frame
   total_subjects <- nrow(randomized_pop)
   current <- 0
   cpt <- 0
@@ -210,29 +210,29 @@ if (!file.exists(us_simu_mort_file)) {
     site_id <- randomized_pop$SITEID[i]
     st <- trial_sites_data$state[trial_sites_data$SITEID == site_id]
     
-    # Calculate the number of days the subject is present
+    # Calculates the number of days the subject is present
     days_present <- as.integer(end_date - start_date + 1)
     
-    # Iterate over each day the subject is present
+    # Iterates over each day the subject is present
     for (j in 1:days_present) {
       current_date <- start_date + (j - 1)
       
-      # Find the year, month for the current date
+      # Finds the year, month for the current date
       y <- as.integer(format(current_date, "%Y"))
       m <- as.integer(format(current_date, "%m"))
       
-      # Find the corresponding row in the us_mortality data frame
+      # Finds the corresponding row in the us_mortality data frame
       mortality_prob <- us_mortality %>%
         filter(state == st, year == y, month == m, age_group == ag) %>% 
         pull(daily_chance_to_die)
       
-      # Add the daily chance to die to the mort_by_date data frame
+      # Adds the daily chance to die to the mort_by_date data frame
       mort_by_date$mortality_rate[mort_by_date$date == current_date] <- 
         mort_by_date$mortality_rate[mort_by_date$date == current_date] + mortality_prob
     }
   }
   
-  # Print the mort_by_date vector
+  # Prints the mort_by_date vector
   print(mort_by_date)
   write.csv(mort_by_date, us_simu_mort_file)
   print(mort_by_date)

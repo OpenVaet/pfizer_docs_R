@@ -145,17 +145,17 @@ for (i in 1:nrow(all_subjects)) {
   subject_id  <- all_subjects$subject_id [i]
   trial_site_id <- all_subjects$trial_site_id[i]
   
-  # Reset current_gap when site ID changes
+  # Resets current_gap when site ID changes
   if (latest_site_id != '' && latest_site_id != trial_site_id) {
     current_gap <- 0
   }
   
-  # Increment current_gap when missing is "Yes"
+  # Increments current_gap when missing is "Yes"
   if (missing == "Yes") {
     current_gap <- current_gap + 1
   }
   
-  # Store current_gap when missing is not "Yes" and current_gap is not 0
+  # Stores current_gap when missing is not "Yes" and current_gap is not 0
   if (missing != "Yes" && current_gap != 0) {
     print(paste('i : ', i ))
     print(paste('current_gap : ', current_gap ))
@@ -169,12 +169,12 @@ for (i in 1:nrow(all_subjects)) {
   latest_site_id <- trial_site_id
 }
 
-# Write gap counts to a CSV file
+# Writes gap counts to a CSV file
 gap_counts_df <- data.frame(gap_size = names(gap_counts), count = as.numeric(gap_counts))
 print(gap_counts_df)
 write.csv(gap_counts_df, "missing_subjects_sequential_gaps.csv", row.names = FALSE)
 
-# Create a formatted table
+# Creates a formatted table
 html_table <- flextable(gap_counts_df) %>%
   set_header_labels(
     "gap_size" = "Gap Size",
@@ -186,10 +186,10 @@ html_table <- flextable(gap_counts_df) %>%
   padding(padding = 10) %>%
   autofit()
 
-# Save the HTML table to a file
+# Saves the HTML table to a file
 save_as_html(html_table, path = "missing_subjects_gaps_size.html")
 
-# Create a summary data frame
+# Creates a summary data frame
 summary_data <- data.frame(
   trial_site_id = unique(missing_subjects$trial_site_id),
   total_missing = sapply(unique(missing_subjects$trial_site_id), function(x) sum(missing_subjects$trial_site_id == x)),
@@ -200,10 +200,10 @@ summary_data <- data.frame(
 )
 print(summary_data)
 
-# Write the summary data to a CSV file
+# Writes the summary data to a CSV file
 write.csv(summary_data, "missing_subjects_by_sites.csv", row.names = FALSE)
 
-# Split the data into two data frames
+# Splits the data into two data frames
 num_rows <- nrow(summary_data)
 split_index <- ceiling(num_rows / 2)
 output_data_left <- summary_data[1:split_index, 1:5]
@@ -280,24 +280,24 @@ for (i in 1:nrow(filtered_subjects)) {
   }
 }
 
-# Calculate the center of "Yes" rows
+# Calculates the center of "Yes" rows
 center_row <- median(missing_indices)
 print(center_row)
 
-# Select the 50 rows around the center row
+# Selects the 50 rows around the center row
 subjects_missing_highlight <- filtered_subjects %>% 
   arrange(subject_trial_site_incremental_number) %>% 
   slice((center_row - 23):(center_row + 23))
 print(subjects_missing_highlight)
 
 
-# Load the template
+# Loads the template
 template <- readLines("missing_subjects_template.html")
 
-# Initialize the table rows
+# Initializes the table rows
 table_rows <- ""
 
-# Iterate over each subject and add their HTML data
+# Iterates over each subject and add their HTML data
 for (i in 1:nrow(subjects_missing_highlight)) {
   row <- subjects_missing_highlight[i, ]
   missing <- subjects_missing_highlight$missing[i]
@@ -320,10 +320,10 @@ for (i in 1:nrow(subjects_missing_highlight)) {
   }
 }
 
-# Replace the <--TABLE_ROWS--> placeholder with the actual table rows
+# Replaces the <--TABLE_ROWS--> placeholder with the actual table rows
 template <- gsub("<--TABLE_ROWS-->", table_rows, template)
 
-# Print the resulting HTML to a file
+# Prints the resulting HTML to a file
 writeLines(template, "subjects_missing.html")
 
 # Generates an export of the daily recruitment on site 1231.

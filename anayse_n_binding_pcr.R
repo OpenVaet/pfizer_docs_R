@@ -1,4 +1,4 @@
-# Load necessary libraries
+# Loads necessary libraries
 library(jsonlite)
 library(readr)
 library(dplyr)
@@ -10,23 +10,23 @@ library(stats)
 # Loading ADSL data.
 data_file <- 'subjects_test_data.csv'
 
-# Create an environment to use as a hash table
+# Creates an environment to use as a hash table
 subjects <- new.env(hash = TRUE, parent = emptyenv(), size = nrow(data))
 phase_1_subjects <- new.env(hash = TRUE, parent = emptyenv(), size = nrow(data))
 
-# Read the data
+# Reads the data
 data <- read_csv(data_file)
 
-# Get all unique subject_ids from your data
+# Gets all unique subject_ids from your data
 all_subject_ids <- unique(data$subject_id)
 
-# Initialize variables
+# Initializes variables
 row_num <- 0
 total_subjects_p1 <- 0
 total_subjects_p3 <- 0
 phase_1_subjects <- list()
 
-# Loop over rows
+# Loops over rows
 count_display <- 0
 for (i in 1:nrow(data)) {
   row <- data[i, ]
@@ -50,14 +50,14 @@ for (i in 1:nrow(data)) {
     next
   }
   
-  # Create a new list for this subject if it doesn't exist
+  # Creates a new list for this subject if it doesn't exist
   if (!exists(values$subject_id, envir = subjects)) {
     total_subjects_p3 <- total_subjects_p3 + 1
     assign(values$subject_id, list(), envir = subjects)
   }
   
   
-  # Add or update subject data
+  # Adds or updates subject data
   subjects[[values$subject_id]]$age_years <- values$age_years
   subjects[[values$subject_id]]$treatment_arm <- values$treatment_arm
   subjects[[values$subject_id]]$dose_1_date <- values$dose_1_date
@@ -70,24 +70,24 @@ for (i in 1:nrow(data)) {
   subjects[[values$subject_id]]$site_id <- values$site_id
   subjects[[values$subject_id]]$unblinding_date <- values$unblinding_date
 
-  # Create a new list for tests if it doesn't exist
+  # Creates a new list for tests if it doesn't exist
   if (!"tests" %in% names(subjects[[values$subject_id]])) {
     subjects[[values$subject_id]]$tests <- list()
   }
 
-  # Create a new list for this test date if it doesn't exist
+  # Creates a new list for this test date if it doesn't exist
   values$test_date <- as.character(values$test_date)
   if (!values$test_date %in% names(subjects[[values$subject_id]]$tests)) {
     subjects[[values$subject_id]]$tests[[values$test_date]] <- list()
   }
 
-  # Create a new list for this test date test type if it doesn't exist
+  # Creates a new list for this test date test type if it doesn't exist
   values$test_type <- as.character(values$test_type)
   if (!values$test_type %in% names(subjects[[values$subject_id]]$tests[[values$test_date]])) {
     subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]] <- list()
   }
 
-  # Add or update test data
+  # Adds or updates test data
   subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]]$test_visit <- values$test_visit
   subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]]$test_result <- values$test_result
 
@@ -127,11 +127,11 @@ stats <- list("0_treatment_arm" = list(),
               "18_non_detected_pre_visit_3" = list(),
               "19_detection_pre_visit_3_by_site" = list())
 
-# Get all unique treatment arms
+# Gets all unique treatment arms
 treatment_arms <- unique(unlist(lapply(subjects, function(x) x$treatment_arm)))
 sites <- unique(unlist(lapply(subjects, function(x) x$site_id)))
 
-# Initialize a list for each treatment arm in each key of `stats`
+# Initializes a list for each treatment arm in each key of `stats`
 for (treatment_arm in treatment_arms) {
   stats[["0_treatment_arm"]][[treatment_arm]] <- 0
   stats[["1_adrg_exclusions"]][[treatment_arm]] <- 0
