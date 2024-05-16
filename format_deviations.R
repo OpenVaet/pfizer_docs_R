@@ -4,6 +4,7 @@ library(lubridate)
 library(stats)
 library(stringr)
 library(flextable)
+library(ggplot2)
 
 protocol_devs_analysis_file <- 'xpt_data/FDA-CBER-2021-5683-0065774-to-0066700_125742_S1_M5_c4591001-A-D-addv.xpt'
 protocol_devs_sup_file <- 'xpt_data/FDA-CBER-2021-5683-0174607 to -0178318_125742_S1_M5_c4591001-S-D-suppdv.xpt'
@@ -299,3 +300,49 @@ html_table <- flextable(deviations_significant_results) %>%
 save_as_html(html_table, path = "imbalanced_deviations_by_sites.html")
 
 print(deviations_significant_results)
+
+# Represents the site-staff related deviations weekly occurrences.
+print(imbalanced_deviations)
+
+# Adds YEARWEEK column
+imbalanced_deviations <- imbalanced_deviations %>%
+  mutate(YEARWEEK = paste0(year(ymd(DVSTDTC)), "-", sprintf("%02d", week(ymd(DVSTDTC)))))
+
+# Creates a dataframe with the total rows for each YEARWEEK
+imbalanced_yearweek_summary <- imbalanced_deviations %>%
+  group_by(YEARWEEK) %>%
+  summarize(total_deviations = n())
+
+# Plots the deviations by YEARWEEK as a column chart
+ggplot(imbalanced_yearweek_summary, aes(x = YEARWEEK, y = total_deviations)) +
+  geom_col(fill = "#D3D3D3") +
+  labs(title = "C4591001 - Total \"Staff-Related\" Imbalanced Deviations by Year-Week",
+       x = "Year-Week",
+       y = "Total Deviations") +
+  theme_minimal() +
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+
+# Represents the "other nonstudy coronavirus vaccine"
+other_vaccine_deviations <- filtered_data %>%
+  filter(CONCATTERM == "Receipt of any other nonstudy coronavirus vaccine at any time prior to or during the study. ")
+print(other_vaccine_deviations)
+
+# Adds YEARWEEK column
+other_vaccine_deviations <- other_vaccine_deviations %>%
+  mutate(YEARWEEK = paste0(year(ymd(DVSTDTC)), "-", sprintf("%02d", week(ymd(DVSTDTC)))))
+
+# Creates a dataframe with the total rows for each YEARWEEK
+yearweek_summary <- other_vaccine_deviations %>%
+  group_by(YEARWEEK) %>%
+  summarize(total_deviations = n())
+
+# Plots the deviations by YEARWEEK as a column chart
+ggplot(yearweek_summary, aes(x = YEARWEEK, y = total_deviations)) +
+  geom_col() +
+  labs(title = "C4591001 - Total \"Other Vaccine\" Deviations by Year-Week",
+       x = "Year-Week",
+       y = "Total Deviations") +
+  theme_minimal() +
+  theme(text = element_text(size = 18),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))

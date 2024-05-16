@@ -271,7 +271,7 @@ ggplot(merged_data, aes(x = year_week)) +
   geom_col(aes(y = mortality_rate, fill = "Expected")) + 
   geom_col(aes(y = n, fill = "Actual")) + 
   labs(title = "C4591001 - Expected vs Actual deaths for the USA population", 
-       x = "Year-Week", y = "Mortality Rate", fill = "Type") + 
+       x = "Year-Week", y = "Deaths", fill = "Type") + 
   theme_classic() + 
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
