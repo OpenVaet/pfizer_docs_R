@@ -88,3 +88,14 @@ cat("The effect of PROCESS2 on AECOUNT is a", round(process2_effect * 100, 2), "
 comorbidities_ratio <- coef(model2)[2] / coef(model2)[5]
 cat("The effect of PROCESS2 on AECOUNT is", round(comorbidities_ratio, 2), "times larger than the effect of COMORBIDITIES.\n")
 
+# Performs the 2nd evaluation with a negative binomial regression.
+model2_nb <- glm.nb(AECOUNT ~ PROCESS2 + MALE + OBESE + COMORBIDITIES + offset(log(UNBLINDEXPOSURE)),
+                    data = non_obese_males_data)
+summary(model2_nb)
+# Calculates the percentage change in AECOUNT for a one-unit increase in PROCESS2
+process2_effect <- exp(coef(model2_nb)[2]) - 1
+cat("The effect of PROCESS2 on AECOUNT is a", round(process2_effect * 100, 2), "% increase.\n")
+
+# Calculates the ratio of the coefficient estimate for PROCESS2 to the coefficient estimate for COMORBIDITIES
+comorbidities_ratio <- coef(model2_nb)[2] / coef(model2_nb)[5]
+cat("The effect of PROCESS2 on AECOUNT is", round(comorbidities_ratio, 2), "times larger than the effect of COMORBIDITIES.\n")
