@@ -7,7 +7,7 @@ library(lubridate)
 library(stringr)
 library(stats)
 
-# Loading ADSL data.
+# Loading Tests data.
 data_file <- 'subjects_test_data.csv'
 
 # Creates an environment to use as a hash table
@@ -16,9 +16,7 @@ phase_1_subjects <- new.env(hash = TRUE, parent = emptyenv(), size = nrow(data))
 
 # Reads the data
 data <- read_csv(data_file)
-
-# Gets all unique subject_ids from your data
-all_subject_ids <- unique(data$subject_id)
+print(data)
 
 # Initializes variables
 row_num <- 0
@@ -39,57 +37,57 @@ for (i in 1:nrow(data)) {
   
   values <- setNames(as.list(row), names(row))
 
-  values$subject_id <- as.character(values$subject_id)
+  values$SUBJID <- as.character(values$SUBJID)
   
-  if (grepl("Stage 1", values$cohort)) {
-    if (!values$subject_id %in% names(phase_1_subjects)) {
+  if (grepl("Stage 1", values$COHORT)) {
+    if (!values$SUBJID %in% names(phase_1_subjects)) {
       total_subjects_p1 <- total_subjects_p1 + 1
-      phase_1_subjects[[values$subject_id]] <- list()
+      phase_1_subjects[[values$SUBJID]] <- list()
     }
-    phase_1_subjects[[values$subject_id]]$exists <- 1
+    phase_1_subjects[[values$SUBJID]]$exists <- 1
     next
   }
   
   # Creates a new list for this subject if it doesn't exist
-  if (!exists(values$subject_id, envir = subjects)) {
+  if (!exists(values$SUBJID, envir = subjects)) {
     total_subjects_p3 <- total_subjects_p3 + 1
-    assign(values$subject_id, list(), envir = subjects)
+    assign(values$SUBJID, list(), envir = subjects)
   }
   
   
   # Adds or updates subject data
-  subjects[[values$subject_id]]$age_years <- values$age_years
-  subjects[[values$subject_id]]$treatment_arm <- values$treatment_arm
-  subjects[[values$subject_id]]$dose_1_date <- values$dose_1_date
-  subjects[[values$subject_id]]$dose_2_date <- values$dose_2_date
-  subjects[[values$subject_id]]$dose_3_date <- values$dose_3_date
-  subjects[[values$subject_id]]$dose_4_date <- values$dose_4_date
-  subjects[[values$subject_id]]$randomization_date <- values$randomization_date
-  subjects[[values$subject_id]]$randomization_number <- values$randomization_number
-  subjects[[values$subject_id]]$screening_date <- values$screening_date
-  subjects[[values$subject_id]]$site_id <- values$site_id
-  subjects[[values$subject_id]]$unblinding_date <- values$unblinding_date
+  subjects[[values$SUBJID]]$AGE <- values$AGE
+  subjects[[values$SUBJID]]$ARM <- values$ARM
+  subjects[[values$SUBJID]]$VAX101DT <- values$VAX101DT
+  subjects[[values$SUBJID]]$VAX102DT <- values$VAX102DT
+  subjects[[values$SUBJID]]$VAX201DT <- values$VAX201DT
+  subjects[[values$SUBJID]]$VAX202DT <- values$VAX202DT
+  subjects[[values$SUBJID]]$RANDDT <- values$RANDDT
+  subjects[[values$SUBJID]]$RANDNO <- values$RANDNO
+  subjects[[values$SUBJID]]$RFICDT <- values$RFICDT
+  subjects[[values$SUBJID]]$SITEID <- values$SITEID
+  subjects[[values$SUBJID]]$UNBLNDDT <- values$UNBLNDDT
 
   # Creates a new list for tests if it doesn't exist
-  if (!"tests" %in% names(subjects[[values$subject_id]])) {
-    subjects[[values$subject_id]]$tests <- list()
+  if (!"tests" %in% names(subjects[[values$SUBJID]])) {
+    subjects[[values$SUBJID]]$tests <- list()
   }
 
   # Creates a new list for this test date if it doesn't exist
-  values$test_date <- as.character(values$test_date)
-  if (!values$test_date %in% names(subjects[[values$subject_id]]$tests)) {
-    subjects[[values$subject_id]]$tests[[values$test_date]] <- list()
+  values$TESTDATE <- as.character(values$TESTDATE)
+  if (!values$TESTDATE %in% names(subjects[[values$SUBJID]]$tests)) {
+    subjects[[values$SUBJID]]$tests[[values$TESTDATE]] <- list()
   }
 
   # Creates a new list for this test date test type if it doesn't exist
-  values$test_type <- as.character(values$test_type)
-  if (!values$test_type %in% names(subjects[[values$subject_id]]$tests[[values$test_date]])) {
-    subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]] <- list()
+  values$TESTTYPE <- as.character(values$TESTTYPE)
+  if (!values$TESTTYPE %in% names(subjects[[values$SUBJID]]$tests[[values$TESTDATE]])) {
+    subjects[[values$SUBJID]]$tests[[values$TESTDATE]][[values$TESTTYPE]] <- list()
   }
 
   # Adds or updates test data
-  subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]]$test_visit <- values$test_visit
-  subjects[[values$subject_id]]$tests[[values$test_date]][[values$test_type]]$test_result <- values$test_result
+  subjects[[values$SUBJID]]$tests[[values$TESTDATE]][[values$TESTTYPE]]$VISIT <- values$VISIT
+  subjects[[values$SUBJID]]$tests[[values$TESTDATE]][[values$TESTTYPE]]$TESTRESULT <- values$TESTRESULT
 
 }
 
@@ -106,7 +104,7 @@ for (exclusion in adrg_exclusions) {
 }
 
 # Performing analysis on subjects, and keeping track of each exclusion layer.
-stats <- list("0_treatment_arm" = list(),
+stats <- list("0_ARM" = list(),
               "1_adrg_exclusions" = list(),
               "2_age_exclusions" = list(),
               "3_no_visit_1" = list(),
@@ -127,58 +125,58 @@ stats <- list("0_treatment_arm" = list(),
               "18_non_detected_pre_visit_3" = list(),
               "19_detection_pre_visit_3_by_site" = list())
 
-# Gets all unique treatment arms
-treatment_arms <- unique(unlist(lapply(subjects, function(x) x$treatment_arm)))
-sites <- unique(unlist(lapply(subjects, function(x) x$site_id)))
+# Gets all unique treatment treatment_arm
+treatment_arm <- unique(unlist(lapply(subjects, function(x) x$ARM)))
+sites <- unique(unlist(lapply(subjects, function(x) x$SITEID)))
 
 # Initializes a list for each treatment arm in each key of `stats`
-for (treatment_arm in treatment_arms) {
-  stats[["0_treatment_arm"]][[treatment_arm]] <- 0
-  stats[["1_adrg_exclusions"]][[treatment_arm]] <- 0
-  stats[["2_age_exclusions"]][[treatment_arm]] <- 0
-  stats[["3_no_visit_1"]][[treatment_arm]] <- 0
-  stats[["4_no_visit_1_PCR"]][[treatment_arm]] <- 0
-  stats[["5_no_visit_1_NBinding"]][[treatment_arm]] <- 0
-  stats[["6_visit_1_Missing_Test"]][[treatment_arm]] <- 0
-  stats[["7_subjects_with_V1_PCR_and_NBinding"]][[treatment_arm]] <- 0
-  stats[["8_visit_1_POS"]][[treatment_arm]] <- 0
-  stats[["9_visit_1_IND"]][[treatment_arm]] <- 0
-  stats[["10_no_dose_1"]][[treatment_arm]] <- 0
-  stats[["11_visit_1_NEG_and_dose_1"]][[treatment_arm]] <- 0
-  stats[["13_visit_3"]][[treatment_arm]] <- 0
-  stats[["14_visit_3_NEG"]][[treatment_arm]] <- 0
-  stats[["15_visit_3_POS"]][[treatment_arm]] <- 0
-  stats[["17_detected_pre_visit_3"]][[treatment_arm]] <- 0
-  stats[["18_non_detected_pre_visit_3"]][[treatment_arm]] <- 0
+for (ARM in treatment_arm) {
+  stats[["0_ARM"]][[ARM]] <- 0
+  stats[["1_adrg_exclusions"]][[ARM]] <- 0
+  stats[["2_age_exclusions"]][[ARM]] <- 0
+  stats[["3_no_visit_1"]][[ARM]] <- 0
+  stats[["4_no_visit_1_PCR"]][[ARM]] <- 0
+  stats[["5_no_visit_1_NBinding"]][[ARM]] <- 0
+  stats[["6_visit_1_Missing_Test"]][[ARM]] <- 0
+  stats[["7_subjects_with_V1_PCR_and_NBinding"]][[ARM]] <- 0
+  stats[["8_visit_1_POS"]][[ARM]] <- 0
+  stats[["9_visit_1_IND"]][[ARM]] <- 0
+  stats[["10_no_dose_1"]][[ARM]] <- 0
+  stats[["11_visit_1_NEG_and_dose_1"]][[ARM]] <- 0
+  stats[["13_visit_3"]][[ARM]] <- 0
+  stats[["14_visit_3_NEG"]][[ARM]] <- 0
+  stats[["15_visit_3_POS"]][[ARM]] <- 0
+  stats[["17_detected_pre_visit_3"]][[ARM]] <- 0
+  stats[["18_non_detected_pre_visit_3"]][[ARM]] <- 0
 }
 print(stats)
 
-for (subject_id in sort(names(subjects))) {
-  subject_id <- as.character(subject_id)
-  # print(subject_id)
-  treatment_arm <- subjects[[subject_id]]$treatment_arm
-  age_years <- subjects[[subject_id]]$age_years
+for (SUBJID in sort(names(subjects))) {
+  SUBJID <- as.character(SUBJID)
+  # print(SUBJID)
+  ARM <- subjects[[SUBJID]]$ARM
+  AGE <- subjects[[SUBJID]]$AGE
 
-  if (is.null(treatment_arm)) {
-    stop("treatment_arm is null")
+  if (is.null(ARM)) {
+    stop("ARM is null")
   }
-  stats[['0_treatment_arm']][[treatment_arm]] <- ifelse(is.null(stats[['0_treatment_arm']][[treatment_arm]]), 0, stats[['0_treatment_arm']][[treatment_arm]])
-  stats[['0_treatment_arm']][[treatment_arm]] <- stats[['0_treatment_arm']][[treatment_arm]] + 1
+  stats[['0_ARM']][[ARM]] <- ifelse(is.null(stats[['0_ARM']][[ARM]]), 0, stats[['0_ARM']][[ARM]])
+  stats[['0_ARM']][[ARM]] <- stats[['0_ARM']][[ARM]] + 1
   
-  if (exists(subject_id, envir = adrg_exclusions_env)) {
-    stats[['1_adrg_exclusions']][[treatment_arm]] <- ifelse(is.null(stats[['1_adrg_exclusions']][[treatment_arm]]), 0, stats[['1_adrg_exclusions']][[treatment_arm]])
-    stats[['1_adrg_exclusions']][[treatment_arm]] <- stats[['1_adrg_exclusions']][[treatment_arm]] + 1
+  if (exists(SUBJID, envir = adrg_exclusions_env)) {
+    stats[['1_adrg_exclusions']][[ARM]] <- ifelse(is.null(stats[['1_adrg_exclusions']][[ARM]]), 0, stats[['1_adrg_exclusions']][[ARM]])
+    stats[['1_adrg_exclusions']][[ARM]] <- stats[['1_adrg_exclusions']][[ARM]] + 1
     next
   }
   
-  age_years <- subjects[[subject_id]]$age_years
-  if (is.null(age_years)) {
-    stop("age_years is null")
+  AGE <- subjects[[SUBJID]]$AGE
+  if (is.null(AGE)) {
+    stop("AGE is null")
   }
   
-  if (age_years < 16) {
-    stats[['2_age_exclusions']][[treatment_arm]] <- ifelse(is.null(stats[['2_age_exclusions']][[treatment_arm]]), 0, stats[['2_age_exclusions']][[treatment_arm]])
-    stats[['2_age_exclusions']][[treatment_arm]] <- stats[['2_age_exclusions']][[treatment_arm]] + 1
+  if (AGE < 16) {
+    stats[['2_age_exclusions']][[ARM]] <- ifelse(is.null(stats[['2_age_exclusions']][[ARM]]), 0, stats[['2_age_exclusions']][[ARM]])
+    stats[['2_age_exclusions']][[ARM]] <- stats[['2_age_exclusions']][[ARM]] + 1
     next
   }
   
@@ -197,134 +195,134 @@ for (subject_id in sort(names(subjects))) {
   visit_1_date <- NULL
   visit_3_date <- NULL
   
-  for (test_date in sort(names(subjects[[subject_id]]$tests))) {
-    # print(test_date)
-    for (test_type in sort(names(subjects[[subject_id]]$tests[[test_date]]))) {
-      # print(test_type)
-      test_visit <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_visit
-      if (is.null(test_visit)) {
-        stop("test_visit is null")
+  for (TESTDATE in sort(names(subjects[[SUBJID]]$tests))) {
+    # print(TESTDATE)
+    for (TESTTYPE in sort(names(subjects[[SUBJID]]$tests[[TESTDATE]]))) {
+      # print(TESTTYPE)
+      VISIT <- subjects[[SUBJID]]$tests[[TESTDATE]][[TESTTYPE]]$VISIT
+      if (is.null(VISIT)) {
+        stop("VISIT is null")
       }
       
-      test_result <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_result
-      # print(test_result)
-      if (is.null(test_result)) {
-        stop("test_result is null")
+      TESTRESULT <- subjects[[SUBJID]]$tests[[TESTDATE]][[TESTTYPE]]$TESTRESULT
+      # print(TESTRESULT)
+      if (is.null(TESTRESULT)) {
+        stop("TESTRESULT is null")
       }
       
-      if (test_visit == 'V1_DAY1_VAX1_L') {
+      if (VISIT == 'V1_DAY1_VAX1_L') {
         has_v1 <- 1
-        visit_1_compdate <- as.numeric(gsub("\\D", "", test_date))
-        visit_1_date <- test_date
+        visit_1_compdate <- as.numeric(gsub("\\D", "", TESTDATE))
+        visit_1_date <- TESTDATE
         
-        if (test_type == 'PCR Central') {
+        if (TESTTYPE == 'PCR Central') {
           has_v1_PCR <- 1
         }
         
-        if (test_type == 'N-Binding') {
+        if (TESTTYPE == 'N-Binding') {
           has_v1_NB <- 1
         }
         
-        if (test_result == 'POS') {
+        if (TESTRESULT == 'POS') {
           has_v1_POS <- 1
         }
         
-        if (test_result == 'IND') {
+        if (TESTRESULT == 'IND') {
           has_v1_IND <- 1
         }
-      } else if (test_visit == 'V3_MONTH1_POSTVAX2_L') {
+      } else if (VISIT == 'V3_MONTH1_POSTVAX2_L') {
         has_v3 <- 1
-        visit_3_compdate <- as.numeric(gsub("\\D", "", test_date))
-        visit_3_date <- test_date
+        visit_3_compdate <- as.numeric(gsub("\\D", "", TESTDATE))
+        visit_3_date <- TESTDATE
         
-        if (test_result == 'POS') {
+        if (TESTRESULT == 'POS') {
           has_v3_POS <- 1
         }
         
-        if (test_result == 'IND') {
+        if (TESTRESULT == 'IND') {
           has_v3_IND <- 1
         }
       }
       
-      if (test_type != 'PCR Central' && test_result == 'POS') {
+      if (TESTTYPE != 'PCR Central' && TESTRESULT == 'POS') {
         has_positive_pcr <- 1
       }
     }
   }
   
   if (!has_v1) {
-    stats[['3_no_visit_1']][[treatment_arm]] <- ifelse(is.null(stats[['3_no_visit_1']][[treatment_arm]]), 0, stats[['3_no_visit_1']][[treatment_arm]])
-    stats[['3_no_visit_1']][[treatment_arm]] <- stats[['3_no_visit_1']][[treatment_arm]] + 1
+    stats[['3_no_visit_1']][[ARM]] <- ifelse(is.null(stats[['3_no_visit_1']][[ARM]]), 0, stats[['3_no_visit_1']][[ARM]])
+    stats[['3_no_visit_1']][[ARM]] <- stats[['3_no_visit_1']][[ARM]] + 1
     next
   }
   
   if (!has_v1_PCR) {
-    stats[['4_no_visit_1_PCR']][[treatment_arm]] <- ifelse(is.null(stats[['4_no_visit_1_PCR']][[treatment_arm]]), 0, stats[['4_no_visit_1_PCR']][[treatment_arm]])
-    stats[['4_no_visit_1_PCR']][[treatment_arm]] <- stats[['4_no_visit_1_PCR']][[treatment_arm]] + 1
+    stats[['4_no_visit_1_PCR']][[ARM]] <- ifelse(is.null(stats[['4_no_visit_1_PCR']][[ARM]]), 0, stats[['4_no_visit_1_PCR']][[ARM]])
+    stats[['4_no_visit_1_PCR']][[ARM]] <- stats[['4_no_visit_1_PCR']][[ARM]] + 1
   }
   
   if (!has_v1_NB) {
-    stats[['5_no_visit_1_NBinding']][[treatment_arm]] <- ifelse(is.null(stats[['5_no_visit_1_NBinding']][[treatment_arm]]), 0, stats[['5_no_visit_1_NBinding']][[treatment_arm]])
-    stats[['5_no_visit_1_NBinding']][[treatment_arm]] <- stats[['5_no_visit_1_NBinding']][[treatment_arm]] + 1
+    stats[['5_no_visit_1_NBinding']][[ARM]] <- ifelse(is.null(stats[['5_no_visit_1_NBinding']][[ARM]]), 0, stats[['5_no_visit_1_NBinding']][[ARM]])
+    stats[['5_no_visit_1_NBinding']][[ARM]] <- stats[['5_no_visit_1_NBinding']][[ARM]] + 1
   }
   
   if (!has_v1_PCR || !has_v1_NB) {
-    stats[['6_visit_1_Missing_Test']][[treatment_arm]] <- ifelse(is.null(stats[['6_visit_1_Missing_Test']][[treatment_arm]]), 0, stats[['6_visit_1_Missing_Test']][[treatment_arm]])
-    stats[['6_visit_1_Missing_Test']][[treatment_arm]] <- stats[['6_visit_1_Missing_Test']][[treatment_arm]] + 1
+    stats[['6_visit_1_Missing_Test']][[ARM]] <- ifelse(is.null(stats[['6_visit_1_Missing_Test']][[ARM]]), 0, stats[['6_visit_1_Missing_Test']][[ARM]])
+    stats[['6_visit_1_Missing_Test']][[ARM]] <- stats[['6_visit_1_Missing_Test']][[ARM]] + 1
     next
   }
   
-  stats[['7_subjects_with_V1_PCR_and_NBinding']][[treatment_arm]] <- ifelse(is.null(stats[['7_subjects_with_V1_PCR_and_NBinding']][[treatment_arm]]), 0, stats[['7_subjects_with_V1_PCR_and_NBinding']][[treatment_arm]])
-  stats[['7_subjects_with_V1_PCR_and_NBinding']][[treatment_arm]] <- stats[['7_subjects_with_V1_PCR_and_NBinding']][[treatment_arm]] + 1
+  stats[['7_subjects_with_V1_PCR_and_NBinding']][[ARM]] <- ifelse(is.null(stats[['7_subjects_with_V1_PCR_and_NBinding']][[ARM]]), 0, stats[['7_subjects_with_V1_PCR_and_NBinding']][[ARM]])
+  stats[['7_subjects_with_V1_PCR_and_NBinding']][[ARM]] <- stats[['7_subjects_with_V1_PCR_and_NBinding']][[ARM]] + 1
 
   if (has_v1_POS) {
-    stats[['8_visit_1_POS']][[treatment_arm]] <- ifelse(is.null(stats[['8_visit_1_POS']][[treatment_arm]]), 0, stats[['8_visit_1_POS']][[treatment_arm]])
-    stats[['8_visit_1_POS']][[treatment_arm]] <- stats[['8_visit_1_POS']][[treatment_arm]] + 1
+    stats[['8_visit_1_POS']][[ARM]] <- ifelse(is.null(stats[['8_visit_1_POS']][[ARM]]), 0, stats[['8_visit_1_POS']][[ARM]])
+    stats[['8_visit_1_POS']][[ARM]] <- stats[['8_visit_1_POS']][[ARM]] + 1
     next
   }
 
   if (has_v1_IND) {
-    stats[['9_visit_1_IND']][[treatment_arm]] <- ifelse(is.null(stats[['9_visit_1_IND']][[treatment_arm]]), 0, stats[['9_visit_1_IND']][[treatment_arm]])
-    stats[['9_visit_1_IND']][[treatment_arm]] <- stats[['9_visit_1_IND']][[treatment_arm]] + 1
+    stats[['9_visit_1_IND']][[ARM]] <- ifelse(is.null(stats[['9_visit_1_IND']][[ARM]]), 0, stats[['9_visit_1_IND']][[ARM]])
+    stats[['9_visit_1_IND']][[ARM]] <- stats[['9_visit_1_IND']][[ARM]] + 1
     next
   }
-  dose_1_date <- subjects[[subject_id]]$dose_1_date
+  VAX101DT <- subjects[[SUBJID]]$VAX101DT
 
-  dose_1_date_test <- as.character(dose_1_date)
-  if (is.na(dose_1_date_test) || dose_1_date_test == 'NA') {
-    stats[['10_no_dose_1']][[treatment_arm]] <- ifelse(is.null(stats[['10_no_dose_1']][[treatment_arm]]), 0, stats[['10_no_dose_1']][[treatment_arm]])
-    stats[['10_no_dose_1']][[treatment_arm]] <- stats[['10_no_dose_1']][[treatment_arm]] + 1
+  VAX101DT_test <- as.character(VAX101DT)
+  if (is.na(VAX101DT_test) || VAX101DT_test == 'NA') {
+    stats[['10_no_dose_1']][[ARM]] <- ifelse(is.null(stats[['10_no_dose_1']][[ARM]]), 0, stats[['10_no_dose_1']][[ARM]])
+    stats[['10_no_dose_1']][[ARM]] <- stats[['10_no_dose_1']][[ARM]] + 1
     next
   }
   
-  stats[['11_visit_1_NEG_and_dose_1']][[treatment_arm]] <- ifelse(is.null(stats[['11_visit_1_NEG_and_dose_1']][[treatment_arm]]), 0, stats[['11_visit_1_NEG_and_dose_1']][[treatment_arm]])
-  stats[['11_visit_1_NEG_and_dose_1']][[treatment_arm]] <- stats[['11_visit_1_NEG_and_dose_1']][[treatment_arm]] + 1
+  stats[['11_visit_1_NEG_and_dose_1']][[ARM]] <- ifelse(is.null(stats[['11_visit_1_NEG_and_dose_1']][[ARM]]), 0, stats[['11_visit_1_NEG_and_dose_1']][[ARM]])
+  stats[['11_visit_1_NEG_and_dose_1']][[ARM]] <- stats[['11_visit_1_NEG_and_dose_1']][[ARM]] + 1
   if (!has_v3) {
-    if (!treatment_arm %in% names(stats[['12_no_visit_3']])) {
-      stats[['12_no_visit_3']][[treatment_arm]] <- list()
-      stats[['12_no_visit_3']][[treatment_arm]]$total <- 0
+    if (!ARM %in% names(stats[['12_no_visit_3']])) {
+      stats[['12_no_visit_3']][[ARM]] <- list()
+      stats[['12_no_visit_3']][[ARM]]$total <- 0
     }
     has_positive_pcr <- as.character(has_positive_pcr)
-    if (!has_positive_pcr %in% names(stats[['12_no_visit_3']][[treatment_arm]])) {
-      stats[['12_no_visit_3']][[treatment_arm]][[has_positive_pcr]] <- 0
+    if (!has_positive_pcr %in% names(stats[['12_no_visit_3']][[ARM]])) {
+      stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] <- 0
     }
 
-    stats[['12_no_visit_3']][[treatment_arm]]$total <- stats[['12_no_visit_3']][[treatment_arm]]$total + 1
-    stats[['12_no_visit_3']][[treatment_arm]][[has_positive_pcr]] <- stats[['12_no_visit_3']][[treatment_arm]][[has_positive_pcr]] + 1
+    stats[['12_no_visit_3']][[ARM]]$total <- stats[['12_no_visit_3']][[ARM]]$total + 1
+    stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] <- stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] + 1
     next
   }
 
-  stats[['13_visit_3']][[treatment_arm]] <- ifelse(is.null(stats[['13_visit_3']][[treatment_arm]]), 0, stats[['13_visit_3']][[treatment_arm]])
-  stats[['13_visit_3']][[treatment_arm]] <- stats[['13_visit_3']][[treatment_arm]] + 1
+  stats[['13_visit_3']][[ARM]] <- ifelse(is.null(stats[['13_visit_3']][[ARM]]), 0, stats[['13_visit_3']][[ARM]])
+  stats[['13_visit_3']][[ARM]] <- stats[['13_visit_3']][[ARM]] + 1
   
   if (!has_v3_POS) {
-    stats[['14_visit_3_NEG']][[treatment_arm]] <- ifelse(is.null(stats[['14_visit_3_NEG']][[treatment_arm]]), 0, stats[['14_visit_3_NEG']][[treatment_arm]])
-    stats[['14_visit_3_NEG']][[treatment_arm]] <- stats[['14_visit_3_NEG']][[treatment_arm]] + 1
+    stats[['14_visit_3_NEG']][[ARM]] <- ifelse(is.null(stats[['14_visit_3_NEG']][[ARM]]), 0, stats[['14_visit_3_NEG']][[ARM]])
+    stats[['14_visit_3_NEG']][[ARM]] <- stats[['14_visit_3_NEG']][[ARM]] + 1
     next
   }
   
-  stats[['15_visit_3_POS']][[treatment_arm]] <- ifelse(is.null(stats[['15_visit_3_POS']][[treatment_arm]]), 0, stats[['15_visit_3_POS']][[treatment_arm]])
-  stats[['15_visit_3_POS']][[treatment_arm]] <- stats[['15_visit_3_POS']][[treatment_arm]] + 1
+  stats[['15_visit_3_POS']][[ARM]] <- ifelse(is.null(stats[['15_visit_3_POS']][[ARM]]), 0, stats[['15_visit_3_POS']][[ARM]])
+  stats[['15_visit_3_POS']][[ARM]] <- stats[['15_visit_3_POS']][[ARM]] + 1
 
   days_between <- abs(as.Date(visit_1_date, format = "%Y-%m-%d") - as.Date(visit_3_date, format = "%Y-%m-%d"))
   days_between <- as.character(days_between)
@@ -337,50 +335,50 @@ for (subject_id in sort(names(subjects))) {
   has_positive_pcr_before_v3 <- 0
   first_positive_date <- 99999999
   
-  for (test_date in sort(names(subjects[[subject_id]]$tests))) {
-    compdate <- as.numeric(gsub("\\D", "", test_date))
+  for (TESTDATE in sort(names(subjects[[SUBJID]]$tests))) {
+    compdate <- as.numeric(gsub("\\D", "", TESTDATE))
     
     if (compdate >= visit_3_compdate) next
     
-    for (test_type in names(subjects[[subject_id]]$tests[[test_date]])) {
-      if (test_type != 'PCR Central') next
+    for (TESTTYPE in names(subjects[[SUBJID]]$tests[[TESTDATE]])) {
+      if (TESTTYPE != 'PCR Central') next
       
-      test_visit <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_visit
-      test_result <- subjects[[subject_id]]$tests[[test_date]][[test_type]]$test_result
+      VISIT <- subjects[[SUBJID]]$tests[[TESTDATE]][[TESTTYPE]]$VISIT
+      TESTRESULT <- subjects[[SUBJID]]$tests[[TESTDATE]][[TESTTYPE]]$TESTRESULT
       
-      if (test_result == 'POS') {
+      if (TESTRESULT == 'POS') {
         first_positive_date <- min(first_positive_date, compdate)
         has_positive_pcr_before_v3 <- 1
       }
     }
   }
   
-  site_id <- subjects[[subject_id]]$site_id
-  site_id <- as.character(site_id)
+  SITEID <- subjects[[SUBJID]]$SITEID
+  SITEID <- as.character(SITEID)
   
-  if (!site_id %in% names(stats[['19_detection_pre_visit_3_by_site']])) {
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]] <- list()
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$total_cases <- 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms <- list()
+  if (!SITEID %in% names(stats[['19_detection_pre_visit_3_by_site']])) {
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]] <- list()
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$total_cases <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm <- list()
   }
-  stats[['19_detection_pre_visit_3_by_site']][[site_id]]$total_cases <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$total_cases + 1
-  if (!treatment_arm %in% names(stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms)) {
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]] <- list()
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$detected <- 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected <- 0
+  stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$total_cases <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$total_cases + 1
+  if (!ARM %in% names(stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm)) {
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]] <- list()
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$detected <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected <- 0
   }
   
   if (has_positive_pcr_before_v3) {
-    stats[['17_detected_pre_visit_3']][[treatment_arm]] <- ifelse(is.null(stats[['17_detected_pre_visit_3']][[treatment_arm]]), 0, stats[['17_detected_pre_visit_3']][[treatment_arm]])
-    stats[['17_detected_pre_visit_3']][[treatment_arm]] <- stats[['17_detected_pre_visit_3']][[treatment_arm]] + 1
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$detected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$detected + 1
+    stats[['17_detected_pre_visit_3']][[ARM]] <- ifelse(is.null(stats[['17_detected_pre_visit_3']][[ARM]]), 0, stats[['17_detected_pre_visit_3']][[ARM]])
+    stats[['17_detected_pre_visit_3']][[ARM]] <- stats[['17_detected_pre_visit_3']][[ARM]] + 1
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$detected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$detected + 1
     next
   }
   
-  stats[['18_non_detected_pre_visit_3']][[treatment_arm]] <- ifelse(is.null(stats[['18_non_detected_pre_visit_3']][[treatment_arm]]), 0, stats[['18_non_detected_pre_visit_3']][[treatment_arm]])
-  stats[['18_non_detected_pre_visit_3']][[treatment_arm]] <- stats[['18_non_detected_pre_visit_3']][[treatment_arm]] + 1
-  stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected <- ifelse(is.null(stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected), 0, stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected)
-  stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms[[treatment_arm]]$undetected + 1
+  stats[['18_non_detected_pre_visit_3']][[ARM]] <- ifelse(is.null(stats[['18_non_detected_pre_visit_3']][[ARM]]), 0, stats[['18_non_detected_pre_visit_3']][[ARM]])
+  stats[['18_non_detected_pre_visit_3']][[ARM]] <- stats[['18_non_detected_pre_visit_3']][[ARM]] + 1
+  stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected <- ifelse(is.null(stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected), 0, stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected)
+  stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm[[ARM]]$undetected + 1
 }
 
 total_sites_with_cases <- length(names(stats[['19_detection_pre_visit_3_by_site']]))
@@ -397,25 +395,25 @@ subjects_by_sites$not_of_interest$bnt_undetected <- 0
 subjects_by_sites$not_of_interest$placebo_detected <- 0
 subjects_by_sites$not_of_interest$placebo_undetected <- 0
 subjects_by_sites$not_of_interest$total_sites <- 0
-for (site_id in sort(names(stats[['19_detection_pre_visit_3_by_site']]))) {
-  bnt_detected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$BNT162b2$detected
-  bnt_undetected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$BNT162b2$undetected
-  placebo_detected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$Placebo$detected
-  placebo_undetected <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$Placebo$undetected
-  total_cases <- stats[['19_detection_pre_visit_3_by_site']][[site_id]]$total_cases
+for (SITEID in sort(names(stats[['19_detection_pre_visit_3_by_site']]))) {
+  bnt_detected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$BNT162b2$detected
+  bnt_undetected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$BNT162b2$undetected
+  placebo_detected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$Placebo$detected
+  placebo_undetected <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$Placebo$undetected
+  total_cases <- stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$total_cases
   if (is.null(bnt_detected)) {
     bnt_detected = 0
     bnt_undetected = 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$`BNT162b2 Phase 2/3 (30 mcg)` <- list()
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$`BNT162b2 Phase 2/3 (30 mcg)`$detected <- 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$`BNT162b2 Phase 2/3 (30 mcg)`$undetected <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$`BNT162b2 Phase 2/3 (30 mcg)` <- list()
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$`BNT162b2 Phase 2/3 (30 mcg)`$detected <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$`BNT162b2 Phase 2/3 (30 mcg)`$undetected <- 0
   }
   if (is.null(placebo_detected)) {
     placebo_detected = 0
     placebo_undetected = 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$Placebo <- list()
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$Placebo$detected <- 0
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$Placebo$undetected <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$Placebo <- list()
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$Placebo$detected <- 0
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$Placebo$undetected <- 0
   }
   bnt_total <- bnt_detected + bnt_undetected
   placebo_total <- placebo_detected + placebo_undetected
@@ -438,12 +436,12 @@ for (site_id in sort(names(stats[['19_detection_pre_visit_3_by_site']]))) {
     subjects_by_sites$not_of_interest$placebo_undetected <- subjects_by_sites$not_of_interest$placebo_undetected + placebo_undetected
     subjects_by_sites$not_of_interest$total_sites <- subjects_by_sites$not_of_interest$total_sites + 1
     
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]] <- NULL
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]] <- NULL
   } else {
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$bnt_total <- bnt_total
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$bnt_detection_rate <- bnt_detection_rate
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$placebo_total <- placebo_total
-    stats[['19_detection_pre_visit_3_by_site']][[site_id]]$treatment_arms$placebo_detection_rate <- placebo_detection_rate
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$bnt_total <- bnt_total
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$bnt_detection_rate <- bnt_detection_rate
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$placebo_total <- placebo_total
+    stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$treatment_arm$placebo_detection_rate <- placebo_detection_rate
 
     testing_ratio_offset <- abs(bnt_detection_rate - placebo_detection_rate)
 
@@ -459,7 +457,7 @@ for (site_id in sort(names(stats[['19_detection_pre_visit_3_by_site']]))) {
       subjects_by_sites$not_of_interest$placebo_detected <- subjects_by_sites$not_of_interest$placebo_detected + placebo_detected
       subjects_by_sites$not_of_interest$placebo_undetected <- subjects_by_sites$not_of_interest$placebo_undetected + placebo_undetected
       subjects_by_sites$not_of_interest$total_sites <- subjects_by_sites$not_of_interest$total_sites + 1
-      stats[['19_detection_pre_visit_3_by_site']][[site_id]] <- NULL
+      stats[['19_detection_pre_visit_3_by_site']][[SITEID]] <- NULL
     }
   }
 }

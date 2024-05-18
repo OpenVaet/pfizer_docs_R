@@ -14,7 +14,7 @@ medical_history$SUBJID <- sub(".*C4591001 \\d{4} (\\d{8}).*", "\\1", medical_his
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
 randomized_pop <- read.csv(randomized_pop_file)
 randomized_pop <- randomized_pop %>%
-  filter(ARM == 'BNT162b2 Phase 2/3 (30 mcg)' & SEX == 'F')
+  filter(ARM == 'BNT162b2 Phase 2/3 (30 mcg)' & SEX == 'F' & AGE >= 16 & AGE <= 59)
 print(randomized_pop)
 medical_history_filtered <- medical_history[medical_history$SUBJID %in% randomized_pop$SUBJID, ]
 print(medical_history_filtered)
@@ -39,9 +39,8 @@ print(length(subjects_with_bleedings))
 print(unique(medical_history_with_bleedings$MHENTPT)) 
 
 # Loads the Phase 3 population randomized.
-women_randomized_pop <- randomized_pop %>%
-  filter(AGE >= 16 & AGE <= 39 & SEX == 'F')
-total_bnt <- nrow(women_randomized_pop)
+total_bnt <- nrow(randomized_pop)
+print(total_bnt)
 
 # Calculates the rates or Menorrhagia among past history.
 menorrhagia_rate <- subjects_with_bleedings * 100 / total_bnt
@@ -49,5 +48,7 @@ print(paste('Rates of Menorrhagia / 100.000 : ', menorrhagia_rate))
 
 # Calculates the rates of other troubles whihc could be used to classify Menorrhagia
 subjects_with_potential_bleedings <- length((unique(medical_history_with_potential_bleedings$SUBJID)))
+print(subjects_with_potential_bleedings)
 menorrhagia_and_others_rate <- subjects_with_potential_bleedings * 100 / total_bnt
 print(paste('Rates of Menorrhagia & other bleeding causes / 100.000 : ', menorrhagia_and_others_rate))
+

@@ -12,7 +12,7 @@ if (!file.exists(adae_path)) {
 
 # Reads & filters the ADAE file.
 adae_data <- read_xpt(adae_path)
-adae_selected_data <- adae_data[c("SUBJID", "ARM", "VPHASE", "AREL", "AERELTXT", "AESTDTC", "AEENDTC", "AEDECOD")]
+adae_selected_data <- adae_data[c("SUBJID", "ARM", "AGE", "VPHASE", "AREL", "AERELTXT", "AESTDTC", "AEENDTC", "AEDECOD")]
 print(adae_selected_data)
 adae_data_filtered <- adae_selected_data %>%
   filter(AEDECOD %in% c("Menorrhagia"))
