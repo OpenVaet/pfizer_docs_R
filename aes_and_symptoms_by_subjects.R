@@ -112,6 +112,8 @@ merged_data_fil <- merged_data %>%
   filter(!is.na(ARM))
 print(merged_data_fil)
 
+# Writes the symptoms data merged to a CSV file
+write.csv(merged_data_fil, "covid_symptoms_accross_datasets.csv", row.names = FALSE)
 
 summary_df <- merged_data_fil %>%
   group_by(ARM, REPORTDATE) %>%
