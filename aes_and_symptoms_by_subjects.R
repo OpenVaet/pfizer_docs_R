@@ -149,3 +149,4 @@ ggsave("subjects_with_covid_symptoms.png", width = 8, height = 6, dpi = 300)
 
 # Writes the updated data to a CSV file
 write.csv(summary_df, "subjects_with_covid_symptoms.csv", row.names = FALSE)
+

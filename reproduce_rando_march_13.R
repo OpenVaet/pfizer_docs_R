@@ -26,7 +26,7 @@ print(filtered_data, n=1)
 
 # Selects the desired columns
 selected_data <- filtered_data[c(
-  "SUBJID", "SITEID", "RFICDT", "ARM", "PHASE",
+  "SUBJID", "SITEID", "COUNTRY", "RFICDT", "ARM", "PHASE",
   "AGE", "AGETR01", "RANDDT", "RANDNO", "AGEGR1",
   "AGEGR2", "AGEGR3", "UNBLNDDT", "SEX", "DTHDT",
   "VAX101DT", "VAX102DT", "VAX201DT", "VAX202DT", "RACE",
