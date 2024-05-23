@@ -54,7 +54,7 @@ write.csv(subjects_by_country, "subjects_by_country.csv", row.names = FALSE)
 
 # Creates the plot
 ggplot(subjects_by_country, aes(x = reorder(Country, -Total_Subjects), y = Total_Subjects)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
+  geom_bar(stat = "identity", fill = "#C8C8C8") +
   geom_text(aes(label = format(Total_Subjects, big.mark = ",")), 
             position = position_dodge(width = 0.9),
             vjust = -0.5, 

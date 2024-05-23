@@ -339,7 +339,7 @@ yearweek_summary <- other_vaccine_deviations %>%
 
 # Plots the deviations by YEARWEEK as a column chart
 ggplot(yearweek_summary, aes(x = YEARWEEK, y = total_deviations)) +
-  geom_col() +
+  geom_col(fill = "#A0A0A0") +
   labs(title = "C4591001 - Total \"Other Vaccine\" Deviations by Year-Week",
        x = "Year-Week",
        y = "Total Deviations") +

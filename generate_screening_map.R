@@ -38,8 +38,8 @@ for (i in 1:nrow(sites_data)) {
   site_name_print <- gsub("'", "\\\\'", site_name, fixed = TRUE)
   
   data_points <- paste0(data_points, sprintf("var circle%s = L.circle([%s, %s], {
-    color: '#3ebfed',
-    fillColor: '#3ebfed',
+    color: '#B0B0B0',
+    fillColor: '#B0B0B0',
     fillOpacity: 0.9,
     radius: %s,
     site_name: '%s',
