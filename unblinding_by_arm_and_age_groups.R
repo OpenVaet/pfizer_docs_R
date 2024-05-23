@@ -37,6 +37,6 @@ ggplot(randomized_pop_cumulative, aes(x = UNBLNDDT, y = cumulative_percent, colo
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
   scale_x_date(date_breaks = "1 week", date_labels = "%Y-%m-%d") + 
-  scale_color_manual(values = c("#415178", "#afd1b1")) # customize line colors
+  scale_color_manual(values = c("#415178", "#BEBEBE")) # customize line colors
 
 
