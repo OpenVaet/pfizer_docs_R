@@ -95,10 +95,6 @@ print(face_merged)
 # Merging the tables.
 merged_data <- rbind(adae_selected_merged, symptoms_selected, face_merged) %>% 
   distinct(SUBJID, SYMPTOM, REPORTDATE, .keep_all = TRUE)
-merged_data %>%
-  group_by(SUBJID, SYMPTOM) %>%
-  arrange(REPORTDATE) %>%
-  filter(lag(REPORTDATE, default = REPORTDATE[1]) + 4 <= REPORTDATE | row_number() == 1)
 
 # Filtering data to prior cut-off.
 merged_data <- merged_data[merged_data$REPORTDATE <= "2020-11-14", ]
@@ -115,6 +111,13 @@ print(merged_data_fil)
 # Writes the symptoms data merged to a CSV file
 write.csv(merged_data_fil, "covid_symptoms_accross_datasets.csv", row.names = FALSE)
 
+# Filters out symptoms every 4 days.
+merged_data_fil <- merged_data_fil %>%
+  group_by(SUBJID) %>%
+  arrange(REPORTDATE) %>%
+  filter(lag(REPORTDATE, default = REPORTDATE[1]) + 4 <= REPORTDATE | row_number() == 1)
+print(merged_data_fil)
+
 summary_df <- merged_data_fil %>%
   group_by(ARM, REPORTDATE) %>%
   summarise(Count = n_distinct(SUBJID), .groups = "drop") %>%
@@ -127,7 +130,7 @@ print(summary_df)
 ggplot(summary_df, aes(x = REPORTDATE, y = Count, color = ARM)) +
   geom_point() +
   geom_line(size = 1.4) +
-  scale_color_manual(values = c("BNT162b2 Phase 2/3 (30 mcg)" = "#FF6B6B", "Placebo" = "black")) +
+  scale_color_manual(values = c("BNT162b2 Phase 2/3 (30 mcg)" = "#FF6B6B", "Placebo" = "#BEBEBE")) +
   labs(title = "C4591001 - Phase 2-3 Subjects Reporting COVID symptoms",
        x = "Date",
        y = "Subjects",

@@ -338,4 +338,4 @@ site_1231_subjects_with_RFICDT %>%
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
   scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d") + 
-  scale_fill_manual(values = c("#839367", "#9f5148"))
+  scale_fill_manual(values = c("#C0C0C0", "#9f5148"))

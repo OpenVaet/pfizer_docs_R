@@ -258,8 +258,8 @@ marker_data <- plot_data %>%
 
 # Create the plot
 ggplot(plot_data, aes(x = date)) + 
-  geom_col(aes(y = daily_cases), fill = "skyblue") + 
-  geom_line(aes(y = accumulated_cases / 13.33), color = "red", size = 1.2) + 
+  geom_col(aes(y = daily_cases), fill = "#BEBEBE") + 
+  geom_line(aes(y = accumulated_cases / 13.33), color = "#FF6B6B", size = 1.2) + 
   geom_point(data = marker_data, 
              aes(x = date, y = accumulated_cases / 13.33), 
              color = "black", size = 3) + 
