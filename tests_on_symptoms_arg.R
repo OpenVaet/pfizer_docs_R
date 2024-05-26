@@ -6,7 +6,7 @@ library(ggplot2)
 
 within_days <- 4         # We consider the symptom has been tested if a test has occurred within N days.
 rolling_avg <- 3         # We smooth the testing rates for each date based on this rolling average.
-target_country <- 'USA'  # The country targeted by the current analysis.
+target_country <- 'ARG'  # The country targeted by the current analysis.
 cutoff_date <- 20201114  # The date at which the treatment stops.
 nullify_v1_pcr <- FALSE  # Defines if we nullify the V1 PCR tests (TRUE or FALSE)
 
@@ -314,7 +314,7 @@ p <- ggplot(df, aes(x = report_date)) +
     x = "Report Date",
     color = "Legend",
     fill = "",
-    title = "C4591001 - USA - PCR Testing on negative at baseline subjects reporting Symptoms, from Dose 1 to November 14, 2020"
+    title = "C4591001 - Argentina - PCR Testing on negative at baseline subjects reporting Symptoms, from Dose 1 to November 14, 2020"
   ) +
   scale_color_manual(
     values = c("Percent of Subjects Reporting Symptoms PCR Tested" = "#DC143C")
