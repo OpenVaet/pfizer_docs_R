@@ -301,13 +301,11 @@ print(scaling_factor_right)
 
 # Converts report_date to Date type
 df$report_date <- ymd(df$report_date)
-
 # Creates the plot
 p <- ggplot(df, aes(x = report_date)) +
-  geom_col(aes(y = bnt_total / scaling_factor_right, fill = "BNT Total"), alpha = 0.5) +
-  geom_col(aes(y = placebo_total / scaling_factor_right, fill = "Placebo Total"), alpha = 0.5) +
-  geom_line(aes(y = bnt_percent, color = "BNT Percent"), size = 1.5) +
-  geom_line(aes(y = placebo_percent, color = "Placebo Percent"), size = 1.5) +
+  geom_col(aes(y = bnt_total / scaling_factor_right, fill = "BNT Total Symptoms"), alpha = 0.5) +
+  geom_col(aes(y = placebo_total / scaling_factor_right, fill = "Placebo Total Symptoms"), alpha = 0.5) +
+  geom_line(aes(y = cumulated_percent, color = "Percent of Subjects Reporting Symptoms PCR Tested"), size = 1.5) + # Changed this line
   scale_y_continuous(
     name = "Symptoms Tested Percent",
     sec.axis = sec_axis(~.*scaling_factor_right, name = "Total Symptoms Reported")
@@ -319,10 +317,10 @@ p <- ggplot(df, aes(x = report_date)) +
     title = "C4591001 - USA - PCR Testing on negative at baseline subjects reporting Symptoms, from Dose 1 to November 14, 2020"
   ) +
   scale_color_manual(
-    values = c("BNT Percent" = "#6082B6", "Placebo Percent" = "#AA4A44")
+    values = c("Percent of Subjects Reporting Symptoms PCR Tested" = "#DC143C")
   ) +
   scale_fill_manual(
-    values = c("BNT Total" = "#7393B3", "Placebo Total" = "#E97451")
+    values = c("BNT Total Symptoms" = "#7393B3", "Placebo Total Symptoms" = "#E97451")
   ) +
   theme_minimal() +
   theme(
@@ -331,7 +329,9 @@ p <- ggplot(df, aes(x = report_date)) +
     axis.text = element_text(size = 18),
     legend.title = element_text(size = 18),
     legend.text = element_text(size = 18),
-    axis.text.x = element_text(angle = 90, hjust = 1) 
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    legend.position = "bottom",  # Move legend to bottom
+    legend.box = "horizontal"    # Set legend to occupy full width
   )
 
 # Prints the plot
@@ -357,6 +357,3 @@ p <- p +
 
 # Prints the updated plot
 print(p)
-
-
-
