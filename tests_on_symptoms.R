@@ -4,11 +4,11 @@ library(readr)
 library(zoo)
 library(ggplot2)
 
-within_days <- 4        # We consider the symptom has been tested if a test has occurred within N days.
-rolling_avg <- 1        # We smooth the testing rates for each date based on this rolling average.
-target_country <- 'USA' # The country targeted by the current analysis.
-cutoff_date <- 20201114 # The date at which the treatment stops.
-nullify_v1_pcr <- TRUE  # Defines if we nullify the V1 PCR tests.
+within_days <- 4         # We consider the symptom has been tested if a test has occurred within N days.
+rolling_avg <- 3         # We smooth the testing rates for each date based on this rolling average.
+target_country <- 'USA'  # The country targeted by the current analysis.
+cutoff_date <- 20201114  # The date at which the treatment stops.
+nullify_v1_pcr <- FALSE  # Defines if we nullify the V1 PCR tests (TRUE or FALSE)
 
 symptoms_file <- 'covid_symptoms_accross_datasets.csv'
 randoms_file <- 'phase_3_randomized_pop.csv'
@@ -236,7 +236,7 @@ write.csv(symptoms_df, "symptoms2.csv", row.names = FALSE)
 # Opens CSV file for writing
 out_file <- 'daily_testing_rates.csv'
 out <- file(out_file, "w")
-writeLines("report_date,bnt_test,bnt_no_test,bnt_total,bnt_percent,placebo_test,placebo_no_test,placebo_total,placebo_percent,cumulative_population", out)
+writeLines("report_date,bnt_test,bnt_no_test,bnt_total,bnt_percent,placebo_test,placebo_no_test,placebo_total,placebo_percent,cumulative_population,cumulated_percent", out)
 
 # Iterates over the symptoms_tested list
 for (report_date in sort(names(symptoms_tested))) {
@@ -269,6 +269,9 @@ for (report_date in sort(names(symptoms_tested))) {
   placebo_total <- daily_stats['placebo_test'] + daily_stats['placebo_no_test']
   bnt_percent <- ifelse(bnt_total > 0, round(daily_stats['bnt_test'] * 100 / bnt_total, 2), 0)
   placebo_percent <- ifelse(placebo_total > 0, round(daily_stats['placebo_test'] * 100 / placebo_total, 2), 0)
+  cumulated_tested <- daily_stats['bnt_test'] + daily_stats['placebo_test']
+  cumulated_total <- placebo_total + bnt_total
+  cumulated_percent <- ifelse(cumulated_total > 0, round(cumulated_tested * 100 / cumulated_total, 2), 0)
   
   # Converts report_date to YYYY-MM-DD format
   formatted_report_date <- format(ymd(report_date), "%Y-%m-%d")
@@ -276,7 +279,7 @@ for (report_date in sort(names(symptoms_tested))) {
   # Writes to CSV
   writeLines(paste(formatted_report_date, daily_stats['bnt_test'], daily_stats['bnt_no_test'], bnt_total, bnt_percent,
                    daily_stats['placebo_test'], daily_stats['placebo_no_test'], placebo_total, placebo_percent,
-                   cumulative_population, sep = ","), out)
+                   cumulative_population, cumulated_percent, sep = ","), out)
 }
 close(out)
 
