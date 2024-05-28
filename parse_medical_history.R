@@ -26,11 +26,7 @@ medical_history_with_bleedings <- medical_history_filtered %>%
 medical_history_with_potential_bleedings <- medical_history_filtered %>%
   filter(MHDECOD %in% c(
     "Menorrhagia", "Dysfunctional uterine bleeding",
-    "Ovarian haemorrhage", "Vaginal cyst",
-    "Vulvovaginal pain", "Haemorrhage",
-    "Ovarian cyst", "Ovarian rupture",
-    "Ovarian cyst ruptured", "Ovarian cancer",
-    "Benign ovarian tumour", "Ovarian mass"
+    "Ovarian haemorrhage"
   ))
 subjects_with_bleedings <- length((unique(medical_history_with_bleedings$SUBJID)))
 print(subjects_with_bleedings)

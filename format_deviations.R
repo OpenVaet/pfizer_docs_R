@@ -185,10 +185,6 @@ filtered_imbalanced_deviations_by_arms <- imbalanced_deviations_by_arms %>%
   filter(sum(total_devs) >= 20)
 print(filtered_imbalanced_deviations_by_arms, n = 100)
 
-# Loads the Phase 3 population randomized.
-randomized_pop_file <- 'phase_3_randomized_pop.csv'
-randomized_pop <- read.csv(randomized_pop_file)
-
 randomized_pop_by_arms <- randomized_pop %>%
   group_by(SITEID, ARM) %>%
   summarise(
@@ -300,6 +296,8 @@ html_table <- flextable(deviations_significant_results) %>%
 save_as_html(html_table, path = "imbalanced_deviations_by_sites.html")
 
 print(deviations_significant_results)
+write.csv(deviations_significant_results, "deviations_significant_results_by_sites.csv", row.names = FALSE)
+
 
 # Represents the site-staff related deviations weekly occurrences.
 print(imbalanced_deviations)

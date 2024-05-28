@@ -29,6 +29,12 @@ symptoms <- symptoms %>%
 print(colnames(symptoms))
 print(symptoms)
 
+# Renders unique symptoms.
+symptoms_unique <- symptoms %>%
+  select(PARAM) %>%
+  distinct()
+print(symptoms_unique)
+
 # Sustains only columns required for the current analysis.
 symptoms_selected <- symptoms[c("SUBJID", "PARAM", "ADT")]
 symptoms_selected <- symptoms_selected %>% 
@@ -97,7 +103,6 @@ merged_data <- rbind(adae_selected_merged, symptoms_selected, face_merged) %>%
   distinct(SUBJID, SYMPTOM, REPORTDATE, .keep_all = TRUE)
 
 # Filtering data to prior cut-off.
-merged_data <- merged_data[merged_data$REPORTDATE <= "2020-11-14", ]
 merged_data <- merged_data %>%
   inner_join(randomized_pop %>% 
                mutate(SUBJID = as.character(SUBJID)) %>% 
@@ -110,6 +115,8 @@ print(merged_data_fil)
 
 # Writes the symptoms data merged to a CSV file
 write.csv(merged_data_fil, "covid_symptoms_accross_datasets.csv", row.names = FALSE)
+
+merged_data_fil <- merged_data_fil[merged_data_fil$REPORTDATE <= "2020-11-14", ]
 
 # Filters out symptoms every 4 days.
 merged_data_fil <- merged_data_fil %>%

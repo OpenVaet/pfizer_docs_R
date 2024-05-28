@@ -12,7 +12,7 @@ if (!file.exists(adae_path)) {
 
 # Reads & filters the ADAE file.
 adae_data <- read_xpt(adae_path)
-adae_selected_data <- adae_data[c("SUBJID", "VPHASE", "AREL", "AEHLGT", "AETERM", "AESER", "AERELTXT", "ATOXGR", "AESTDTC", "AEENDTC", "AEDECOD")]
+adae_selected_data <- adae_data[c("SUBJID", "ARM", "VPHASE", "AREL", "AEHLGT", "AETERM", "AESER", "AERELTXT", "ATOXGR", "AESTDTC", "AEENDTC", "AEDECOD")]
 adae_12312982_data <- adae_selected_data %>% 
   filter(SUBJID == 12312982)
 print(adae_12312982_data)

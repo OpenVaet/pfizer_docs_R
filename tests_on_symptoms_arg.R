@@ -288,7 +288,7 @@ df <- read.csv("daily_testing_rates.csv")
 print(df)
 
 # Find the max value for placebo_total and bnt_total
-max_total <- max(max(df$placebo_total), max(df$bnt_total)) + 200
+max_total <- max(max(df$placebo_total), max(df$bnt_total)) + 50
 
 # Find the max value for placebo_percent and bnt_percent
 max_percent <- 100

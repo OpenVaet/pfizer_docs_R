@@ -275,7 +275,7 @@ ggplot(merged_data, aes(x = year_week)) +
   theme_classic() + 
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
-  scale_fill_manual(values = c("Expected" = "#c1c9b3", "Actual" = "#b75b47"))
+  scale_fill_manual(values = c("Expected" = "#C0C0C0", "Actual" = "#b75b47"))
 
 # Summarizes a few metrics.
 expected_deaths <- sum(merged_data$mortality_rate)
