@@ -204,11 +204,16 @@ for (ARM in treatment_arm) {
 }
 print(stats)
 
+no_v3_sites_stats <- list()
+
 for (SUBJID in sort(names(subjects))) {
   SUBJID <- as.character(SUBJID)
   # print(SUBJID)
   ARM <- subjects[[SUBJID]]$ARM
   AGE <- subjects[[SUBJID]]$AGE
+  
+  SITEID <- subjects[[SUBJID]]$SITEID
+  SITEID <- as.character(SITEID)
 
   if (is.null(ARM)) {
     stop("ARM is null")
@@ -308,6 +313,16 @@ for (SUBJID in sort(names(subjects))) {
     stats[['3_no_visit_1']][[ARM]] <- stats[['3_no_visit_1']][[ARM]] + 1
     next
   }
+  if (!SITEID %in% names(no_v3_sites_stats)) {
+    no_v3_sites_stats[[SITEID]] <- list()
+  }
+  if (!ARM %in% names(no_v3_sites_stats[[SITEID]])) {
+    no_v3_sites_stats[[SITEID]][[ARM]] <- list()
+    no_v3_sites_stats[[SITEID]][[ARM]]$no_v3 <- 0
+    no_v3_sites_stats[[SITEID]][[ARM]]$v3 <- 0
+    no_v3_sites_stats[[SITEID]][[ARM]]$v1 <- 0
+  }
+  no_v3_sites_stats[[SITEID]][[ARM]]$v1 <- no_v3_sites_stats[[SITEID]][[ARM]]$v1 + 1
   
   if (!has_v1_PCR) {
     stats[['4_no_visit_1_PCR']][[ARM]] <- ifelse(is.null(stats[['4_no_visit_1_PCR']][[ARM]]), 0, stats[['4_no_visit_1_PCR']][[ARM]])
@@ -359,11 +374,12 @@ for (SUBJID in sort(names(subjects))) {
     if (!has_positive_pcr %in% names(stats[['12_no_visit_3']][[ARM]])) {
       stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] <- 0
     }
-
+    no_v3_sites_stats[[SITEID]][[ARM]]$no_v3 <- no_v3_sites_stats[[SITEID]][[ARM]]$no_v3 + 1
     stats[['12_no_visit_3']][[ARM]]$total <- stats[['12_no_visit_3']][[ARM]]$total + 1
     stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] <- stats[['12_no_visit_3']][[ARM]][[has_positive_pcr]] + 1
     next
   }
+  no_v3_sites_stats[[SITEID]][[ARM]]$v3 <- no_v3_sites_stats[[SITEID]][[ARM]]$v3 + 1
 
   stats[['13_visit_3']][[ARM]] <- ifelse(is.null(stats[['13_visit_3']][[ARM]]), 0, stats[['13_visit_3']][[ARM]])
   stats[['13_visit_3']][[ARM]] <- stats[['13_visit_3']][[ARM]] + 1
@@ -406,9 +422,6 @@ for (SUBJID in sort(names(subjects))) {
     }
   }
   
-  SITEID <- subjects[[SUBJID]]$SITEID
-  SITEID <- as.character(SITEID)
-  
   if (!SITEID %in% names(stats[['19_detection_pre_visit_3_by_site']])) {
     stats[['19_detection_pre_visit_3_by_site']][[SITEID]] <- list()
     stats[['19_detection_pre_visit_3_by_site']][[SITEID]]$total_cases <- 0
@@ -436,6 +449,8 @@ for (SUBJID in sort(names(subjects))) {
 
 total_sites_with_cases <- length(names(stats[['19_detection_pre_visit_3_by_site']]))
 cat("total_sites_with_cases : ", total_sites_with_cases, "\n")
+
+print(no_v3_sites_stats)
 
 subjects_by_sites <- list()
 subjects_by_sites$of_interest$bnt_detected <- 0
@@ -645,3 +660,51 @@ no_visit_3_no_pcr_template <- gsub("P_VALUE", format.pval(no_visit_3_no_pcr_chi_
 
 # Writes the modified template
 writeLines(no_visit_3_no_pcr_template, "no_visit_3_no_pcr_chi_sq.html")
+
+
+
+
+
+# Extract SITEIDs
+site_ids <- names(no_v3_sites_stats)
+
+# Initialize a list to store results
+fisher_results <- list()
+
+# Loop through each SITEID
+for (site in site_ids) {
+  arms <- names(no_v3_sites_stats[[site]])
+  # Check if both arms "Placebo" and "BNT162b2 Phase 2/3 (30 mcg)" exist
+  if (all(c("Placebo", "BNT162b2 Phase 2/3 (30 mcg)") %in% arms)) {
+    # Retrieve the values for each arm
+    placebo_no_v3 <- no_v3_sites_stats[[site]][["Placebo"]]$no_v3
+    placebo_v3 <- no_v3_sites_stats[[site]][["Placebo"]]$v3
+    treatment_no_v3 <- no_v3_sites_stats[[site]][["BNT162b2 Phase 2/3 (30 mcg)"]]$no_v3
+    treatment_v3 <- no_v3_sites_stats[[site]][["BNT162b2 Phase 2/3 (30 mcg)"]]$v3
+    
+    # Create the contingency table
+    contingency_table <- matrix(c(placebo_no_v3, placebo_v3, treatment_no_v3, treatment_v3), nrow = 2)
+    colnames(contingency_table) <- c("Placebo", "BNT162b2 Phase 2/3 (30 mcg)")
+    rownames(contingency_table) <- c("no_v3", "v3")
+    
+    # Perform Fisher's exact test
+    fisher_test <- fisher.test(contingency_table)
+    
+    # Store the results
+    fisher_results[[site]] <- list(
+      contingency_table = contingency_table,
+      p_value = fisher_test$p.value
+    )
+  }
+}
+
+# Print results with significant p-values
+for (site in names(fisher_results)) {
+  result <- fisher_results[[site]]
+  if (result$p_value < 0.05) {
+    cat("\nSITEID:", site, "\n")
+    print(result$contingency_table)
+    cat("p-value:", result$p_value, "\n")
+    print(no_v3_sites_stats[[site]])
+  }
+}

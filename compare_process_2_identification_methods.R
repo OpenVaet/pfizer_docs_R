@@ -87,4 +87,4 @@ ggplot(recruitment_by_week_long, aes(x = week, y = Subjects, fill = Process)) +
   theme_classic() +
   theme(text = element_text(size = 18),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
-  scale_fill_manual(values = c("Process 2 Subjects" = "darkblue", "Process 1 Subjects" = "lightblue"))
+  scale_fill_manual(values = c("Process 2 Subjects" = "#708090", "Process 1 Subjects" = "#D3D3D3"))

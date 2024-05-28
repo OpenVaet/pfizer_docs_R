@@ -97,8 +97,8 @@ for (i in 1:nrow(trial_sites_data)) {
         <td>", SITEID, "</td>
         <td>", state, "</td>
         <td>", investigator, "</td>")
-  print(total_missing)
   total_missing <- trial_sites_data$total_missing[i]
+  print(total_missing)
   HASDEV <- trial_sites_data$HASDEV[i]
   HASPCRIMBALANCE <- trial_sites_data$HASPCRIMBALANCE[i]
   OffsetRando <- trial_sites_data$OffsetRando[i]
@@ -134,12 +134,12 @@ for (i in 1:nrow(trial_sites_data)) {
   }
   if (total_missing == 0) {
     table_rows <- paste0(table_rows, "
-        <td>", total_missing, "</td>
+        <td></td>
   ")
   } else {
     is_clean <- 0
     table_rows <- paste0(table_rows, "
-        <td style=\"background:#fa8072\">", total_missing, "</td>
+        <td style=\"background:#fa8072\">-", total_missing, "</td>
   ")
   }
   if (is_clean) {
