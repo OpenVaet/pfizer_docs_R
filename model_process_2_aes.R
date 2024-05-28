@@ -14,7 +14,7 @@ print(process_2_subjects)
 # Loads ADSL.
 adsl_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-1066333-1067534_125742_S6_M5_c4591001-A-D-adsl.xpt')
 adsl_data <- adsl_data[adsl_data$SUBJID %in% randomized_pop$SUBJID, ]
-adsl_selected_data <- adsl_data[c("SUBJID", "COMBODFL", "BMICATN", "OBESEFL", "COUNTRY")]
+adsl_selected_data <- adsl_data[c("SUBJID", "COMBODFL", "BMICATN", "OBESEFL")]
 print(colnames(adsl_data))
 print(adsl_data)
 
