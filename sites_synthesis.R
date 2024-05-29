@@ -40,8 +40,32 @@ trial_sites_data <- trial_sites_data %>%
 missing_subjects <- missing_subjects %>%
   rename(SITEID = trial_site_id)
 
+# Calculate total_missing for SITEID 1231
+total_missing_1231 <- missing_subjects %>%
+  filter(SITEID == 1231) %>%
+  summarize(total_missing = sum(total_missing)) %>%
+  pull(total_missing)
+print(total_missing_1231)
+
+# Calculate total_missing for SITEID 4444
+total_missing_4444 <- missing_subjects %>%
+  filter(SITEID == 4444) %>%
+  summarize(total_missing = sum(total_missing)) %>%
+  pull(total_missing)
+print(total_missing_4444)
+
+# Replace the existing total_missing value for SITEID 1231
+missing_subjects <- missing_subjects %>%
+  mutate(total_missing = ifelse(SITEID == 1231, total_missing_1231 + total_missing_4444, total_missing))
+
+# Delete the row with SITEID 4444
+missing_subjects <- missing_subjects %>%
+  filter(SITEID != 4444)
+
+
 print(sympto_pcrs)
 print(missing_subjects)
+print(sum(missing_subjects$total_missing))
 print(randomization_offsets)
 
 # Convert SITEID columns to character type to ensure compatibility
@@ -75,14 +99,21 @@ trial_sites_data <- trial_sites_data %>%
 # Replace NA values in total_missing with 0
 trial_sites_data <- trial_sites_data %>%
   mutate(total_missing = replace_na(total_missing, 0))
+print(sum(trial_sites_data$total_missing))
+print(sort(unique(sympto_pcrs$SITEID)))
+print(sort(unique(randomization_offsets$SITEID)))
+
+# Filters out site 1002 (no subject negative at baseline)
+# trial_sites_data <- trial_sites_data %>% 
+#   filter(SITEID != "1002")
 
 # Print updated trial_sites_data
 print(trial_sites_data)
 
-# Loads the template
-template <- readLines("sites_synthesis_template.html")
-
-# Initializes the table rows
+# Initialize variables for pagination
+rows_per_page <- 33
+page_number <- 1
+row_counter <- 0
 table_rows <- ""
 
 clean <- 0
@@ -102,6 +133,66 @@ clean_PLACEBONEGBASELINE <- 0
 clean_PLACEBOPOS <- 0
 clean_BNTNEGBASELINE <- 0
 clean_BNTPOS <- 0
+
+
+# Calculate the totals and clean totals across all pages
+total_BNTNEGBASELINE <- sum(trial_sites_data$BNTNEGBASELINE)
+total_PLACEBONEGBASELINE <- sum(trial_sites_data$PLACEBONEGBASELINE)
+total_BNTPOS <- sum(trial_sites_data$BNTPOS)
+total_PLACEBOPOS <- sum(trial_sites_data$PLACEBOPOS)
+total_total_missing <- sum(trial_sites_data$total_missing)
+total_OffsetRando <- sum(ifelse(!is.na(trial_sites_data$OffsetRando) & trial_sites_data$OffsetRando < 0, trial_sites_data$OffsetRando, 0))
+
+clean_BNTNEGBASELINE <- sum(trial_sites_data$BNTNEGBASELINE[trial_sites_data$HASDEV == 1 & trial_sites_data$HASPCRIMBALANCE == 1 & trial_sites_data$OffsetRando >= 0 & trial_sites_data$total_missing == 0])
+clean_PLACEBONEGBASELINE <- sum(trial_sites_data$PLACEBONEGBASELINE[trial_sites_data$HASDEV == 1 & trial_sites_data$HASPCRIMBALANCE == 1 & trial_sites_data$OffsetRando >= 0 & trial_sites_data$total_missing == 0])
+clean_BNTPOS <- sum(trial_sites_data$BNTPOS[trial_sites_data$HASDEV == 1 & trial_sites_data$HASPCRIMBALANCE == 1 & trial_sites_data$OffsetRando >= 0 & trial_sites_data$total_missing == 0])
+clean_PLACEBOPOS <- sum(trial_sites_data$PLACEBOPOS[trial_sites_data$HASDEV == 1 & trial_sites_data$HASPCRIMBALANCE == 1 & trial_sites_data$OffsetRando >= 0 & trial_sites_data$total_missing == 0])
+
+# Function to write HTML file
+write_html_file <- function(page_number, table_rows, include_totals = FALSE) {
+  template <- readLines("sites_synthesis_template.html")
+  if (include_totals) {
+    # Create totals row
+    totals_row <- paste0("
+      <tr>
+        <td>Total</td>
+        <td></td>
+        <td>", total_BNTNEGBASELINE, "</td>
+        <td>", total_PLACEBONEGBASELINE, "</td>
+        <td></td>
+        <td></td>
+        <td>", total_OffsetRando, "</td>
+        <td>", total_total_missing, "</td>
+        <td>", total_BNTPOS, "</td>
+        <td>", total_PLACEBOPOS, "</td>
+      </tr>")
+    
+    # Create clean totals row
+    clean_totals_row <- paste0("
+      <tr>
+        <td>Clean</td>
+        <td></td>
+        <td>", clean_BNTNEGBASELINE, "</td>
+        <td>", clean_PLACEBONEGBASELINE, "</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td>", clean_BNTPOS, "</td>
+        <td>", clean_PLACEBOPOS, "</td>
+      </tr>")
+    
+    content <- gsub("<--TABLE_ROWS-->", paste0(totals_row, clean_totals_row, table_rows), template)
+  } else {
+    content <- gsub("<--TABLE_ROWS-->", table_rows, template)
+  }
+  writeLines(content, paste0("sites_synthesis_", page_number, ".html"))
+}
+
+# Write HTML file with totals
+write_html_file(page_number, table_rows, include_totals = TRUE)
+
+print(paste('Sites clean : ', clean, '/', total))
 
 # Iterates over each subject and add their HTML data
 for (i in 1:nrow(trial_sites_data)) {
@@ -130,16 +221,6 @@ for (i in 1:nrow(trial_sites_data)) {
   HASDEV <- trial_sites_data$HASDEV[i]
   HASPCRIMBALANCE <- trial_sites_data$HASPCRIMBALANCE[i]
   OffsetRando <- trial_sites_data$OffsetRando[i]
-  
-  # Update totals
-  total_PLACEBONEGBASELINE <- total_PLACEBONEGBASELINE + PLACEBONEGBASELINE
-  total_PLACEBOPOS <- total_PLACEBOPOS + PLACEBOPOS
-  total_BNTNEGBASELINE <- total_BNTNEGBASELINE + BNTNEGBASELINE
-  total_BNTPOS <- total_BNTPOS + BNTPOS
-  total_total_missing <- total_total_missing + total_missing
-  if (!is.na(OffsetRando) && OffsetRando < 0) {
-    total_OffsetRando <- total_OffsetRando + OffsetRando
-  }
   
   if (HASDEV == 0) {
     table_rows <- paste0(table_rows, "
@@ -193,42 +274,25 @@ for (i in 1:nrow(trial_sites_data)) {
         <td>", PLACEBOPOS, "</td>")
   table_rows <- paste0(table_rows, "
       </tr>")
+  
+  row_counter <- row_counter + 1
+  
+  # If the page is full, write the HTML file
+  if (row_counter == rows_per_page) {
+    include_totals <- page_number == 1
+    write_html_file(page_number, table_rows, include_totals)
+    
+    # Reset for the next page
+    page_number <- page_number + 1
+    row_counter <- 0
+    table_rows <- ""
+  }
 }
 
-# Create totals row
-totals_row <- paste0("
-  <tr>
-    <td>Total</td>
-    <td></td>
-    <td>", total_BNTNEGBASELINE, "</td>
-    <td>", total_PLACEBONEGBASELINE, "</td>
-    <td></td>
-    <td></td>
-    <td>", total_OffsetRando, "</td>
-    <td>", total_total_missing, "</td>
-    <td>", total_BNTPOS, "</td>
-    <td>", total_PLACEBOPOS, "</td>
-  </tr>")
-
-# Create clean totals row
-clean_totals_row <- paste0("
-  <tr>
-    <td>Clean Total</td>
-    <td></td>
-    <td>", clean_BNTNEGBASELINE, "</td>
-    <td>", clean_PLACEBONEGBASELINE, "</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td>", clean_BNTPOS, "</td>
-    <td>", clean_PLACEBOPOS, "</td>
-  </tr>")
-
-# Replaces the <--TABLE_ROWS--> placeholder with the actual table rows including totals and clean totals
-template <- gsub("<--TABLE_ROWS-->", paste0(totals_row, clean_totals_row, table_rows), template)
-
-# Prints the resulting HTML to a file
-writeLines(template, "sites_synthesis.html")
+# If there are remaining rows, write the last page
+if (row_counter > 0) {
+  include_totals <- page_number == 1
+  write_html_file(page_number, table_rows, include_totals)
+}
 
 print(paste('Sites clean : ', clean, '/', total))

@@ -7,6 +7,7 @@ library(stringr)
 library(flextable)
 library(dplyr)
 library(readr)
+library(haven)
 
 # UA used to scrap target.
 user_agent <- "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36"
@@ -206,3 +207,41 @@ html_table <- flextable(output_data_merged) %>%
   set_caption("Table 1: Sites with negative screening results")
 
 save_as_html(html_table, path = "sites_with_negative_screening.html")
+
+# Loads the ADSL file.
+file_path <- 'xpt_data/FDA-CBER-2021-5683-1066333-1067534_125742_S6_M5_c4591001-A-D-adsl.xpt'
+data <- read_xpt(file_path)
+print(colnames(data))
+selected_data <- data[c("SUBJID", "SITEID", "RANDDT", "AGE")]
+
+# Creates a new column storing ORIGINSITEID and summarizes how many subjects changed sites.
+selected_data$ORIGINSITEID <- as.numeric(sub("(....)....", "\\1", selected_data$SUBJID))
+print(selected_data)
+
+# 1. Adding a dataframe subjects_changing_sites with the rows where selected_data.SITEID != ORIGINSITEID
+subjects_changing_sites <- selected_data[selected_data$SITEID != selected_data$ORIGINSITEID, ]
+print(subjects_changing_sites)
+
+# 2. Adding a dataframe with the sum of subjects going IN and OUT of each SITEID (the SITEID is the destination site while ORIGINSITEID is the original one)
+site_transfers <- aggregate(SUBJID ~ SITEID + ORIGINSITEID, data = subjects_changing_sites, FUN = length)
+colnames(site_transfers)[3] <- "NUM_SUBJECTS"
+site_summary <- merge(
+  aggregate(NUM_SUBJECTS ~ SITEID, data = site_transfers, FUN = sum, na.rm = TRUE, subset = (SITEID != ORIGINSITEID)),
+  aggregate(NUM_SUBJECTS ~ ORIGINSITEID, data = site_transfers, FUN = sum, na.rm = TRUE, subset = (SITEID != ORIGINSITEID)),
+  by.x = "SITEID",
+  by.y = "ORIGINSITEID",
+  all = TRUE
+)
+colnames(site_summary) <- c("SITEID", "NUM_IN", "NUM_OUT")
+print(site_summary)
+
+# 3. Filter on the anomalies on SITEID = 1018 so we know how many subjects came in and out
+site_1018_anomalies <- site_summary[site_summary$SITEID == 1018, ]
+print(site_1018_anomalies)
+
+# 4. Add a dataframe containing all subjects with AGE < 16 and print it
+subjects_under_16 <- selected_data[selected_data$AGE < 16, ]
+print(subjects_under_16)
+site_1018_subjects_under_16 <- subjects_under_16[subjects_under_16$ORIGINSITEID == 1018, ]
+print(site_1018_subjects_under_16)
+

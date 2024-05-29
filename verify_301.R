@@ -199,6 +199,7 @@ summary_data <- data.frame(
   stringsAsFactors = FALSE
 )
 print(summary_data)
+print(sum(summary_data$total_missing))
 
 # Writes the summary data to a CSV file
 write.csv(summary_data, "missing_subjects_by_sites.csv", row.names = FALSE)
