@@ -1,6 +1,7 @@
 library(readr)
 library(haven)
 library(lubridate)
+library(tidyr)
 library(dplyr)
 library(ggplot2)
 
@@ -87,7 +88,7 @@ ggplot() +
 # Loads symptoms recorded.
 adsympt_file <- 'xpt_data/FDA-CBER-2021-5683-0663135-0671344-125742_S1_M5_c4591001-A-D-adsympt.xpt'
 adsympt_data <- read_xpt(adsympt_file)
-adsympt_selected_data <- adsympt_data[c("USUBJID", "PARCAT1", "PARAM", "AVISIT", "AVALC", "ADT", "AENDT")]
+adsympt_selected_data <- adsympt_data[c("USUBJID", "SITEID", "PARCAT1", "PARAM", "AVISIT", "AVALC", "ADT", "AENDT")]
 adsympt_filtered_data <- adsympt_selected_data[adsympt_selected_data$PARCAT1 == 'SIGNS AND SYMPTOMS OF DISEASE', ]
 adsympt_filtered_data$SUBJID <- sub(".*C4591001 \\d{4} (\\d{8}).*", "\\1", adsympt_filtered_data$USUBJID)
 adsympt_filtered_data <- adsympt_filtered_data[c("SUBJID", "PARCAT1", "PARAM", "AVISIT", "AVALC", "ADT", "AENDT")]

@@ -9,6 +9,7 @@ randomization_offsets_file <- 'offset_randomization_between_fa_m6.csv'
 deviations_file <- 'deviations_significant_results_by_sites.csv'
 imbalanced_pcrs_file <- 'phase_3_local_tests_by_sites.csv'
 missing_subjects_file <- 'missing_subjects_by_sites.csv'
+sympto_pcrs_file <- 'sites_symptomatic_positive_pcrs.csv'
 trial_sites_file <- 'trial_site_data.json'
 
 # Read the data
@@ -16,6 +17,7 @@ deviations <- read.csv(deviations_file)
 randomization_offsets <- read.csv(randomization_offsets_file)
 imbalanced_pcrs <- read.csv(imbalanced_pcrs_file)
 missing_subjects <- read.csv(missing_subjects_file)
+sympto_pcrs <- read.csv(sympto_pcrs_file)
 trial_sites_data <- fromJSON(trial_sites_file, simplifyDataFrame = TRUE)
 
 # Create deviations_unique_sites containing unique SITEID from deviations
@@ -38,12 +40,17 @@ trial_sites_data <- trial_sites_data %>%
 missing_subjects <- missing_subjects %>%
   rename(SITEID = trial_site_id)
 
+print(sympto_pcrs)
+print(missing_subjects)
+print(randomization_offsets)
+
 # Convert SITEID columns to character type to ensure compatibility
 trial_sites_data$SITEID <- as.character(trial_sites_data$SITEID)
 randomization_offsets$SITEID <- as.character(randomization_offsets$SITEID)
 deviations_unique_sites$SITEID <- as.character(deviations_unique_sites$SITEID)
 imbalanced_pcrs_unique_sites$SITEID <- as.character(imbalanced_pcrs_unique_sites$SITEID)
 missing_subjects$SITEID <- as.character(missing_subjects$SITEID)
+sympto_pcrs$SITEID <- as.character(sympto_pcrs$SITEID)
 
 # Add HASDEV column
 trial_sites_data <- trial_sites_data %>%
@@ -61,17 +68,16 @@ trial_sites_data <- trial_sites_data %>%
 trial_sites_data <- trial_sites_data %>%
   left_join(missing_subjects %>% select(SITEID, total_missing), by = "SITEID")
 
+# Add symptomatic PCR columns from sympto_pcrs
+trial_sites_data <- trial_sites_data %>%
+  left_join(sympto_pcrs %>% select(SITEID, PLACEBONEGBASELINE, PLACEBOPOS, BNTNEGBASELINE, BNTPOS), by = "SITEID")
+
 # Replace NA values in total_missing with 0
 trial_sites_data <- trial_sites_data %>%
   mutate(total_missing = replace_na(total_missing, 0))
 
 # Print updated trial_sites_data
 print(trial_sites_data)
-
-
-
-
-
 
 # Loads the template
 template <- readLines("sites_synthesis_template.html")
@@ -81,12 +87,33 @@ table_rows <- ""
 
 clean <- 0
 total <- 0
+
+# Initialize counters for totals and clean totals
+total_PLACEBONEGBASELINE <- 0
+total_PLACEBOPOS <- 0
+total_BNTNEGBASELINE <- 0
+total_BNTPOS <- 0
+total_HASDEV <- 0
+total_HASPCRIMBALANCE <- 0
+total_OffsetRando <- 0
+total_total_missing <- 0
+
+clean_PLACEBONEGBASELINE <- 0
+clean_PLACEBOPOS <- 0
+clean_BNTNEGBASELINE <- 0
+clean_BNTPOS <- 0
+
 # Iterates over each subject and add their HTML data
 for (i in 1:nrow(trial_sites_data)) {
   total <- total + 1
   is_clean <- 1
   row <- trial_sites_data[i, ]
   SITEID <- trial_sites_data$SITEID[i]
+  if (SITEID == 1002) next
+  PLACEBONEGBASELINE <- trial_sites_data$PLACEBONEGBASELINE[i]
+  PLACEBOPOS <- trial_sites_data$PLACEBOPOS[i]
+  BNTNEGBASELINE <- trial_sites_data$BNTNEGBASELINE[i]
+  BNTPOS <- trial_sites_data$BNTPOS[i]
   state <- trial_sites_data$state[i]
   if (is.na(state)) {
     state <- trial_sites_data$country[i]
@@ -96,12 +123,24 @@ for (i in 1:nrow(trial_sites_data)) {
       <tr>
         <td>", SITEID, "</td>
         <td>", state, "</td>
-        <td>", investigator, "</td>")
+        <td>", BNTNEGBASELINE, "</td>
+        <td>", PLACEBONEGBASELINE, "</td>")
   total_missing <- trial_sites_data$total_missing[i]
   print(total_missing)
   HASDEV <- trial_sites_data$HASDEV[i]
   HASPCRIMBALANCE <- trial_sites_data$HASPCRIMBALANCE[i]
   OffsetRando <- trial_sites_data$OffsetRando[i]
+  
+  # Update totals
+  total_PLACEBONEGBASELINE <- total_PLACEBONEGBASELINE + PLACEBONEGBASELINE
+  total_PLACEBOPOS <- total_PLACEBOPOS + PLACEBOPOS
+  total_BNTNEGBASELINE <- total_BNTNEGBASELINE + BNTNEGBASELINE
+  total_BNTPOS <- total_BNTPOS + BNTPOS
+  total_total_missing <- total_total_missing + total_missing
+  if (!is.na(OffsetRando) && OffsetRando < 0) {
+    total_OffsetRando <- total_OffsetRando + OffsetRando
+  }
+  
   if (HASDEV == 0) {
     table_rows <- paste0(table_rows, "
         <td></td>
@@ -124,7 +163,7 @@ for (i in 1:nrow(trial_sites_data)) {
   }
   if (OffsetRando >= 0) {
     table_rows <- paste0(table_rows, "
-        <td>", OffsetRando, "</td>
+        <td></td>
   ")
   } else {
     is_clean <- 0
@@ -144,13 +183,50 @@ for (i in 1:nrow(trial_sites_data)) {
   }
   if (is_clean) {
     clean <- clean + 1
+    clean_PLACEBONEGBASELINE <- clean_PLACEBONEGBASELINE + PLACEBONEGBASELINE
+    clean_PLACEBOPOS <- clean_PLACEBOPOS + PLACEBOPOS
+    clean_BNTNEGBASELINE <- clean_BNTNEGBASELINE + BNTNEGBASELINE
+    clean_BNTPOS <- clean_BNTPOS + BNTPOS
   }
+  table_rows <- paste0(table_rows, "
+        <td>", BNTPOS, "</td>
+        <td>", PLACEBOPOS, "</td>")
   table_rows <- paste0(table_rows, "
       </tr>")
 }
 
-# Replaces the <--TABLE_ROWS--> placeholder with the actual table rows
-template <- gsub("<--TABLE_ROWS-->", table_rows, template)
+# Create totals row
+totals_row <- paste0("
+  <tr>
+    <td>Total</td>
+    <td></td>
+    <td>", total_BNTNEGBASELINE, "</td>
+    <td>", total_PLACEBONEGBASELINE, "</td>
+    <td></td>
+    <td></td>
+    <td>", total_OffsetRando, "</td>
+    <td>", total_total_missing, "</td>
+    <td>", total_BNTPOS, "</td>
+    <td>", total_PLACEBOPOS, "</td>
+  </tr>")
+
+# Create clean totals row
+clean_totals_row <- paste0("
+  <tr>
+    <td>Clean Total</td>
+    <td></td>
+    <td>", clean_BNTNEGBASELINE, "</td>
+    <td>", clean_PLACEBONEGBASELINE, "</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td>", clean_BNTPOS, "</td>
+    <td>", clean_PLACEBOPOS, "</td>
+  </tr>")
+
+# Replaces the <--TABLE_ROWS--> placeholder with the actual table rows including totals and clean totals
+template <- gsub("<--TABLE_ROWS-->", paste0(totals_row, clean_totals_row, table_rows), template)
 
 # Prints the resulting HTML to a file
 writeLines(template, "sites_synthesis.html")
