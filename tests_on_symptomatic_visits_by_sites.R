@@ -2,14 +2,16 @@ library(haven)
 library(dplyr)
 library(lubridate)
 library(stringr)
+library(zoo)
+library(tidyr)
+library(ggplot2)
 
 # Loads the Phase 3 population randomized.
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
 randomized_pop <- read.csv(randomized_pop_file)
 
+# Reads the symptoms XPT files
 symptoms_file <- 'xpt_data/FDA-CBER-2021-5683-0663135-0671344-125742_S1_M5_c4591001-A-D-adsympt.xpt'
-
-# Reads the primary XPT files
 symptoms <- read_xpt(symptoms_file)
 print(colnames(symptoms))
 print(symptoms)
@@ -307,5 +309,224 @@ writeLines(html_output, "phase_3_local_tests_by_sites.html")
 # Writes the dataframe to a CSV file
 write.csv(local_significant_results, "phase_3_local_tests_by_sites.csv", row.names = FALSE)
 
+# Creates a dataframe sites_symptoms containing the rows in symptoms_selected where SITEID is also in local_significant_results
+# Gets the unique SITEIDs from local_significant_results
+significant_site_ids <- unique(local_significant_results$SITEID)
 
+# Filters symptoms_selected to include only rows where SITEID is in significant_site_ids
+sites_symptoms <- symptoms_selected %>%
+  filter(SITEID %in% significant_site_ids)
+
+# Print the resulting dataframe
+print(sites_symptoms)
+
+# For each unique SUBJID-AVISIT pair in sites_symptoms, calculate the average rows, being the total rows / total AVISIT, for each ARM
+# Group by SUBJID, AVISIT, and ARM to count the number of rows for each unique pair
+subjects_avist_count <- sites_symptoms %>%
+  group_by(SUBJID, AVISIT, ARM) %>%
+  summarise(total_rows = n(), .groups = "drop")
+
+# Group by ARM to calculate the average rows per unique SUBJID-AVISIT pair
+average_rows_per_arm <- subjects_avist_count %>%
+  group_by(ARM) %>%
+  summarise(
+    total_rows = sum(total_rows),
+    total_avist = n(),
+    average_rows = total_rows / total_avist,
+    .groups = "drop"
+  )
+
+# Print the resulting dataframe
+print(average_rows_per_arm)
+
+# Step 1: Extract the relevant data for each group
+bnt_data <- sites_symptoms %>%
+  filter(ARM == "BNT162b2 Phase 2/3 (30 mcg)") %>%
+  group_by(SUBJID, AVISIT) %>%
+  summarise(rows = n(), .groups = "drop")
+
+placebo_data <- sites_symptoms %>%
+  filter(ARM == "Placebo") %>%
+  group_by(SUBJID, AVISIT) %>%
+  summarise(rows = n(), .groups = "drop")
+
+# Step 2: Perform the t-test on the average rows per unique SUBJID-AVISIT pair
+t_test_result <- t.test(bnt_data$rows, placebo_data$rows)
+
+# Print the results of the t-test
+print(t_test_result)
+
+# Loads COVID symptoms accross datasets.
+symptoms_file <- 'covid_symptoms_accross_datasets.csv'
+
+# Reads symptoms file
+symptoms_data <- read_csv(symptoms_file, col_types = cols(.default = "c"))
+
+print(symptoms_data)
+
+# Verify uniqueness by checking for duplicates
+duplicates <- symptoms_data %>%
+  group_by(SUBJID, REPORTDATE, SYMPTOM) %>%
+  filter(n() > 1)
+
+# Print the duplicates, if any
+print(duplicates)
+
+# Check if there are any duplicates
+if (nrow(duplicates) == 0) {
+  cat("All rows are unique based on SUBJID, REPORTDATE, and SYMPTOM.\n")
+} else {
+  cat("There are duplicate rows based on SUBJID, REPORTDATE, and SYMPTOM.\n")
+}
+
+
+# Filters symptoms_selected to include only rows where SITEID is in significant_site_ids
+symptoms_data$SITEID <- as.numeric(sub("(....)....", "\\1", symptoms_data$SUBJID))
+print(symptoms_data)
+sites_symptoms_data <- symptoms_data %>%
+  filter(SITEID %in% significant_site_ids)
+print(sites_symptoms_data)
+
+# For each unique SUBJID-AVISIT pair in sites_symptoms_data, calculate the average rows, being the total rows / total AVISIT, for each ARM
+# Group by SUBJID, AVISIT, and ARM to count the number of rows for each unique pair
+subjects_avist_count <- sites_symptoms_data %>%
+  group_by(SUBJID, ARM) %>%
+  summarise(total_rows = n(), .groups = "drop")
+
+# Group by ARM to calculate the average rows per unique SUBJID-AVISIT pair
+average_rows_per_arm <- subjects_avist_count %>%
+  group_by(ARM) %>%
+  summarise(
+    total_rows = sum(total_rows),
+    total_avist = n(),
+    average_rows = total_rows / total_avist,
+    .groups = "drop"
+  )
+print(average_rows_per_arm)
+
+# Extracts the relevant data for each group
+bnt_data <- sites_symptoms_data %>%
+  filter(ARM == "BNT162b2 Phase 2/3 (30 mcg)") %>%
+  group_by(SUBJID) %>%
+  summarise(rows = n(), .groups = "drop")
+
+placebo_data <- sites_symptoms_data %>%
+  filter(ARM == "Placebo") %>%
+  group_by(SUBJID) %>%
+  summarise(rows = n(), .groups = "drop")
+
+# Performs the t-test on the average rows per unique SUBJID-AVISIT pair
+t_test_result <- t.test(bnt_data$rows, placebo_data$rows)
+
+# Prints the results of the t-test
+print(t_test_result)
+print(sites_symptoms)
+print(sites_symptoms_data)
+
+# Converts the dates in `sites_symptoms` to character for comparison
+sites_symptoms <- sites_symptoms %>%
+  mutate(ADT = as.character(ADT), ASTDT = as.character(ASTDT))
+
+# Performs the join and create the HASVISIT column
+joined_data <- sites_symptoms_data %>%
+  left_join(sites_symptoms, 
+            by = c("SUBJID" = "SUBJID", "SYMPTOM" = "PARAM"), 
+            relationship = "many-to-many") %>%
+  mutate(HASVISIT = ifelse(REPORTDATE == ADT | REPORTDATE == ASTDT, 1, 0)) %>%
+  select(SUBJID, REPORTDATE, SYMPTOM, ARM.x, ORIGINSITEID, SITEID.x, HASVISIT) %>%
+  rename(ARM = ARM.x, SITEID = SITEID.x)
+
+# Replaces NA values in HASVISIT with 0
+joined_data <- joined_data %>%
+  mutate(HASVISIT = ifelse(is.na(HASVISIT), 0, HASVISIT))
+
+# Filters out a few rows with improper date.
+joined_data <- joined_data %>%
+  filter(!is.na(REPORTDATE))
+
+# Calculates the summary percentage for each ARM
+summary_percentage <- joined_data %>%
+  group_by(ARM) %>%
+  summarise(total_visits = n(),
+            has_visit_count = sum(HASVISIT),
+            percentage_has_visit = (has_visit_count / total_visits) * 100)
+
+# Displays the summary
+print(summary_percentage)
+
+print(joined_data)
+
+# Calculate the daily total of symptoms reported for each ARM and HASVISIT status
+daily_totals <- joined_data %>%
+  group_by(REPORTDATE, ARM, HASVISIT) %>%
+  summarise(total_symptoms = n(), .groups = 'drop')
+print(daily_totals)
+
+# Ensure REPORTDATE is of Date type
+daily_totals <- daily_totals %>%
+  mutate(REPORTDATE = as.Date(REPORTDATE))
+
+print(daily_totals)
+
+# Initialize a data frame to store the results
+rolling_summary <- data.frame()
+
+# Iterate over each unique REPORTDATE
+unique_dates <- unique(daily_totals$REPORTDATE)
+
+for (date in unique_dates) {
+  # Ensure date is of Date type
+  date <- as.Date(date)
+  
+  print(date)
+  # Get the date range for the previous 4 days including REPORTDATE
+  date_range <- seq(date - 7, date, by = "days")
+  print(date_range)
+  
+  # Filter the data for the given date range
+  date_data <- daily_totals %>%
+    filter(REPORTDATE %in% date_range)
+  
+  print(date_data)
+  
+  
+  # Group by ARM and calculate the total symptoms and HASVISIT counts
+  date_summary <- date_data %>%
+    group_by(ARM) %>%
+    summarise(total_symptoms_sum = sum(total_symptoms),
+              has_visit_symptoms = sum(total_symptoms * HASVISIT),
+              .groups = 'drop') %>%
+    mutate(rolling_percentage = ifelse(total_symptoms_sum > 0, (has_visit_symptoms / total_symptoms_sum) * 100, 0),
+           REPORTDATE = date)
+  
+  # Append the results to the rolling_summary data frame
+  rolling_summary <- bind_rows(rolling_summary, date_summary)
+}
+
+# Print the rolling summary
+print(rolling_summary)
+
+# Plot the results using ggplot2
+ggplot(rolling_summary, aes(x = REPORTDATE, y = rolling_percentage, color = ARM)) +
+  geom_line(size = 1.2) +
+  labs(
+       title = "C4591001 - Symptoms Resulting in association with a COVID visit",
+       subtitle = "Sites 1005, 1006, 1007, 1028, 1042, 1057, 1090, 1091, 1109, 1116, 1123, 1149, 1162, 1170, 1236, 1247",
+       x = "Report Date", y = "Rolling Percentage",
+       color = "Legend") +
+  scale_fill_manual(
+    values = c("BNT162b2 Phase 2/3 (30 mcg)" = "#E97451", "Placebo" = "#7393B3")
+  ) +
+  scale_x_date(date_breaks = "3 days", date_labels = "%Y-%m-%d") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 18),
+    axis.title = element_text(size = 18),
+    axis.text = element_text(size = 18),
+    legend.title = element_text(size = 18),
+    legend.text = element_text(size = 18),
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    legend.position = "bottom",  # Move legend to bottom
+    legend.box = "horizontal"    # Set legend to occupy full width
+  )
 
