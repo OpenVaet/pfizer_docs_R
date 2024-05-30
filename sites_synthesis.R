@@ -99,16 +99,24 @@ trial_sites_data <- trial_sites_data %>%
 # Replace NA values in total_missing with 0
 trial_sites_data <- trial_sites_data %>%
   mutate(total_missing = replace_na(total_missing, 0))
+trial_sites_data <- trial_sites_data %>%
+  mutate(PLACEBONEGBASELINE = replace_na(PLACEBONEGBASELINE, 0))
+trial_sites_data <- trial_sites_data %>%
+  mutate(PLACEBOPOS = replace_na(PLACEBOPOS, 0))
+trial_sites_data <- trial_sites_data %>%
+  mutate(BNTNEGBASELINE = replace_na(BNTNEGBASELINE, 0))
+trial_sites_data <- trial_sites_data %>%
+  mutate(BNTPOS = replace_na(BNTPOS, 0))
 print(sum(trial_sites_data$total_missing))
 print(sort(unique(sympto_pcrs$SITEID)))
 print(sort(unique(randomization_offsets$SITEID)))
 
-# Filters out site 1002 (no subject negative at baseline)
+# Filters out site 1002 (no subject negative at baseline, only use for phase 1)
 # trial_sites_data <- trial_sites_data %>% 
 #   filter(SITEID != "1002")
 
 # Print updated trial_sites_data
-print(trial_sites_data)
+print(trial_sites_data, max.print=200)
 
 # Initialize variables for pagination
 rows_per_page <- 33
@@ -200,7 +208,7 @@ for (i in 1:nrow(trial_sites_data)) {
   is_clean <- 1
   row <- trial_sites_data[i, ]
   SITEID <- trial_sites_data$SITEID[i]
-  if (SITEID == 1002) next
+  #if (SITEID == 1002) next
   PLACEBONEGBASELINE <- trial_sites_data$PLACEBONEGBASELINE[i]
   PLACEBOPOS <- trial_sites_data$PLACEBOPOS[i]
   BNTNEGBASELINE <- trial_sites_data$BNTNEGBASELINE[i]
