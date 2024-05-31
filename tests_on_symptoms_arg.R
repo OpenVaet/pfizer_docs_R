@@ -303,24 +303,24 @@ print(scaling_factor_right)
 df$report_date <- ymd(df$report_date)
 # Creates the plot
 p <- ggplot(df, aes(x = report_date)) +
-  geom_col(aes(y = bnt_total / scaling_factor_right, fill = "BNT Total Symptoms"), alpha = 0.5) +
-  geom_col(aes(y = placebo_total / scaling_factor_right, fill = "Placebo Total Symptoms"), alpha = 0.5) +
-  geom_line(aes(y = cumulated_percent, color = "Percent of Subjects Reporting Symptoms PCR Tested"), size = 1.5) + # Changed this line
+  geom_col(aes(y = bnt_total / scaling_factor_right, fill = "BNT Total Subjects with Symptoms"), alpha = 0.5) +
+  geom_col(aes(y = placebo_total / scaling_factor_right, fill = "Placebo Total Subjects with Symptoms"), alpha = 0.5) +
+  geom_line(aes(y = cumulated_percent, color = "Percent of subjects reporting at least one Symptoms resulting in a PCR Test"), size = 1.5) + # Changed this line
   scale_y_continuous(
-    name = "Symptoms Tested Percent",
-    sec.axis = sec_axis(~.*scaling_factor_right, name = "Total Symptoms Reported")
+    name = "Percent of Subjects with Symptoms PCR Tested",
+    sec.axis = sec_axis(~.*scaling_factor_right, name = "Subjects with Symptoms")
   ) +
   labs(
     x = "Report Date",
     color = "Legend",
     fill = "",
-    title = "C4591001 - Argentina - PCR Testing on negative at baseline subjects reporting Symptoms, from Dose 1 to November 14, 2020"
+    title = "C4591001 - Argentina - PCR Testing on negative at baseline subjects reporting at least one Symptoms, from Dose 1 to November 14, 2020"
   ) +
   scale_color_manual(
-    values = c("Percent of Subjects Reporting Symptoms PCR Tested" = "#DC143C")
+    values = c("Percent of subjects reporting at least one Symptoms resulting in a PCR Test" = "#DC143C")
   ) +
   scale_fill_manual(
-    values = c("BNT Total Symptoms" = "#7393B3", "Placebo Total Symptoms" = "#E97451")
+    values = c("BNT Total Subjects with Symptoms" = "#7393B3", "Placebo Total Subjects with Symptoms" = "#E97451")
   ) +
   theme_minimal() +
   theme(

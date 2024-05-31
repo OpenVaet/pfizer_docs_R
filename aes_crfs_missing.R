@@ -2,6 +2,10 @@
 library(tools)
 library(haven)
 library(dplyr)
+library(pdftools)
+library(rmarkdown)
+library(flextable)
+library(tidyverse)
 
 # Verifies if the requireed files have been properly retrieved.
 # ADAE
@@ -36,7 +40,7 @@ html_table_10551139 <- flextable(adae_10551139_data) %>%
   fontsize(size = 14, part = "all") %>%
   padding(padding = 2) %>%
   autofit() %>%
-  set_caption("Table 1: Sites with negative screening results")
+  set_caption("Table 1: AES Reported by Subject 10551139")
 
 save_as_html(html_table_10551139, path = "aes_10551139.html")
 
@@ -62,7 +66,7 @@ html_table_11401282 <- flextable(adae_11401282_data) %>%
   fontsize(size = 14, part = "all") %>%
   padding(padding = 2) %>%
   autofit() %>%
-  set_caption("Table 1: Sites with negative screening results")
+  set_caption("Table 1: AES Reported by Subject 11401282")
 
 save_as_html(html_table_11401282, path = "aes_11401282.html")
 
@@ -88,7 +92,7 @@ html_table_12411347 <- flextable(adae_12411347_data) %>%
   fontsize(size = 14, part = "all") %>%
   padding(padding = 2) %>%
   autofit() %>%
-  set_caption("Table 1: Sites with negative screening results")
+  set_caption("Table 1: AES Reported by Subject 12411347")
 
 save_as_html(html_table_12411347, path = "aes_12411347.html")
 

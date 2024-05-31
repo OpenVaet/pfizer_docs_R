@@ -138,9 +138,9 @@ ggplot(summary_df, aes(x = REPORTDATE, y = Count, color = ARM)) +
   geom_point() +
   geom_line(size = 1.4) +
   scale_color_manual(values = c("BNT162b2 Phase 2/3 (30 mcg)" = "#FF6B6B", "Placebo" = "#BEBEBE")) +
-  labs(title = "C4591001 - Phase 2-3 Subjects Reporting COVID symptoms",
+  labs(title = "C4591001 - Phase 2-3 Subjects Reporting At Least One Symptom for the first time within 4 days",
        x = "Date",
-       y = "Subjects",
+       y = "Subjects Reporting At Least One Symptom",
        color = "ARM") +
   theme_minimal() +
   theme(
