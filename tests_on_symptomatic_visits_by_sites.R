@@ -5,6 +5,7 @@ library(stringr)
 library(zoo)
 library(tidyr)
 library(ggplot2)
+library(readr)
 
 # Loads the Phase 3 population randomized.
 randomized_pop_file <- 'phase_3_randomized_pop.csv'
@@ -433,7 +434,7 @@ joined_data <- sites_symptoms_data %>%
             by = c("SUBJID" = "SUBJID", "SYMPTOM" = "PARAM"), 
             relationship = "many-to-many") %>%
   mutate(HASVISIT = ifelse(REPORTDATE == ADT | REPORTDATE == ASTDT, 1, 0)) %>%
-  select(SUBJID, REPORTDATE, SYMPTOM, ARM.x, ORIGINSITEID, SITEID.x, HASVISIT) %>%
+  select(SUBJID, REPORTDATE, SYMPTOM, ARM.x, SITEID.x, HASVISIT) %>%
   rename(ARM = ARM.x, SITEID = SITEID.x)
 
 # Replaces NA values in HASVISIT with 0
@@ -478,17 +479,12 @@ for (date in unique_dates) {
   # Ensure date is of Date type
   date <- as.Date(date)
   
-  print(date)
   # Get the date range for the previous 4 days including REPORTDATE
   date_range <- seq(date - 7, date, by = "days")
-  print(date_range)
   
   # Filter the data for the given date range
   date_data <- daily_totals %>%
     filter(REPORTDATE %in% date_range)
-  
-  print(date_data)
-  
   
   # Group by ARM and calculate the total symptoms and HASVISIT counts
   date_summary <- date_data %>%

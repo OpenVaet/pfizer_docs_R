@@ -170,7 +170,7 @@ write_html_file <- function(page_number, table_rows, include_totals = FALSE) {
         <td></td>
         <td></td>
         <td>", total_OffsetRando, "</td>
-        <td>", total_total_missing, "</td>
+        <td>-", total_total_missing, "</td>
         <td>", total_BNTPOS, "</td>
         <td>", total_PLACEBOPOS, "</td>
       </tr>")
