@@ -316,6 +316,17 @@ jpg_in_crfs$Gmt_YYYYMMDD <- sprintf("%04d-%02d-%02d",
 
 print(jpg_in_crfs)
 
+# Select the relevant columns to create the new dataframe
+jpg_in_crfs_print <- jpg_in_crfs %>%
+  select(SUBJID, page_num, Form, Gmt_YYYYMMDD)
+
+# Print the new dataframe to check the content
+print(jpg_in_crfs_print)
+
+# Save the new dataframe to a CSV file
+write.csv(jpg_in_crfs_print, 'jpg_in_crfs.csv', row.names = FALSE)
+
+
 # Filter merged_data to sustain only the rows where ARM = "Placebo"
 placebo_data <- merged_data %>% filter(ARM == "Placebo")
 
@@ -358,9 +369,6 @@ subjects_vax_na <- unique(filtered_jpg_in_crfs_merged_data[is.na(filtered_jpg_in
 # Print the unique subjects
 cat("Unique subjects with VAX201DT NA:\n")
 print(subjects_vax_na)
-
-
-
 
 # Create a table of counts based on the Form entry
 form_counts <- as.data.frame(table(jpg_in_crfs$Form))
