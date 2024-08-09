@@ -16,12 +16,6 @@ library(rmarkdown)
 library(flextable)
 library(lubridate)
 
-# You'll need the XPDF version corresponding to your OS.
-# Both files below are coming from https://www.xpdfreader.com/download.html
-# Place the "pdftohtml.exe" (windows) or "pdftohtml" (linux) file,
-# located in the bin32/64 subfolder of the archive you downloaded,
-# in your project repository.
-
 # Define the path to the pdftohtml executable
 pdf_to_html_executable <- 'pdftohtml' # Use appropriate executable name for your OS
 
@@ -30,8 +24,40 @@ dir_create('crf_html')
 
 pages_replaced <- list()
 
-# Data frame to store information about skipped files
-skipped_files <- data.frame(file = character(), size_mb = numeric(), stringsAsFactors = FALSE)
+# Data frame to store PDF files and their standardized dates
+pdf_dates <- data.frame(file = character(), subjid = character(), standardized_date = character(), abnormal_pages = numeric(), total_pages = numeric(), file_size_mb = character(), abnormal_percent = numeric(), stringsAsFactors = FALSE)
+
+# Function to extract the standardized date from a given page
+extract_standardized_date <- function(page_text) {
+  pattern <- "Final On: (\\d{2}-[A-Za-z]{3}-\\d{4} \\d{2}:\\d{2})"
+  match <- stri_match_first_regex(page_text, pattern)
+  if (!is.na(match[1, 2])) {
+    timestamp <- match[1, 2]
+    cat("Extracted Timestamp:", timestamp, "\n")
+    
+    # Convert the extracted timestamp to YYYY-MM-DD format
+    date <- dmy_hm(timestamp)
+    standardized_date <- format(date, "%Y-%m-%d")
+    cat("Standardized Date:", standardized_date, "\n")
+    return(standardized_date)
+  } else {
+    return(NULL)
+  }
+}
+
+# Define hardcoded dates for specific files
+hardcoded_dates <- list(
+  "pdf_data/125742_S1_M5_CRF_c4591001-1091-10911213.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1091-10911170.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1091-10911002.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1097-10971011.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1097-10971023.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1097-10971064.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1123-11231381.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1135-11351257.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-1241-12411347.pdf" = "2021-04-01",
+  "pdf_data/125742_S1_M5_CRF_c4591001-4444-44441634.pdf" = "2021-04-01"
+)
 
 # Iterate over the PDF files
 pdf_files <- dir_ls('pdf_data', glob = '*_CRF_*.pdf')
@@ -61,12 +87,6 @@ for (file in pdf_files) {
   file_size_bytes <- file_info(file)$size
   file_size_mb <- file_size_bytes / (1024 * 1024)
   file_size_mb <- round(file_size_mb, 2)
-  if (file_size_mb > 15) {
-    cat("Skipping file [", file, "] (", file_size_mb, " MB)\n", sep = "")
-    # Add skipped file information to the data frame
-    skipped_files <- rbind(skipped_files, data.frame(file = file, size_mb = file_size_mb, stringsAsFactors = FALSE))
-    next
-  }
   total_files_parsed <- total_files_parsed + 1
   cat("File size:", file_size_mb, "MB\n")
   
@@ -97,6 +117,8 @@ for (file in pdf_files) {
   }
   
   has_anomalies <- 0
+  total_pages <- 0
+  abnormal_pages <- 0
   for (page in html_pages) {
     html <- read_html(page)
     
@@ -112,62 +134,123 @@ for (file in pdf_files) {
     
     if (text_length < 50) {
       has_anomalies <- 1
+      abnormal_pages <- abnormal_pages + 1
       if (is.null(pages_replaced[[subjid]])) {
         pages_replaced[[subjid]] <- list()
       }
       pages_replaced[[subjid]][[page_num]] <- text_length
       cat('---->', file, '->', page_num, '|', text_length, "\n")
     }
+    total_pages <- total_pages + 1
   }
   
   if (has_anomalies == 1) {
     files_with_anomalies <- files_with_anomalies + 1
   }
+  
+  # Read and print the text from the PDF
+  # Check if the file has a hardcoded date
+  if (file %in% names(hardcoded_dates)) {
+    standardized_date <- hardcoded_dates[[file]]
+  } else {
+    pdf_text_content <- pdf_text(file)
+    
+    # Try to find the standardized date on different pages
+    for (i in 1:length(pdf_text_content)) {
+      page_text <- pdf_text_content[i]
+      # cat("PDF text content for", subjid, "Page", i, ":\n")
+      # cat(page_text, sep = "\n")
+      
+      standardized_date <- extract_standardized_date(page_text)
+      if (!is.null(standardized_date)) {
+        break
+      }
+    }
+  }
+  
+  if (!is.null(standardized_date)) {
+    # Calculate abnormal_percent
+    abnormal_percent <- (abnormal_pages * 100) / total_pages
+    abnormal_percent <- round(abnormal_percent, 2) # Round to nearest 0.01
+    
+    # Add the file, subjid, and standardized date to the data frame
+    pdf_dates <- rbind(pdf_dates, data.frame(file = file, subjid = subjid, standardized_date = standardized_date, abnormal_pages, total_pages, file_size_mb, abnormal_percent, stringsAsFactors = FALSE))
+  } else {
+    cat('File : [', file, ']', ":\n")
+    stop('Failed to find date on any page')
+  }
 }
+
+# Write the data frame to a CSV file
+write.csv(pdf_dates, 'crf_generation_dates.csv', row.names = FALSE)
+
+# Create a new dataframe full_jpg_crf where abnormal_pages > 99
+full_jpg_crf <- pdf_dates %>% filter(abnormal_pages > 99) %>% select(-file)
+print(full_jpg_crf)
 
 # Write the results to a CSV file
 output_file <- 'jpg_in_crfs.csv'
 file_conn <- file(output_file, 'w', encoding = 'UTF-8')
 writeLines("subjid,page_num,text_length", file_conn)  # Add header to CSV
-
 for (subjid in sort(names(pages_replaced))) {
   for (page in sort(names(pages_replaced[[subjid]]))) {
     text_length <- pages_replaced[[subjid]][[page]]
     writeLines(paste(subjid, page, text_length, sep = ','), file_conn)
   }
 }
-
 close(file_conn)
 
-# Write the skipped files information to a CSV file
-skipped_output_file <- 'jpg_full_high_size.csv'
-write.csv(skipped_files, skipped_output_file, row.names = FALSE)
-print(skipped_files)
-skipped_html_table <- flextable(skipped_files) %>%
+# Read phase_3_randomized_pop.csv
+phase_3_randomized_pop <- read.csv('phase_3_randomized_pop.csv', stringsAsFactors = FALSE)
+print(phase_3_randomized_pop)
+print(colnames(phase_3_randomized_pop))
+phase_3_randomized_pop_filtered <- phase_3_randomized_pop %>%
+  select(SUBJID, ARM, VAX202DT)
+print(phase_3_randomized_pop_filtered)
+
+# Change the column name in full_jpg_crf from subjid to SUBJID
+colnames(full_jpg_crf)[colnames(full_jpg_crf) == "subjid"] <- "SUBJID"
+
+# Merge the dataframes based on SUBJID, keeping only the entries in jpg_in_crfs
+merged_full_jpg_data <- merge(full_jpg_crf, phase_3_randomized_pop_filtered, by = "SUBJID")
+
+print(merged_full_jpg_data)
+
+# Write the full JPG information
+full_jpg_crf_html_table <- flextable(merged_full_jpg_data) %>%
   set_header_labels(
-    "file" = "File",
-    "size_mb" = "Size (Mb)"
+    "subjid" = "Subject ID",
+    "standardized_date" = "Generation Date",
+    "abnormal_pages" = "Abnormal Pages",
+    "total_pages" = "Total Pages",
+    "abnormal_percent" = "% Abnormal",
+    "file_size_mb" = "Size (Mb)",
+    "ARM" = "Arm",
+    "VAX202DT" = "Active Product\n Received Date\n (if Placebo)"
   ) %>%
   theme_zebra() %>%
   align(align = "center", part = "all") %>%
   fontsize(size = 14, part = "all") %>%
   padding(padding = 2) %>%
   autofit() %>%
-  set_caption("Table 1: Skipped files (high size)")
-save_as_html(skipped_html_table, path = "crf_skipped_files_table.html")
+  set_caption("Table 1: Full JPG files (99%+)")
+save_as_html(full_jpg_crf_html_table, path = "crf_full_jpg_crf_table.html")
 
-# Print skipped files information
-cat("Skipped files due to size:\n")
-print(skipped_files)
+# Print full_jpg_crf files information
+cat("full_jpg_crf files :\n")
+print(full_jpg_crf)
 
-cat("Total files abnormal : ", files_with_anomalies)
-cat("Total files processed : ", total_files_parsed)
+cat("Total files abnormal : ", files_with_anomalies, "\n")
+cat("Total files processed : ", total_files_parsed, "\n")
+
+# Calculate the sum of the total_pages & abnormal_pages column in merged_full_jpg_data
+total_pages_sum <- sum(merged_full_jpg_data$total_pages)
+cat("Sum of total_pages column in full JPG files:", total_pages_sum, "\n")
+abnormal_pages_sum <- sum(merged_full_jpg_data$abnormal_pages)
+cat("Sum of abnormal_pages column in full JPG files:", abnormal_pages_sum, "\n")
 
 # Read jpg_in_crfs.csv
 jpg_in_crfs <- read.csv('jpg_in_crfs.csv', stringsAsFactors = FALSE)
-
-# Read phase_3_randomized_pop.csv
-phase_3_randomized_pop <- read.csv('phase_3_randomized_pop.csv', stringsAsFactors = FALSE)
 
 # Change the column name from subjid to SUBJID
 colnames(jpg_in_crfs)[colnames(jpg_in_crfs) == "subjid"] <- "SUBJID"
@@ -179,6 +262,90 @@ print(merged_data)
 
 # Write the merged data to a new CSV file
 write.csv(merged_data, 'merged_output.csv', row.names = FALSE)
+
+# Create a new dataframe text_crfs containing only the merged_data rows where SUBJID isn't in merged_full_jpg_data
+text_crfs <- merged_data %>% filter(!SUBJID %in% merged_full_jpg_data$SUBJID)
+
+# Print the new dataframe text_crfs
+print(text_crfs)
+
+# Write the text_crfs dataframe to a new CSV file
+write.csv(text_crfs, 'text_crfs_output.csv', row.names = FALSE)
+
+print(pdf_dates)
+
+# Display the total unique SUBJID in text_crfs
+unique_subjid_count <- n_distinct(text_crfs$SUBJID)
+cat("Total unique SUBJID in text_crfs:", unique_subjid_count, "\n")
+
+# Change the column name from subjid to SUBJID
+colnames(pdf_dates)[colnames(pdf_dates) == "subjid"] <- "SUBJID"
+
+# Display the total of the rows for the columns abnormal_pages & total_pages in pdf_dates where SUBJID in pdf_dates is also in text_crfs
+matching_pdf_dates <- pdf_dates %>% filter(SUBJID %in% text_crfs$SUBJID)
+total_abnormal_pages <- sum(matching_pdf_dates$abnormal_pages, na.rm = TRUE)
+total_total_pages <- sum(matching_pdf_dates$total_pages, na.rm = TRUE)
+
+cat("Total abnormal_pages for matching SUBJID in pdf_dates:", total_abnormal_pages, "\n")
+cat("Total total_pages for matching SUBJID in pdf_dates:", total_total_pages, "\n")
+
+# Create a list to store missing pages
+missing_pages <- list()
+
+# Loop through each SUBJID in merged_full_jpg_data
+for (subjid in merged_full_jpg_data$SUBJID) {
+  # Get the total number of pages for the current SUBJID
+  total_pages <- merged_full_jpg_data %>% filter(SUBJID == subjid) %>% pull(total_pages)
+  
+  # Create a sequence of pages from 1 to total_pages
+  all_pages <- seq(1, total_pages)
+  
+  # Get the pages that are replaced for the current SUBJID
+  replaced_pages <- if (!is.null(pages_replaced[[subjid]])) {
+    as.numeric(names(pages_replaced[[subjid]]))
+  } else {
+    numeric(0)  # If no pages replaced, return an empty numeric vector
+  }
+  
+  # Find the pages that are not in replaced_pages
+  missing <- setdiff(all_pages, replaced_pages)
+  
+  # Store the missing pages in the list
+  missing_pages[[subjid]] <- missing
+}
+
+# Print the missing pages for each SUBJID
+for (subjid in names(missing_pages)) {
+  cat("SUBJID:", subjid, "Missing Pages:", paste(missing_pages[[subjid]], collapse = ", "), "\n")
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Calculate total number of rows for each ARM
 total_rows_per_arm <- merged_data %>%
@@ -411,3 +578,4 @@ form_table <- set_caption(form_table, "Table 3: Total entries in jpg_in_crfs bas
 
 # Save as HTML
 save_as_html(form_table, path = "filtered_jpg_in_crfs_form_table.html")
+

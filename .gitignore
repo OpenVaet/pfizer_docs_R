@@ -57,5 +57,9 @@ html_data/*
 txt_data/*
 pdf_data/*
 prod_data/*
+prod_data_12_15/*
+pdf_data_12_15/*
+xpt_data_12_15/*
+drops_data_12_15/*
 drops_data/*
 crf_html/*
