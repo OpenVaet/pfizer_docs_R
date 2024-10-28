@@ -13,8 +13,8 @@ adsl_data$SITEID <- as.integer(adsl_data$SITEID)
 adsl_data$SUBJID <- as.integer(adsl_data$SUBJID)
 print(adsl_data)
 
-fa <- read.csv("discontinued_subjects_fa.csv")
-m6 <- read.csv("discontinued_subjects_m6.csv")
+fa <- read.csv("csv_data/discontinued_subjects_fa.csv")
+m6 <- read.csv("csv_data/discontinued_subjects_m6.csv")
 print(fa)
 print(m6)
 
@@ -108,7 +108,7 @@ randomized_diff_summary <- m6_summary %>%
 # Print the difference summary
 print(randomized_diff_summary, n = 200)
 
-write.csv(randomized_diff_summary, "discontinued_between_fa_and_m6.csv", row.names = FALSE)
+write.csv(randomized_diff_summary, "csv_data/discontinued_between_fa_and_m6.csv", row.names = FALSE)
 
 offsets_rando <- read.csv("offset_randomization_between_fa_m6.csv")
 print(offsets_rando)
@@ -149,6 +149,6 @@ result_summary <- result_summary %>%
 # Print the result summary
 print(result_summary)
 
-write.csv(result_summary, "offset_randomization_between_fa_m6_invesig_and_discontinuations.csv", row.names = FALSE)
+write.csv(result_summary, "csv_data/offset_randomization_between_fa_m6_invesig_and_discontinuations.csv", row.names = FALSE)
 
 

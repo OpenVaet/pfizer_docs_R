@@ -24,20 +24,14 @@ if(http_error(res)){
 content <- content(res, as="text")
 tree <- read_html(content)
 
-# Creates pdf_data directory if required
-pdf_path <- "pdf_data"
-if (!dir.exists(pdf_path)) {
-  dir.create(pdf_path)
-}
-
-# Creates html_data directory if required
-html_path <- "html_data"
-if (!dir.exists(html_path)) {
-  dir.create(html_path)
+# Creates CSV data.
+csv_path <- "csv_data"
+if (!dir.exists(csv_path)) {
+  dir.create(csv_path)
 }
 
 # Clears the output file if it exists
-output_file <- "discontinued_subjects_fa.csv"
+output_file <- "csv_data/discontinued_subjects_fa.csv"
 if (file.exists(output_file)) {
   file.remove(output_file)
 }
