@@ -104,13 +104,11 @@ write.csv(randomized_diff_summary, "discontinued_between_fa_and_m6.csv", row.nam
 offsets_rando <- read.csv("offset_randomization_between_fa_m6.csv")
 print(offsets_rando)
 
-# Convert offsets_rando.Offset.M6.FA from negative to positive (absolute value)
-offsets_rando$Offset.M6.FA <- abs(offsets_rando$Offset.M6.FA)
-
 # Rename offsets_rando.Trial.Site.ID to SITEID
 offsets_rando <- offsets_rando %>%
   rename(SITEID = Trial.Site.ID)
 offsets_rando$Offset_Investigator <- abs(offsets_rando$Offset.M6.FA)
+offsets_rando$M6_investig_randomized <- abs(offsets_rando$M6)
 
 # Create a new dataframe containing SITEID, Offset.M6.FA, and randomized_diff_summary.total_randomized_diff
 result_summary <- offsets_rando %>%
@@ -118,6 +116,16 @@ result_summary <- offsets_rando %>%
   inner_join(
     randomized_diff_summary %>%
       select(SITEID, Offset_Discontinuations = total_randomized_diff),
+    by = "SITEID"
+  ) %>%
+  inner_join(
+    site_summary %>%
+      select(SITEID, ADSL_randomized = total_randomized),
+    by = "SITEID"
+  ) %>%
+  inner_join(
+    offsets_rando %>%
+      select(SITEID, M6_investig_randomized = M6_investig_randomized),
     by = "SITEID"
   )
 
