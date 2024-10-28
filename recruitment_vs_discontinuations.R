@@ -10,6 +10,7 @@ adsl_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0772469-0773670_125742_S1_M5_
 adsl_data$RFICDT <- ymd(adsl_data$RFICDT)
 adsl_data$RANDDT <- ymd(adsl_data$RANDDT)
 adsl_data$SITEID <- as.integer(adsl_data$SITEID)
+adsl_data$SUBJID <- as.integer(adsl_data$SUBJID)
 print(adsl_data)
 
 fa <- read.csv("discontinued_subjects_fa.csv")
@@ -22,7 +23,8 @@ site_summary <- adsl_data %>%
   group_by(SITEID) %>%
   summarize(
     total_screened = sum(!is.na(RFICDT)),
-    total_randomized = sum(!is.na(RANDDT))
+    total_randomized = sum(!is.na(RANDDT)),
+    total_discontinued = sum(!is.na(EOSDCDT))
   )
 
 # Print the summary
