@@ -1,17 +1,24 @@
+library(haven)
 library(dplyr)
+library(lubridate)
+library(tidyr)
+
+# Reads the XPT file
+adsl_data <- read_xpt('xpt_data/FDA-CBER-2021-5683-0772469-0773670_125742_S1_M5_C4591001-A-D_adsl.xpt')
+
+# Converts RFICDT column to Date format
+adsl_data$RFICDT <- ymd(adsl_data$RFICDT)
+adsl_data$RANDDT <- ymd(adsl_data$RANDDT)
+adsl_data$SITEID <- as.integer(adsl_data$SITEID)
+print(adsl_data)
 
 fa <- read.csv("discontinued_subjects_fa.csv")
 m6 <- read.csv("discontinued_subjects_m6.csv")
 print(fa)
 print(m6)
 
-# Loads the Phase 3 population randomized.
-randomized_pop_file <- 'phase_3_randomized_pop.csv'
-randomized_pop <- read.csv(randomized_pop_file)
-print(randomized_pop)
-
 # Count the total number of subjects screened and randomized for each SITEID
-site_summary <- randomized_pop %>%
+site_summary <- adsl_data %>%
   group_by(SITEID) %>%
   summarize(
     total_screened = sum(!is.na(RFICDT)),
@@ -25,7 +32,7 @@ print(site_summary)
 cutoff_date <- as.Date("2020-11-19")
 
 # Filter the data up to the cutoff date and calculate totals per SITEID
-site_summary_cutoff <- randomized_pop %>%
+site_summary_cutoff <- adsl_data %>%
   filter(as.Date(RFICDT) <= cutoff_date | as.Date(RANDDT) <= cutoff_date) %>%
   group_by(SITEID) %>%
   summarize(
@@ -57,7 +64,7 @@ print(unchanged_sites, n=150)
 
 # Merge the m6 data, keeping only matching subjects in rando. pop from m6
 merged_data_m6 <- m6 %>%
-  inner_join(randomized_pop, by = c("M6_SUBJID" = "SUBJID"))
+  inner_join(adsl_data, by = c("M6_SUBJID" = "SUBJID"))
 
 # Calculate the summary by SITEID
 m6_summary <- merged_data_m6 %>%
@@ -73,7 +80,7 @@ print(m6_summary, n=200)
 
 # Merge the fa data, keeping only matching subjects in rando. pop from fa
 merged_data_fa <- fa %>%
-  inner_join(randomized_pop, by = c("FA_SUBJID" = "SUBJID"))
+  inner_join(adsl_data, by = c("FA_SUBJID" = "SUBJID"))
 
 # Calculate the summary by SITEID
 fa_summary <- merged_data_fa %>%
@@ -127,6 +134,13 @@ result_summary <- offsets_rando %>%
     offsets_rando %>%
       select(SITEID, M6_investig_randomized = M6_investig_randomized),
     by = "SITEID"
+  )
+
+# Calculate offset_ADSL_Investigator and Offset_of_offsets
+result_summary <- result_summary %>%
+  mutate(
+    offset_ADSL_Investigator = ADSL_randomized - M6_investig_randomized,
+    Offset_of_offsets = Offset_Investigator - offset_ADSL_Investigator
   )
 
 
