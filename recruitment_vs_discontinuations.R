@@ -1,6 +1,8 @@
 library(dplyr)
 
+fa <- read.csv("discontinued_subjects_fa.csv")
 m6 <- read.csv("discontinued_subjects_m6.csv")
+print(fa)
 print(m6)
 
 # Loads the Phase 3 population randomized.
@@ -35,24 +37,6 @@ site_summary_cutoff <- randomized_pop %>%
 print(site_summary_cutoff, n=200)
 
 
-
-# Merge the data, keeping only matching subjects from m6
-merged_data <- m6 %>%
-  inner_join(randomized_pop, by = c("M6_SUBJID" = "SUBJID"))
-
-# Calculate the summary by SITEID
-m6_summary <- merged_data %>%
-  group_by(SITEID) %>%
-  summarize(
-    total_subjects = n(),
-    total_screened = sum(!is.na(RFICDT)),
-    total_randomized = sum(!is.na(RANDDT))
-  )
-
-# Print the summary
-print(m6_summary, n=200)
-
-
 # Join site_summary and site_summary_cutoff by SITEID
 comparison <- site_summary %>%
   inner_join(site_summary_cutoff, by = "SITEID", suffix = c("_total", "_cutoff"))
@@ -64,3 +48,83 @@ unchanged_sites <- comparison %>%
 
 # Print the list of SITEIDs where totals haven't changed
 print(unchanged_sites, n=150)
+
+
+
+
+
+
+
+# Merge the m6 data, keeping only matching subjects in rando. pop from m6
+merged_data_m6 <- m6 %>%
+  inner_join(randomized_pop, by = c("M6_SUBJID" = "SUBJID"))
+
+# Calculate the summary by SITEID
+m6_summary <- merged_data_m6 %>%
+  group_by(SITEID) %>%
+  summarize(
+    total_subjects = n(),
+    total_screened = sum(!is.na(RFICDT)),
+    total_randomized = sum(!is.na(RANDDT))
+  )
+
+# Print the summary
+print(m6_summary, n=200)
+
+# Merge the fa data, keeping only matching subjects in rando. pop from fa
+merged_data_fa <- fa %>%
+  inner_join(randomized_pop, by = c("FA_SUBJID" = "SUBJID"))
+
+# Calculate the summary by SITEID
+fa_summary <- merged_data_fa %>%
+  group_by(SITEID) %>%
+  summarize(
+    total_subjects = n(),
+    total_screened = sum(!is.na(RFICDT)),
+    total_randomized = sum(!is.na(RANDDT))
+  )
+
+# Print the summary
+print(fa_summary, n=200)
+
+# Merge summaries and calculate the difference in total_randomized by SITEID (M6 - FA)
+randomized_diff_summary <- m6_summary %>%
+  select(SITEID, total_randomized_M6 = total_randomized) %>%
+  full_join(
+    fa_summary %>% select(SITEID, total_randomized_FA = total_randomized),
+    by = "SITEID"
+  ) %>%
+  mutate(total_randomized_diff = total_randomized_M6 - total_randomized_FA)
+
+# Print the difference summary
+print(randomized_diff_summary, n = 200)
+
+write.csv(randomized_diff_summary, "discontinued_between_fa_and_m6.csv", row.names = FALSE)
+
+offsets_rando <- read.csv("offset_randomization_between_fa_m6.csv")
+print(offsets_rando)
+
+# Convert offsets_rando.Offset.M6.FA from negative to positive (absolute value)
+offsets_rando$Offset.M6.FA <- abs(offsets_rando$Offset.M6.FA)
+
+# Rename offsets_rando.Trial.Site.ID to SITEID
+offsets_rando <- offsets_rando %>%
+  rename(SITEID = Trial.Site.ID)
+offsets_rando$Offset_Investigator <- abs(offsets_rando$Offset.M6.FA)
+
+# Create a new dataframe containing SITEID, Offset.M6.FA, and randomized_diff_summary.total_randomized_diff
+result_summary <- offsets_rando %>%
+  select(SITEID, Offset_Investigator) %>%
+  inner_join(
+    randomized_diff_summary %>%
+      select(SITEID, Offset_Discontinuations = total_randomized_diff),
+    by = "SITEID"
+  )
+
+
+# Print the result summary
+print(result_summary)
+
+write.csv(result_summary, "offset_randomization_between_fa_m6_invesig_and_discontinuations.csv", row.names = FALSE)
+
+
