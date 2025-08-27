@@ -28,3 +28,22 @@ subjid <- 10871286
 filtered_aes <- adae_data_selected %>% 
   filter(SUBJID == subjid)
 print(filtered_aes)
+
+subjid <- 10051081
+
+filtered_aes <- adae_data_selected %>% 
+  filter(SUBJID == subjid)
+print(filtered_aes)
+
+subjid <- 10051150
+
+filtered_aes <- adae_data_selected %>% 
+  filter(SUBJID == subjid)
+print(filtered_aes)
+
+subjid <- 10061115
+
+filtered_aes <- adae_data_selected %>% 
+  filter(SUBJID == subjid)
+print(filtered_aes)
+

@@ -63,3 +63,6 @@ xpt_data_12_15/*
 drops_data_12_15/*
 drops_data/*
 crf_html/*
+eua_zip/*
+eua_data/*
+analysis/*
