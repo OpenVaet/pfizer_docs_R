@@ -154,14 +154,14 @@ adsl_for_merge <- bla_adsl_data_filtered %>%
     SUBJID,
     ARM    = as.character(ARM),
     RANDDT = as.character(RANDDT),
-    V01DT  = as.character(V01DT),
-    V02DT  = as.character(V02DT)
+    VAX101DT  = as.character(VAX101DT),
+    VAX102DT  = as.character(VAX102DT)
   )
 
 attach_adsl <- function(df) {
   df %>%
     left_join(adsl_for_merge, by = "SUBJID") %>%
-    relocate(ARM, RANDDT, V01DT, V02DT, .after = SUBJID)
+    relocate(ARM, RANDDT, VAX101DT, VAX102DT, .after = SUBJID)
 }
 
 # Create report-ready versions (with ADSL columns placed after SUBJID)

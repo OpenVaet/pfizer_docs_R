@@ -201,7 +201,7 @@ suppressPackageStartupMessages({
   library(dplyr)
 })
 
-report_html <- file.path(out_dir, "adsl_eua_vs_bla.html")
+report_html <- file.path(out_dir, "eua_vs_bla_adsl_data.html")
 
 # Helpers -----------------------------------------------------------------------
 human_readable <- function(bytes) {
@@ -271,22 +271,258 @@ if (exists("by_var") && nrow(by_var) > 0) {
 subj_only_in_eua_vec <- sort(subj_only_in_eua)
 subj_only_in_bla_vec <- sort(subj_only_in_bla)
 
-# Sample of value-level differences (first 50) ----------------------------------
-sample_n <- 50L
-if (exists("diff_table") && nrow(diff_table) > 0) {
-  diff_sample <- diff_table %>% arrange(variable, SUBJID) %>% head(sample_n)
-  diff_rows_html <- paste0(
+# -------------------------------------------------------------------------------
+
+# ---------- A) FULL V01DT / V02DT anomaly table + ADSL enrichment + tests -----
+
+# robust date parser already defined above: as_date_smart()
+
+# Handle occasional typos in column names gracefully
+v01_name <- if ("V01DT" %in% names(eua) && "V01DT" %in% names(bla)) "V01DT" else if ("VO1DT" %in% names(eua) && "VO1DT" %in% names(bla)) "VO1DT" else NULL
+v02_name <- if ("V02DT" %in% names(eua) && "V02DT" %in% names(bla)) "V02DT" else if ("VO2DT" %in% names(eua) && "VO2DT" %in% names(bla)) "VO2DT" else NULL
+
+get_date_diff <- function(var) {
+  if (is.null(var)) return(dplyr::tibble())
+  e <- eua %>% dplyr::select(SUBJID, value_eua = dplyr::all_of(var)) %>% dplyr::mutate(value_eua = as_date_smart(value_eua))
+  b <- bla %>% dplyr::select(SUBJID, value_bla = dplyr::all_of(var)) %>% dplyr::mutate(value_bla = as_date_smart(value_bla))
+  df <- dplyr::inner_join(e, b, by = "SUBJID") %>%
+    dplyr::mutate(changed = !is.na(value_eua) & !is.na(value_bla) & value_eua != value_bla)
+  df %>%
+    dplyr::filter(changed) %>%
+    dplyr::transmute(SUBJID, variable = var, value_eua = as.character(value_eua), value_bla = as.character(value_bla))
+}
+
+v01_diff <- get_date_diff(v01_name)
+v02_diff <- get_date_diff(v02_name)
+
+v01_v02_diff <- dplyr::bind_rows(v01_diff, v02_diff)
+
+# Enrich with BLA ADSL context
+adsl_pick <- bla %>%
+  dplyr::transmute(
+    SUBJID = as.character(SUBJID),
+    ARM    = as.character(ARM),
+    RANDDT = as.character(as_date_smart(RANDDT)),
+    VAX101DT = as.character(as_date_smart(VAX101DT)),
+    VAX102DT = as.character(as_date_smart(VAX102DT))
+  )
+
+v01_v02_diff_enriched <- v01_v02_diff %>%
+  dplyr::left_join(adsl_pick, by = "SUBJID") %>%
+  dplyr::relocate(ARM, RANDDT, VAX101DT, VAX102DT, .after = SUBJID)
+
+# (optional) Save the full list to CSV as an artifact
+readr::write_csv(v01_v02_diff_enriched, file.path(out_dir, "adsl_v01_v02_date_changes_full.csv"))
+
+# Build HTML rows for the full list
+if (exists("html_escape") == FALSE) {
+  html_escape <- function(x) {
+    x <- gsub("&", "&amp;", x, fixed = TRUE)
+    x <- gsub("<", "&lt;",  x, fixed = TRUE)
+    x <- gsub(">", "&gt;",  x, fixed = TRUE)
+    x
+  }
+}
+
+differences_block_table_rows <- if (nrow(v01_v02_diff_enriched) > 0) {
+  paste0(
     "<tr>",
-    "<td><code>", html_escape(diff_sample$SUBJID), "</code></td>",
-    "<td><code>", html_escape(diff_sample$variable), "</code></td>",
-    "<td>", html_escape(ifelse(is.na(diff_sample$value_eua), "NA", diff_sample$value_eua)), "</td>",
-    "<td>", html_escape(ifelse(is.na(diff_sample$value_bla), "NA", diff_sample$value_bla)), "</td>",
+    "<td><code>", html_escape(v01_v02_diff_enriched$SUBJID), "</code></td>",
+    "<td><code>", html_escape(v01_v02_diff_enriched$ARM), "</code></td>",
+    "<td>", html_escape(v01_v02_diff_enriched$RANDDT), "</td>",
+    "<td>", html_escape(v01_v02_diff_enriched$VAX101DT), "</td>",
+    "<td>", html_escape(v01_v02_diff_enriched$VAX102DT), "</td>",
+    "<td><code>", html_escape(v01_v02_diff_enriched$variable), "</code></td>",
+    "<td>", html_escape(ifelse(is.na(v01_v02_diff_enriched$value_eua), "NA", v01_v02_diff_enriched$value_eua)), "</td>",
+    "<td>", html_escape(ifelse(is.na(v01_v02_diff_enriched$value_bla), "NA", v01_v02_diff_enriched$value_bla)), "</td>",
     "</tr>",
     collapse = "\n"
   )
 } else {
-  diff_rows_html <- "<tr><td colspan='4' class='muted'>No value-level differences detected.</td></tr>"
+  "<tr><td colspan='8' class='muted'>No V01DT/V02DT anomalies detected.</td></tr>"
 }
+
+# ---------- B) Per-ARM tests vs full ADSL randomized base (two arms) ----------
+
+allowed_arms <- c("Placebo", "BNT162b2 Phase 2/3 (30 mcg)")
+
+eligible_subj_adsl <- bla %>%
+  dplyr::mutate(ARM = stringr::str_trim(as.character(ARM))) %>%
+  dplyr::filter(ARM %in% allowed_arms, !is.na(RANDDT)) %>%  # randomized + target arms
+  dplyr::distinct(SUBJID, ARM)
+
+fmt_p <- function(p) {
+  if (is.na(p)) return("NA")
+  if (p < 1e-4) return("&lt;0.0001")
+  sprintf("%.4f", p)
+}
+
+run_arm_test_vs_adsl <- function(affected_ids, label, eligible_base = eligible_subj_adsl) {
+  base_counts <- eligible_base %>%
+    dplyr::mutate(affected = SUBJID %in% affected_ids) %>%
+    dplyr::count(ARM, affected, name = "n") %>%
+    tidyr::complete(ARM, affected, fill = list(n = 0)) %>%
+    tidyr::pivot_wider(names_from = affected, values_from = n) %>%
+    dplyr::rename(not_affected = `FALSE`, affected = `TRUE`) %>%
+    dplyr::mutate(total = affected + not_affected,
+                  affected_pct = ifelse(total > 0, round(100 * affected / total, 1), 0))
+  mat <- base_counts %>%
+    dplyr::select(ARM, affected, not_affected) %>%
+    tibble::column_to_rownames("ARM") %>%
+    as.matrix()
+
+  suppressWarnings({ chi <- try(chisq.test(mat), silent = TRUE) })
+  use_fisher <- FALSE; use_sim <- FALSE
+  if (inherits(chi, "htest")) {
+    exp_min <- min(chi$expected)
+    if (nrow(mat) == 2 && ncol(mat) == 2 && exp_min < 5) use_fisher <- TRUE
+    else if (exp_min < 5) use_sim <- TRUE
+  } else {
+    if (nrow(mat) == 2 && ncol(mat) == 2) use_fisher <- TRUE else use_sim <- TRUE
+  }
+
+  if (use_fisher) {
+    tst <- fisher.test(mat); method <- "Fisher's exact test"; pval <- tst$p.value
+  } else if (use_sim) {
+    tst <- chisq.test(mat, simulate.p.value = TRUE, B = 10000)
+    method <- "Chi-square test (simulated p-value)"; pval <- tst$p.value
+  } else {
+    tst <- chi; method <- "Chi-square test"; pval <- tst$p.value
+  }
+
+  list(label = label, method = method, pval = pval, counts = base_counts)
+}
+
+# affected subject sets
+v01_affected_ids <- unique(v01_diff$SUBJID)
+v02_affected_ids <- unique(v02_diff$SUBJID)
+
+v01_test <- run_arm_test_vs_adsl(v01_affected_ids, ifelse(is.null(v01_name), "V01DT (not found)", paste0(v01_name, " changed")))
+v02_test <- run_arm_test_vs_adsl(v02_affected_ids, ifelse(is.null(v02_name), "V02DT (not found)", paste0(v02_name, " changed")))
+
+render_test_table_html <- function(test_res) {
+  if (is.null(test_res) || is.null(test_res$counts)) return("")
+  rows <- paste0(
+    "<tr>",
+    "<td>", html_escape(test_res$counts$ARM), "</td>",
+    "<td class='num'>", test_res$counts$affected, "</td>",
+    "<td class='num'>", test_res$counts$not_affected, "</td>",
+    "<td class='num'>", test_res$counts$total, "</td>",
+    "<td class='num'>", sprintf("%.1f", test_res$counts$affected_pct), "</td>",
+    "</tr>",
+    collapse = "\n"
+  )
+  paste0(
+    "<h3>", html_escape(test_res$label), " — ", html_escape(test_res$method),
+    " (p = ", fmt_p(test_res$pval), ")</h3>",
+    "<table><thead><tr>",
+    "<th>ARM</th><th class='num'>Affected</th><th class='num'>Not affected</th><th class='num'>Total</th><th class='num'>Affected (%)</th>",
+    "</tr></thead><tbody>", rows, "</tbody></table>"
+  )
+}
+
+# Assemble the new block that will REPLACE the old sample table in the HTML
+differences_block <- paste0(
+  "<h2>Value-level differences: V01DT &amp; V02DT (complete list)</h2>",
+  "<table>",
+  "<thead><tr>",
+  "<th>SUBJID</th><th>ARM</th><th>RANDDT</th><th>VAX101DT</th><th>VAX102DT</th>",
+  "<th>Variable</th><th>EUA value</th><th>BLA value</th>",
+  "</tr></thead>",
+  "<tbody>", differences_block_table_rows, "</tbody>",
+  "</table>",
+  "<h2>Association of V01DT/V02DT changes with ARM</h2>",
+  render_test_table_html(v01_test),
+  render_test_table_html(v02_test)
+)
+
+# -------------------------------------------------------------------------------
+
+# ---- V01DT / V02DT date-delta stats (BLA − EUA) ------------------------------
+
+# We already resolved v01_name / v02_name and have as_date_smart() above.
+compute_date_delta_stats <- function(var) {
+  if (is.null(var)) return(NULL)
+  e <- eua %>% dplyr::select(SUBJID, e = dplyr::all_of(var)) %>% dplyr::mutate(e = as_date_smart(e))
+  b <- bla %>% dplyr::select(SUBJID, b = dplyr::all_of(var)) %>% dplyr::mutate(b = as_date_smart(b))
+  df <- dplyr::inner_join(e, b, by = "SUBJID") %>%
+    dplyr::filter(!is.na(e) & !is.na(b)) %>%
+    dplyr::transmute(delta = as.integer(b - e))
+  if (nrow(df) == 0) {
+    return(list(var = var, n_pairs = 0,
+                min = NA, median = NA, mean = NA, max = NA,
+                n_changed = 0, min_changed = NA, median_changed = NA,
+                mean_changed = NA, max_changed = NA))
+  }
+  d <- df$delta
+  ch <- d[d != 0]
+  list(
+    var           = var,
+    n_pairs       = length(d),
+    min           = suppressWarnings(min(d, na.rm = TRUE)),
+    median        = suppressWarnings(stats::median(d, na.rm = TRUE)),
+    mean          = suppressWarnings(mean(d, na.rm = TRUE)),
+    max           = suppressWarnings(max(d, na.rm = TRUE)),
+    n_changed     = length(ch),
+    min_changed   = if (length(ch)) min(ch) else NA,
+    median_changed= if (length(ch)) stats::median(ch) else NA,
+    mean_changed  = if (length(ch)) mean(ch) else NA,
+    max_changed   = if (length(ch)) max(ch) else NA
+  )
+}
+
+v01_stats <- compute_date_delta_stats(v01_name)
+v02_stats <- compute_date_delta_stats(v02_name)
+
+# HTML helpers
+if (!exists("html_escape")) {
+  html_escape <- function(x) {
+    x <- gsub("&", "&amp;", x, fixed = TRUE)
+    x <- gsub("<", "&lt;",  x, fixed = TRUE)
+    x <- gsub(">", "&gt;",  x, fixed = TRUE)
+    x
+  }
+}
+fmt_int  <- function(x) ifelse(is.null(x) || is.na(x), "—", format(round(as.numeric(x)), big.mark = ","))
+fmt_mean <- function(x) ifelse(is.null(x) || is.na(x), "—", sprintf("%.1f", as.numeric(x)))
+
+build_stats_row <- function(st) {
+  if (is.null(st)) return("")
+  paste0(
+    "<tr>",
+    "<td><code>", html_escape(st$var), "</code></td>",
+    "<td class='num'>", fmt_int(st$n_pairs), "</td>",
+    "<td class='num'>", fmt_int(st$min), "</td>",
+    "<td class='num'>", fmt_int(st$median), "</td>",
+    "<td class='num'>", fmt_mean(st$mean), "</td>",
+    "<td class='num'>", fmt_int(st$max), "</td>",
+    "<td class='num'>", fmt_int(st$n_changed), "</td>",
+    "<td class='num'>", fmt_int(st$min_changed), "</td>",
+    "<td class='num'>", fmt_int(st$median_changed), "</td>",
+    "<td class='num'>", fmt_mean(st$mean_changed), "</td>",
+    "<td class='num'>", fmt_int(st$max_changed), "</td>",
+    "</tr>"
+  )
+}
+
+stats_rows <- paste0(
+  build_stats_row(v01_stats),
+  build_stats_row(v02_stats)
+)
+
+date_delta_stats_block <- paste0(
+  "<h2>V01DT / V02DT date differences (BLA − EUA, in days)</h2>",
+  "<p class='muted small'>Metrics shown across all comparable pairs (both EUA and BLA present); the right-side columns are restricted to rows where the date actually changed (Δ ≠ 0).</p>",
+  "<table>",
+  "<thead><tr>",
+  "<th>Variable</th><th class='num'>N pairs</th><th class='num'>Min</th><th class='num'>Median</th><th class='num'>Average</th><th class='num'>Max</th>",
+  "<th class='num'>N changed</th><th class='num'>Min (chg)</th><th class='num'>Median (chg)</th><th class='num'>Average (chg)</th><th class='num'>Max (chg)</th>",
+  "</tr></thead><tbody>",
+  if (nchar(stats_rows) > 0) stats_rows else "<tr><td colspan='11' class='muted'>No comparable pairs for V01DT/V02DT.</td></tr>",
+  "</tbody></table>"
+)
+
+# -------------------------------------------------------------------------------
 
 # Build HTML --------------------------------------------------------------------
 generated_on <- format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
@@ -355,12 +591,27 @@ code{background:#f6f6f6;padding:2px 4px;border-radius:4px}
   
   "<h2>SUBJIDs only in EUA</h2>", html_list(subj_only_in_eua_vec, max_n = 50),
   "<h2>SUBJIDs only in BLA</h2>", html_list(subj_only_in_bla_vec, max_n = 50),
-  
-  "<h2>Sample of value-level differences</h2>",
+
+  "<h2>Differences overview</h2>",
   "<table>",
-  "<thead><tr><th>SUBJID</th><th>Variable</th><th>EUA value</th><th>BLA value</th></tr></thead>",
-  "<tbody>", diff_rows_html, "</tbody>",
+  "<thead><tr><th>Variable</th><th class='num'># differing rows</th></tr></thead>",
+  "<tbody>", by_var_rows, "</tbody>",
   "</table>",
+  
+  if (!is.na(chart_file)) paste0("<p><img src='", html_escape(basename(chart_file)), "' alt='Top variables by differences' style='max-width:100%'></p>") else
+    "<p class='muted'>No differences to chart.</p>",
+  
+  "<h2>Columns only in EUA</h2>",  html_list(only_cols_eua, max_n = 50),
+  "<h2>Columns only in BLA</h2>",  html_list(only_cols_bla, max_n = 50),
+  
+  "<h2>SUBJIDs only in EUA</h2>", html_list(subj_only_in_eua_vec, max_n = 50),
+  "<h2>SUBJIDs only in BLA</h2>", html_list(subj_only_in_bla_vec, max_n = 50),
+  
+  # >>> Add this line:
+  date_delta_stats_block,
+  
+  # Then keep your full list + tests section:
+  differences_block,
   
   "<p class='muted small'>Full CSVs are available in <code>", html_escape(normalizePath(out_dir, winslash = "/", mustWork = FALSE)), "</code>.</p>",
   
