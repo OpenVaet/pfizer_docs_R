@@ -154,7 +154,7 @@ expected_by_arm <- subject_days %>%
   ungroup()
 
 # ------------------------------------------------------------
-# Observed daily infections (unchanged; NOT used to censor)
+# Observed daily infections
 # ------------------------------------------------------------
 observed_by_arm <- baseline_f %>%
   filter(!is.na(FIRST_SYMPT_PCR_DATE),
