@@ -1,5 +1,7 @@
 # Packages
 library(readr)
+library(dplyr)# Packages
+library(readr)
 library(dplyr)
 library(lubridate)
 library(ISOweek)   # ISOweek(), ISOweek2date()
@@ -57,6 +59,8 @@ target_countries <- c("Argentina", "United States")
 message("Will filter for countrys: ", paste(target_countries, collapse = " & "))
 message("Length(country) = ", length(owid$country), " | Length(date) = ", length(owid$date))
 
+has_population <- "population" %in% names(owid)
+
 weekly <- owid %>%
   filter(
     country %in% target_countries,
@@ -86,8 +90,22 @@ weekly <- owid %>%
   arrange(country, week_start)
 print(head(weekly, 10))
 
+# Finetunes output.
+weekly_out <- weekly %>%
+  mutate(country = if_else(country == "United States", "USA", country)) %>%
+  transmute(
+    COUNTRY = country,
+    ISOWEEK = iso_week,
+    WEEKCASES = weekly_cases,
+    POP = pop,
+    WEEKLY_PER_100K = weekly_per_100k
+  )
+
+print(head(weekly_out, 10))
+
+
 # Writes to local file
 out_path <- file.path("owid_data", "weekly_cases_by_countries.csv")
-readr::write_csv(weekly, out_path)
-message("Wrote ", nrow(weekly), " rows for ",
-        paste(target_countries, collapse = ", "), " to: ", out_path)
+readr::write_csv(weekly_out, out_path)
+message("Wrote ", nrow(weekly_out), " rows to: ", out_path)
+
