@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
 # Config
 # ------------------------------------------------------------
 DATA_CUTOFF <- as.Date("2020-11-14")
-owid_weekly_path <- file.path("owid_data", "weekly_cases_by_countries.csv")
+owid_weekly_path <- file.path("jh_data", "weekly_cases_by_countries.csv")
 baseline_path    <- "baseline_negative_subjects_with_symptomatic_pcr.csv"
 
 if (!file.exists(owid_weekly_path)) stop("Missing: ", owid_weekly_path)
@@ -299,3 +299,37 @@ summary_tbl <- series_by_arm %>%
     .groups = "drop"
   )
 print(summary_tbl)
+
+# ------------------------------------------------------------
+# Cumulative plots (one per arm): Expected vs Observed
+# ------------------------------------------------------------
+plot_cum_one_arm <- function(df, arm_label) {
+  df_arm <- df %>% filter(ARM == arm_label)
+
+  if (nrow(df_arm) == 0) {
+    message("No data for arm: ", arm_label)
+    return(invisible(NULL))
+  }
+
+  p_cum <- ggplot(df_arm, aes(x = date)) +
+    geom_line(aes(y = expected_cum, linetype = "Expected")) +
+    geom_line(aes(y = observed_cum, linetype = "Observed")) +
+    scale_linetype_manual(values = c("Expected" = "solid", "Observed" = "dashed")) +
+    labs(
+      title = paste0("Cumulative symptomatic PCR+ — Expected vs Observed (", arm_label, ")"),
+      x = "Date",
+      y = "Cumulative count",
+      linetype = NULL,
+      caption = paste0("Expected uses general-population daily infection risk from OWID weekly rates\n",
+                       "BNT162b2 assumed RR=1 for days 0–13 after dose1; RR=0.05 from day 14+.\n",
+                       "Window: ", format(analysis_start), "–", format(analysis_end),
+                       " | Countries: USA, ARGENTINA | Baseline negative subjects only.")
+    ) +
+    theme_minimal(base_size = 12)
+
+  print(p_cum)
+}
+
+# Draw the two cumulative plots
+plot_cum_one_arm(series_by_arm, "Placebo")
+plot_cum_one_arm(series_by_arm, "BNT162b2 Phase 2/3 (30 mcg)")
