@@ -5,11 +5,13 @@
 # COVID-19 testing rates in vaccine trial participants, comparing 
 # treatment and placebo groups across different time periods.
 # =====================================================================
-
+# This script requires that:
+# - download_full_prod.R
+# - extract_full_prod.R
+# have both been executed before.
 # ---------------------------------------------------------------------
 # 1. SETUP AND CONFIGURATION
 # ---------------------------------------------------------------------
-
 # Load required libraries
 library(haven)      # For reading XPT files
 library(dplyr)      # For data manipulation
