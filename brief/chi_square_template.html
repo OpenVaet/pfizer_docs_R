@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi-Square Test Results</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 40px;
+            font-size: 18px;
+        }
+        
+        .formula {
+            text-align: center;
+            margin: 30px 0;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            font-size: 20px;
+            font-family: "Courier New", monospace;
+            color: #2c3e50;
+            border-left: 4px solid #667eea;
+        }
+        
+        .formula-label {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin: 40px 0;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 13px;
+            letter-spacing: 1px;
+        }
+        
+        td {
+            padding: 18px;
+            border-bottom: 1px solid #ecf0f1;
+            transition: background-color 0.3s ease;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .cell-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .cell-percentage {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+        
+        .total-row {
+            background-color: #f1f3f5 !important;
+            font-weight: bold;
+        }
+        
+        .result-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 5px solid #667eea;
+            padding: 30px;
+            margin: 40px 0;
+            border-radius: 8px;
+        }
+        
+        .result-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .result-title::before {
+            content: "📊";
+            margin-right: 10px;
+        }
+        
+        .result-item {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .p-value {
+            font-size: 28px;
+            font-weight: bold;
+            padding: 8px 16px;
+            border-radius: 6px;
+            background: white;
+        }
+        
+        .p-value.significant {
+            color: #e74c3c;
+            background: #ffe5e5;
+        }
+        
+        .p-value.not-significant {
+            color: #27ae60;
+            background: #e5ffe5;
+        }
+        
+        .significance {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        
+        .significance.sig {
+            background: #ffe5e5;
+            color: #c0392b;
+            border: 2px solid #e74c3c;
+        }
+        
+        .significance.not-sig {
+            background: #e5ffe5;
+            color: #229954;
+            border: 2px solid #27ae60;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .footer p {
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            table {
+                font-size: 14px;
+            }
+            
+            th, td {
+                padding: 12px;
+            }
+        }
+        
+        @media print {
+            body {
+                background: white;
+            }
+            
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            
+            .stat-card:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chi-Square Test of Independence</h1>
+        <div class="subtitle">Statistical Analysis of Testing Rates Between Treatment Groups</div>
+        
+        <div class="formula">
+            <div class="formula-label">Chi-Square Formula:</div>
+            χ² = Σ [(O - E)² / E]
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">X²</div>
+                <div class="stat-label">Chi-Square Statistic</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">df</div>
+                <div class="stat-label">Degrees of Freedom</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">p</div>
+                <div class="stat-label">P-Value</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Treatment Group</th>
+                        <th>COLUMN_A</th>
+                        <th>COLUMN_B</th>
+                        <th>Row Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ROW_A_LABEL</strong></td>
+                        <td>
+                            <div class="cell-value">ROW_A_VALUE_1</div>
+                            <div class="cell-percentage">(percentage)</div>
+                        </td>
+                        <td>
+                            <div class="cell-value">ROW_A_VALUE_2</div>
+                            <div class="cell-percentage">(percentage)</div>
+                        </td>
+                        <td><strong>row_total</strong></td>
+                    </tr>
+                    <tr>
+                        <td><strong>ROW_B_LABEL</strong></td>
+                        <td>
+                            <div class="cell-value">ROW_B_VALUE_1</div>
+                            <div class="cell-percentage">(percentage)</div>
+                        </td>
+                        <td>
+                            <div class="cell-value">ROW_B_VALUE_2</div>
+                            <div class="cell-percentage">(percentage)</div>
+                        </td>
+                        <td><strong>row_total</strong></td>
+                    </tr>
+                    <tr class="total-row">
+                        <td><strong>Column Total</strong></td>
+                        <td><strong>col_total_1</strong></td>
+                        <td><strong>col_total_2</strong></td>
+                        <td><strong>grand_total</strong></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="result-section">
+            <div class="result-title">Statistical Test Results</div>
+            
+            <div class="result-item">
+                <span class="result-label">Chi-square statistic (χ²):</span>
+                <span>STATISTIC_VALUE</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">Degrees of freedom:</span>
+                <span>DF_VALUE</span>
+            </div>
+            
+            <div class="result-item">
+                <span class="result-label">P-value:</span>
+                <span class="p-value">P_VALUE</span>
+            </div>
+            
+            <div class="significance">
+                <strong>Statistical Interpretation:</strong><br>
+                The test results indicate whether there is a significant association between the treatment group and testing rate.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Analysis Date:</strong> ANALYSIS_DATE</p>
+            <p><strong>Data Cutoff:</strong> CUTOFF_DATE</p>
+            <p><strong>Significance Level:</strong> α = 0.05</p>
+        </div>
+    </div>
+</body>
+</html>
