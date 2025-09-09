@@ -33,7 +33,7 @@ FILES <- list(
   symptoms = paste0(DATA_PATH, "FDA-CBER-2021-5683-0663135-0671344-125742_S1_M5_c4591001-A-D-adsympt.xpt"),
   symptoms_sup = paste0(DATA_PATH, "FDA-CBER-2021-5683-0539816-0593326-125742_S1_M5_c4591001-01-S-Supp-D-face.xpt"),
   tests = paste0(DATA_PATH, "FDA-CBER-2021-5683-0282366 to -0285643_125742_S1_M5_c4591001-S-D-mb.xpt"),
-  html_template = paste0("brief/", "chi_square_template.html") # not used, kept for compat
+  html_template = paste0("brief/", "chi_square_template.html")
 )
 
 # Analysis parameters
@@ -272,91 +272,100 @@ perform_chi_square_analysis <- function(data, test_type = "local") {
   )
 }
 
-create_testing_comparison_plot <- function(central_results, local_results, cutoff_date) {
+create_testing_comparison_plot <- function(central_results, local_results, cutoff_date, text_scale = 1.6) {
   testing_data <- data.frame(
-    Test_Type = rep(c("Central Test", "Local Test"), each = 2),
-    Group = rep(central_results$counts$ARM, 2),
+    Test_Type  = rep(c("Central Test", "Local Test"), each = 2),
+    Group      = rep(central_results$counts$ARM, 2),
     Percentage = c(central_results$counts$test_percentage,
                    local_results$counts$test_percentage),
-    Count = c(central_results$counts$test_visits,
-              local_results$counts$test_visits),
-    Total = c(central_results$counts$total_visits,
-              local_results$counts$total_visits)
+    Count      = c(central_results$counts$test_visits,
+                   local_results$counts$test_visits),
+    Total      = c(central_results$counts$total_visits,
+                   local_results$counts$total_visits)
   )
+
+  # Sizes (all scale together)
+  s_base       <- 12 * text_scale
+  s_title      <- 16 * text_scale
+  s_subtitle   <- 12 * text_scale
+  s_axis       <- 12 * text_scale
+  s_axis_title <- 12 * text_scale
+  s_legend     <- 12 * text_scale
+  s_bar_label  <- 4  * text_scale
+  s_annot      <- 3.8 * text_scale
 
   # Diffs & p-values
   central_diff <- abs(diff(central_results$counts$test_percentage))
   local_diff   <- abs(diff(local_results$counts$test_percentage))
-  central_p <- ifelse(central_results$test$p.value < 0.001, "p < 0.001",
-                      paste0("p = ", format(central_results$test$p.value, digits = 3)))
-  local_p <- ifelse(local_results$test$p.value < 0.001, "p < 0.001",
-                    paste0("p = ", format(local_results$test$p.value, digits = 3)))
+  central_p    <- ifelse(central_results$test$p.value < 0.001, "p < 0.001",
+                         paste0("p = ", format(central_results$test$p.value, digits = 3)))
+  local_p      <- ifelse(local_results$test$p.value   < 0.001, "p < 0.001",
+                         paste0("p = ", format(local_results$test$p.value,   digits = 3)))
 
-  # Where to place lines/labels
+  # Label positions
   y1 <- max(testing_data$Percentage[1:2]) # central bars top
   y2 <- max(testing_data$Percentage[3:4]) # local bars top
-  # headroom so labels never clip
-  y_top <- max(y1 + 9, y2 + 9)
+  y_top <- max(y1, y2) + 14 * text_scale  # extra headroom for bigger text
 
   p <- ggplot(testing_data, aes(x = Test_Type, y = Percentage, fill = Group)) +
-    geom_bar(stat = "identity", position = "dodge", width = 0.7) +
+    geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
     geom_text(aes(label = sprintf("%.1f%%", Percentage)),
               position = position_dodge(0.7),
-              vjust = -0.5, size = 4, fontface = "bold") +
-    scale_y_continuous(limits = c(0, y_top), breaks = seq(0, 100, 10)) +
+              vjust = -0.5, size = s_bar_label, fontface = "bold") +
+    scale_y_continuous(limits = c(0, y_top), breaks = seq(0, 100, 10),
+                       expand = expansion(mult = c(0, 0.05))) +
     scale_fill_manual(values = c("#667eea", "#764ba2")) +
     labs(
-      title = "PCR Testing Rates by Treatment Arms - Central & Local Tests",
+      title    = "PCR Testing Rates by Treatment Arms - Central & Local Tests",
       subtitle = paste0("Data through ", cutoff_date),
       x = "Test Type", y = "Percentage of Symptomatic Visits Tested (%)",
       fill = "Treatment Group"
     ) +
-    theme_minimal(base_size = 12) +
+    theme_minimal(base_size = s_base) +
     theme(
-      plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-      plot.subtitle = element_text(size = 12, hjust = 0.5, color = "gray50"),
+      plot.title      = element_text(size = s_title, face = "bold", hjust = 0.5),
+      plot.subtitle   = element_text(size = s_subtitle, hjust = 0.5, color = "gray35"),
+      axis.text       = element_text(size = s_axis),
+      axis.title      = element_text(size = s_axis_title, face = "bold"),
       legend.position = "bottom",
-      legend.title = element_text(face = "bold"),
+      legend.title    = element_text(size = s_legend, face = "bold"),
+      legend.text     = element_text(size = s_legend),
+      legend.key.size = grid::unit(12 * text_scale, "pt"),
       panel.grid.minor = element_blank(),
-      axis.title = element_text(face = "bold"),
-      axis.text = element_text(size = 11)
-    )
+      plot.margin     = margin(t = 12 * text_scale, r = 10 * text_scale,
+                               b = 10 * text_scale, l = 10 * text_scale)
+    ) +
+    coord_cartesian(clip = "off")
 
-  # --- Central bracket & labels (line below, text above; text bottom-aligned) ---
+  # Central labels
   p <- p +
-    annotate("segment", x = 0.8, xend = 1.2, y = y1 + 2.5, yend = y1 + 2.5,
-             color = "black", size = 0.5) +
-    annotate("text", x = 1, y = y1 + 3.0, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 1, y = y1 + 4.5 * text_scale, vjust = 0, lineheight = 0.95,
              label = sprintf("%.1f%% difference", central_diff),
-             size = 3.5, fontface = "bold") +
-    annotate("text", x = 1, y = y1 + 5.2, vjust = 0, lineheight = 0.95,
-             label = central_p, size = 3.5, fontface = "bold",
+             size = s_annot, fontface = "bold") +
+    annotate("text", x = 1, y = y1 + 7.7 * text_scale, vjust = 0, lineheight = 0.95,
+             label = central_p, size = s_annot, fontface = "bold",
              color = ifelse(central_results$test$p.value < 0.05, "red", "black"))
 
-  # --- Local bracket & labels ---
+  # Local labels
   p <- p +
-    annotate("segment", x = 1.8, xend = 2.2, y = y2 + 2.5, yend = y2 + 2.5,
-             color = "black", size = 0.5) +
-    annotate("text", x = 2, y = y2 + 3.0, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 2, y = y2 + 4.5 * text_scale, vjust = 0, lineheight = 0.95,
              label = sprintf("%.1f%% difference", local_diff),
-             size = 3.5, fontface = "bold") +
-    annotate("text", x = 2, y = y2 + 5.2, vjust = 0, lineheight = 0.95,
-             label = local_p, size = 3.5, fontface = "bold",
+             size = s_annot, fontface = "bold") +
+    annotate("text", x = 2, y = y2 + 7.7 * text_scale, vjust = 0, lineheight = 0.95,
+             label = local_p, size = s_annot, fontface = "bold",
              color = ifelse(local_results$test$p.value < 0.05, "red", "black"))
 
-  # Optional: soften the bracket
-  # + annotate("segment", ..., color = "grey50", alpha = 0.7)
-
-  # Highlight significant local difference (unchanged)
+  # Optional highlight
   if (local_results$test$p.value < 0.05) {
     p <- p + annotate("rect", xmin = 1.5, xmax = 2.5,
                       ymin = -2, ymax = max(testing_data$Percentage) * 1.25,
-                      alpha = 0.1, fill = "red") +
+                      alpha = 0.08, fill = "red") +
       annotate("text", x = 2, y = -5, label = "⚠ Significant Disparity",
-               size = 3, fontface = "italic", color = "red")
+               size = 3 * text_scale, fontface = "italic", color = "red")
   }
   p
 }
+
 
 save_plot <- function(plot, base_filename, width = 10, height = 6) {
   ggsave(paste0(base_filename, ".png"), plot = plot, width = width, height = height, dpi = 300)
@@ -510,8 +519,9 @@ cat(sprintf("CSV saved: %s\n", OUTPUT_FILES$nov_csv))
 central_results_nov <- perform_chi_square_analysis(merged_nov, "central")
 local_results_nov   <- perform_chi_square_analysis(merged_nov, "local")
 
-p_nov <- create_testing_comparison_plot(central_results_nov, local_results_nov, CUTOFF_DATE_NOV)
-save_plot(p_nov, OUTPUT_FILES$nov_plot)
+p_nov <- create_testing_comparison_plot(central_results_nov, local_results_nov,
+                                        CUTOFF_DATE_NOV, text_scale = 1.3)
+save_plot(p_nov, OUTPUT_FILES$nov_plot, width = 12, height = 7)
 
 # HTML uses the *local* test chi-square (as in your original)
 generate_html_report(
@@ -533,8 +543,9 @@ cat(sprintf("CSV saved: %s\n", OUTPUT_FILES$march_csv))
 central_results_march <- perform_chi_square_analysis(merged_march, "central")
 local_results_march   <- perform_chi_square_analysis(merged_march, "local")
 
-p_march <- create_testing_comparison_plot(central_results_march, local_results_march, CUTOFF_DATE_MARCH)
-save_plot(p_march, OUTPUT_FILES$march_plot)
+p_march <- create_testing_comparison_plot(central_results_march, local_results_march,
+                                          CUTOFF_DATE_MARCH, text_scale = 1.3)
+save_plot(p_march, OUTPUT_FILES$march_plot, width = 12, height = 7)
 
 generate_html_report(
   chi_sq_results = local_results_march,
