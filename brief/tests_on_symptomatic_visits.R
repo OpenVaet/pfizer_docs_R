@@ -1,5 +1,5 @@
 # =====================================================================
-# COVID-19 Vaccine Trial Analysis: Symptomatic Visits and Testing Rates
+# C4591001 Protocol Deviations: Symptomatic Visits and Testing Rates
 # =====================================================================
 # This script analyzes the relationship between symptomatic visits and 
 # COVID-19 testing rates in vaccine trial participants, comparing 

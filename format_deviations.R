@@ -6,7 +6,7 @@ library(stringr)
 library(flextable)
 library(ggplot2)
 
-protocol_devs_analysis_file <- 'xpt_data/FDA-CBER-2021-5683-0065774-to-0066700_125742_S1_M5_c4591001-A-D-addv.xpt'
+protocol_devs_analysis_file <- 'xpt_data/FDA-CBER-2021-5683-0065774 to -0066700_125742_S1_M5_c4591001-A-D-addv.xpt'
 protocol_devs_sup_file <- 'xpt_data/FDA-CBER-2021-5683-0174607 to -0178318_125742_S1_M5_c4591001-S-D-suppdv.xpt'
 
 # Reads the primary XPT files
@@ -76,6 +76,7 @@ print(filtered_data)
 arm_counts <- randomized_pop %>%
   group_by(ARM) %>%
   summarize(total_subjects = n_distinct(SUBJID))
+print(arm_counts)
 
 # Counts the unique SUBJID for each CONCATTERM and ARM
 deviation_counts <- list()
@@ -88,7 +89,7 @@ deviation_counts <- filtered_data %>%
   ) %>%
   ungroup() %>%
   mutate(TOTAL_SUBJECTS = BNT_SUBJECTS + PLACEBO_SUBJECTS)
-
+print(deviation_counts)
 
 # Filters out deviations with under 100 TOTAL_SUBJECTS
 deviation_counts <- deviation_counts %>%
@@ -109,6 +110,7 @@ for (i in 1:nrow(deviation_counts)) {
   deviation_counts$chi_square[i] <- chisq_result$statistic
   deviation_counts$p_value[i] <- chisq_result$p.value
 }
+
 print(deviation_counts, n=120)
 deviation_counts <- deviation_counts %>%
   filter(p_value <= 0.05)
