@@ -281,21 +281,23 @@ create_ae_anomaly_pair_plot_counts <- function(test1, test2,
                                                text_scale  = 1.6,
                                                wrap_width  = 30,
                                                pad_top_mult = 0.12,
-                                               subtitle_gap = 8) {
+                                               subtitle_gap = 8,
+                                               fig_caption = NULL) {   # e.g., "Figure 3"
+
   # Pull affected counts per ARM from the test results
   extract_counts <- function(test_res, label) {
-    df <- test_res$counts %>%
+    test_res$counts %>%
       mutate(ARM = as.character(ARM)) %>%
-      select(ARM, affected, total) %>%
-      mutate(
-        Group = ifelse(ARM == bnt_label, "BNT162b2",
-                 ifelse(ARM == plc_label, "Placebo", ARM)),
+      transmute(
         Anomaly = label,
-        Count = as.integer(replace_na(affected, 0L)),
-        Total = as.integer(replace_na(total,    0L))
-      ) %>%
-      select(Anomaly, Group, Count, Total)
-    df
+        Group   = case_when(
+          ARM == bnt_label ~ bnt_label,
+          ARM == plc_label ~ plc_label,
+          TRUE ~ ARM
+        ),
+        Count   = as.integer(replace_na(affected, 0L)),
+        Total   = as.integer(replace_na(total,    0L))
+      )
   }
 
   plot_df <- bind_rows(
@@ -304,33 +306,33 @@ create_ae_anomaly_pair_plot_counts <- function(test1, test2,
   )
   plot_df$Anomaly <- factor(plot_df$Anomaly, levels = labels)
 
-  # Per-anomaly annotations (Δ and p)
+  # Per-anomaly annotations (Δ & p)
   annot <- bind_rows(lapply(labels, function(lab) {
     sub <- filter(plot_df, Anomaly == lab)
-    # BNT and Placebo counts (ensure both exist)
-    bnt_n <- sub$Count[sub$Group == "BNT162b2"]; if (!length(bnt_n)) bnt_n <- 0L
-    plc_n <- sub$Count[sub$Group == "Placebo"];  if (!length(plc_n)) plc_n <- 0L
-    bnt_t <- sub$Total[sub$Group == "BNT162b2"]; if (!length(bnt_t)) bnt_t <- 0L
-    plc_t <- sub$Total[sub$Group == "Placebo"];  if (!length(plc_t)) plc_t <- 0L
+    bnt_n <- sub$Count[sub$Group == bnt_label]; if (!length(bnt_n)) bnt_n <- 0L
+    plc_n <- sub$Count[sub$Group == plc_label]; if (!length(plc_n)) plc_n <- 0L
+    bnt_t <- sub$Total[sub$Group == bnt_label]; if (!length(bnt_t)) bnt_t <- 0L
+    plc_t <- sub$Total[sub$Group == plc_label]; if (!length(plc_t)) plc_t <- 0L
 
-    # 2x2 test on subjects (affected vs not)
-    m <- matrix(c(bnt_n, bnt_t - bnt_n,
-                  plc_n, plc_t - plc_n), nrow = 2, byrow = TRUE)
+    m <- matrix(c(bnt_n, bnt_t - bnt_n, plc_n, plc_t - plc_n), nrow = 2, byrow = TRUE)
     p <- suppressWarnings(chisq.test(m)$p.value)
 
     ymax    <- max(c(bnt_n, plc_n), na.rm = TRUE)
-    offset  <- max(6 * text_scale, 0.06 * ymax)  # space above bars
+    offset  <- max(6 * text_scale, 0.06 * ymax)
     y_label <- ymax + offset
     delta   <- abs(bnt_n - plc_n)
     p_lab   <- ifelse(p < 0.001, "p < 0.001", paste0("p = ", format(p, digits = 3)))
-    data.frame(Anomaly = lab,
-               y = y_label,
-               label = sprintf("\u0394 = %s\n%s", format(delta, big.mark=","), p_lab),
-               col = ifelse(p < 0.05, "red", "black"),
-               ymax = ymax, stringsAsFactors = FALSE)
+
+    data.frame(
+      Anomaly = lab,
+      y = y_label,
+      label = sprintf("\u0394 = %s\n%s", format(delta, big.mark=","), p_lab),
+      col = ifelse(p < 0.05, "#a1082c", "black"),   # match sig color
+      ymax = ymax, stringsAsFactors = FALSE
+    )
   }))
 
-  # Sizing (same look/feel)
+  # Sizes (match your other plots)
   s_base       <- 12 * text_scale
   s_title      <- 16 * text_scale
   s_subtitle   <- 12 * text_scale
@@ -340,6 +342,11 @@ create_ae_anomaly_pair_plot_counts <- function(test1, test2,
   s_bar_label  <- 4  * text_scale
   s_annot      <- 3.8 * text_scale
 
+  # Legend stability & color mapping
+  plot_df$Group <- factor(plot_df$Group, levels = c(plc_label, bnt_label))
+  fill_vals <- setNames(c("#0d132d", "#a1082c"), c(plc_label, bnt_label))  # Placebo, BNT
+
+  # Headroom above annotations
   max_count <- max(plot_df$Count, na.rm = TRUE)
   pad_top   <- max(8 * text_scale, pad_top_mult * max_count)
   y_top     <- max(annot$y) + pad_top
@@ -355,26 +362,45 @@ create_ae_anomaly_pair_plot_counts <- function(test1, test2,
     scale_y_continuous(limits = c(0, y_top),
                        expand = expansion(mult = c(0, 0.02))) +
     scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = wrap_width)) +
-    scale_fill_manual(values = c("#667eea", "#764ba2")) +
+
+    # COLORS + robust legend
+    scale_fill_manual(values = fill_vals, breaks = names(fill_vals), drop = FALSE,
+                      guide  = guide_legend(title = "Treatment Group")) +
+
     labs(
-      title    = "EUA vs BLA Anomaly Counts by ARM",
+      title    = "EUA vs BLA Anomaly Counts by Treatment Arm",
       subtitle = "Number of subjects with ≥1 anomaly (BNT162b2 vs Placebo)",
-      x = NULL, y = "Subjects with anomaly (count)", fill = "Treatment Group"
+      caption  = fig_caption,          # bottom-right if provided
+      x = NULL, y = "Subjects with anomaly (count)"
     ) +
+
+    # Theme + white backgrounds for print
     theme_minimal(base_size = s_base) +
     theme(
       plot.title      = element_text(size = s_title, face = "bold", hjust = 0.5),
       plot.subtitle   = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
                                      margin = margin(b = subtitle_gap * text_scale)),
+      plot.caption    = element_text(size = s_subtitle, hjust = 1, margin = margin(t = 6 * text_scale)),
+      plot.caption.position = "plot",
+
       axis.text       = element_text(size = s_axis),
       axis.title      = element_text(size = s_axis_title, face = "bold"),
+
       legend.position = "bottom",
       legend.title    = element_text(size = s_legend, face = "bold"),
       legend.text     = element_text(size = s_legend),
       legend.key.size = grid::unit(12 * text_scale, "pt"),
+      legend.background     = element_rect(fill = "white", color = NA),
+      legend.box.background = element_rect(fill = "white", color = NA),
+
       panel.grid.minor = element_blank(),
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background  = element_rect(fill = "white", color = NA),
+
       plot.margin     = margin(t = (12 + subtitle_gap) * text_scale,
-                               r = 10 * text_scale, b = 10 * text_scale, l = 10 * text_scale)
+                               r = 10 * text_scale,
+                               b = 14 * text_scale,
+                               l = 10 * text_scale)
     ) +
     coord_cartesian(clip = "off") +
     geom_text(data = annot,
@@ -383,7 +409,6 @@ create_ae_anomaly_pair_plot_counts <- function(test1, test2,
               size = s_annot, fontface = "bold", show.legend = FALSE) +
     scale_color_identity()
 }
-
 
 # --- 5) Per-ARM anomaly tests vs full ADSL randomized base --------------------
 
@@ -485,19 +510,20 @@ anomaly_pair_plot <- create_ae_anomaly_pair_plot_counts(
   test1  = term_test_adsl,
   test2  = miss_bla_test_adsl,
   labels = c("Term mismatches (both present)",
-             "Present in EUA, missing in BLA"),
-  text_scale = 1.6
+             "Present in EUA, missing in BLA)"),
+  text_scale = 1.6,
+  fig_caption = "Figure 3"
 )
 
 plot_base <- "analysis/ae_anomaly_pair_counts"
-ggsave(paste0(plot_base, ".png"), anomaly_pair_plot, width = 12, height = 7, dpi = 300)
-# Unicode-safe PDF (Δ) if Cairo is available
+ggsave(paste0(plot_base, ".png"), anomaly_pair_plot, width = 12, height = 7, dpi = 300, bg = "white")
 if (isTRUE(capabilities("cairo"))) {
   ggsave(paste0(plot_base, ".pdf"), anomaly_pair_plot, width = 12, height = 7,
-         device = grDevices::cairo_pdf)
+         device = grDevices::cairo_pdf, bg = "white")
 } else {
-  ggsave(paste0(plot_base, ".pdf"), anomaly_pair_plot, width = 12, height = 7)
+  ggsave(paste0(plot_base, ".pdf"), anomaly_pair_plot, width = 12, height = 7, bg = "white")
 }
+
 
 # Build a data-URI for embedding in the HTML report
 anomaly_pair_img_uri <- base64enc::dataURI(file = paste0(plot_base, ".png"), mime = "image/png")
@@ -549,6 +575,12 @@ doc <- tags$html(
       tags$h2("Overview"),
       tags$div(class = "grid", metrics)
     ),
+    tags$section(
+      tags$h2("EUA vs BLA anomaly counts by Arm (visual)"),
+      tags$p("Two anomalies shown: (1) Term mismatches (both present), (2) Present in EUA, missing in BLA."),
+      tags$img(src = anomaly_pair_img_uri,
+               style = "width:100%;max-width:1000px;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.12);")
+    ),
     
     tags$section(
       tags$h2("Cross-dataset comparison (mismatch focus)"),
@@ -572,12 +604,6 @@ doc <- tags$html(
         "Present in EUA, missing in BLA",
         "Keys found in EUA with no corresponding key in BLA"
       ))
-    ),
-    tags$section(
-      tags$h2("EUA vs BLA anomaly counts by ARM (visual)"),
-      tags$p("Two anomalies shown: (1) Term mismatches (both present), (2) Present in EUA, missing in BLA."),
-      tags$img(src = anomaly_pair_img_uri,
-               style = "width:100%;max-width:1000px;border-radius:8px;box-shadow:0 8px 30px rgba(0,0,0,.12);")
     ),
 
     tags$h2("Association of anomalies with ARM"),

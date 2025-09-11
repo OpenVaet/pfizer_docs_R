@@ -145,7 +145,8 @@ create_deviation_pair_plot_counts <- function(filtered_data, arm_counts, target_
                                               text_scale  = 1.6,
                                               wrap_width  = 30,
                                               pad_top_mult = 0.12,   # fraction of max count added above annotations
-                                              subtitle_gap = 8       # gap (in text_scale units) under subtitle
+                                              subtitle_gap = 8,      # gap (in text_scale units) under subtitle
+                                              fig_caption = NULL      # e.g., "Figure 2" (bottom-right); NULL to omit
 ) {
   terms_norm <- normalize_term(target_terms)
 
@@ -165,7 +166,7 @@ create_deviation_pair_plot_counts <- function(filtered_data, arm_counts, target_
     plc_n <- ifelse(length(plc_n) == 0, 0L, as.integer(plc_n))
     data.frame(
       Deviation = term,
-      Group     = c("BNT162b2 Phase 2/3 (30mcg)", "Placebo"),
+      Group     = c(bnt_label, plc_label),
       Count     = c(bnt_n, plc_n),
       Total     = c(bnt_total, plc_total),
       stringsAsFactors = FALSE
@@ -177,26 +178,26 @@ create_deviation_pair_plot_counts <- function(filtered_data, arm_counts, target_
   # Per-term annotation (Δ & p), with dynamic headroom above bars
   annot <- lapply(terms_norm, function(term) {
     sub   <- subset(plot_df, Deviation == term)
-    bnt_n <- sub$Count[sub$Group == "BNT162b2 Phase 2/3 (30mcg)"]; bnt_t <- sub$Total[sub$Group == "BNT162b2 Phase 2/3 (30mcg)"]
-    plc_n <- sub$Count[sub$Group == "Placebo"];  plc_t <- sub$Total[sub$Group == "Placebo"]
+    bnt_n <- sub$Count[sub$Group == bnt_label]; bnt_t <- sub$Total[sub$Group == bnt_label]
+    plc_n <- sub$Count[sub$Group == plc_label]; plc_t <- sub$Total[sub$Group == plc_label]
 
     m <- matrix(c(bnt_n, bnt_t - bnt_n, plc_n, plc_t - plc_n), nrow = 2, byrow = TRUE)
     p <- suppressWarnings(chisq.test(m)$p.value)
 
     ymax    <- max(sub$Count, na.rm = TRUE)
-    offset  <- max(6 * text_scale, 0.06 * ymax)  # space above bars for the label
+    offset  <- max(6 * text_scale, 0.06 * ymax)
     y_label <- ymax + offset
 
     delta   <- abs(diff(sub$Count))
     p_label <- ifelse(p < 0.001, "p < 0.001", paste0("p = ", format(p, digits = 3)))
     label   <- sprintf("\u0394 = %s\n%s", format(delta, big.mark=","), p_label)
-    col     <- ifelse(p < 0.05, "red", "black")
+    col     <- ifelse(p < 0.05, "#a1082c", "black")  # align sig color
 
     data.frame(Deviation = term, y = y_label, label = label, col = col, ymax = ymax)
   })
   annot <- do.call(rbind, annot)
 
-  # --- Sizing ---
+  # --- Sizing (matches your other plot) ---
   s_base       <- 12 * text_scale
   s_title      <- 16 * text_scale
   s_subtitle   <- 12 * text_scale
@@ -206,7 +207,14 @@ create_deviation_pair_plot_counts <- function(filtered_data, arm_counts, target_
   s_bar_label  <- 4  * text_scale
   s_annot      <- 3.8 * text_scale
 
-  # Extra pad ABOVE the highest annotation so it never touches the subtitle
+  # Legend stability & color mapping
+  plot_df$Group <- factor(plot_df$Group, levels = c(plc_label, bnt_label))
+  fill_vals <- c(
+    plc_label = "#0d132d",          # Placebo
+    bnt_label = "#a1082c"           # BNT162b2
+  )
+
+  # Extra headroom above annotations so they never collide with subtitle
   max_count <- max(plot_df$Count, na.rm = TRUE)
   pad_top   <- max(8 * text_scale, pad_top_mult * max_count)
   y_top     <- max(annot$y) + pad_top
@@ -222,27 +230,50 @@ create_deviation_pair_plot_counts <- function(filtered_data, arm_counts, target_
     scale_y_continuous(limits = c(0, y_top),
                        expand = expansion(mult = c(0, 0.02))) +
     scale_x_discrete(labels = function(x) stringr::str_wrap(x, width = wrap_width)) +
-    scale_fill_manual(values = c("#667eea", "#764ba2")) +
+
+    # >>> Requested colors + robust legend (no dropping)
+    scale_fill_manual(
+      values = c(setNames(fill_vals, c(plc_label, bnt_label))),
+      breaks = c(plc_label, bnt_label),
+      drop   = FALSE,
+      guide  = guide_legend(title = "Treatment Group")
+    ) +
+
     labs(
       title    = "Arm Comparison for Selected Deviations (Counts)",
       subtitle = "Number of subjects with ≥1 deviation (C4591001; through 2021-03-13)",
-      x = NULL, y = "Subjects with deviation (count)", fill = "Treatment Group"
+      caption  = fig_caption,                      # bottom-right if provided
+      x = NULL, y = "Subjects with deviation (count)"
     ) +
+
+    # Theme aligned + full white backgrounds for print
     theme_minimal(base_size = s_base) +
     theme(
       plot.title      = element_text(size = s_title, face = "bold", hjust = 0.5),
       plot.subtitle   = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
-                                     margin = margin(b = subtitle_gap * text_scale)),  # push panel down
+                                     margin = margin(b = subtitle_gap * text_scale)),
+      plot.caption    = element_text(size = s_subtitle, hjust = 1,
+                                     margin = margin(t = 6 * text_scale)),
+      plot.caption.position = "plot",
+
       axis.text       = element_text(size = s_axis),
       axis.title      = element_text(size = s_axis_title, face = "bold"),
+
       legend.position = "bottom",
       legend.title    = element_text(size = s_legend, face = "bold"),
       legend.text     = element_text(size = s_legend),
       legend.key.size = grid::unit(12 * text_scale, "pt"),
+      legend.background     = element_rect(fill = "white", color = NA),
+      legend.box.background = element_rect(fill = "white", color = NA),
+
       panel.grid.minor = element_blank(),
-      plot.margin     = margin(t = (12 + subtitle_gap) * text_scale,  # extra top margin too
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background  = element_rect(fill = "white", color = NA),
+
+      # match margins (larger bottom for labels)
+      plot.margin     = margin(t = (12 + subtitle_gap) * text_scale,
                                r = 10 * text_scale,
-                               b = 10 * text_scale,
+                               b = 14 * text_scale,
                                l = 10 * text_scale)
     ) +
     coord_cartesian(clip = "off") +
@@ -430,11 +461,14 @@ pair_counts_plot <- create_deviation_pair_plot_counts(
   filtered_data = filtered_data,
   arm_counts    = arm_counts,
   target_terms  = target_devs_counts,
-  text_scale    = 1.6
+  text_scale    = 1.6,
+  fig_caption   = "Figure 2"
 )
 
-ggsave(paste0(OUTPUTS$dev_pair_counts_plot, ".png"), pair_counts_plot, width = 12, height = 7, dpi = 300)
-ggsave(paste0(OUTPUTS$dev_pair_counts_plot, ".pdf"), pair_counts_plot, width = 12, height = 7)
+ggsave(paste0(OUTPUTS$dev_pair_counts_plot, ".png"), pair_counts_plot,
+       width = 12, height = 7, dpi = 300, bg = "white")
+ggsave(paste0(OUTPUTS$dev_pair_counts_plot, ".pdf"), pair_counts_plot,
+       width = 12, height = 7, bg = "white")
 
 generate_plot_html(
   title     = "C4591001 – BNT vs Placebo for Two Deviations (Counts)",

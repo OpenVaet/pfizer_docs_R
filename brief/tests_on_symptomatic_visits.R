@@ -3,7 +3,7 @@
 # =====================================================================
 # This script analyzes the relationship between symptomatic visits and 
 # COVID-19 testing rates in vaccine trial participants, comparing 
-# treatment and placebo groups across different time periods.
+# treatment and placebo groups for the March 13, 2021 cutoff.
 # =====================================================================
 # This script requires that:
 # 1 - download_full_prod.R
@@ -19,7 +19,6 @@
 library(haven)      # For reading XPT files
 library(dplyr)      # For data manipulation
 library(lubridate)  # For date handling
-library(furrr)      # For parallel processing
 library(stringr)    # For string manipulation
 library(ggplot2)    # For creating plots
 library(base64enc)  # For embedding plots in HTML
@@ -42,16 +41,12 @@ EXCLUDED_SUBJECTS <- c(10561101, 11331382, 11101123, 11331405, 11491117,
                        11231105, 10711213)
 MIN_AGE <- 16
 CUTOFF_DATE_MARCH <- "2021-03-13"
-CUTOFF_DATE_NOV <- "2020-11-14"
 
 # Output files
 OUTPUT_FILES <- list(
-  march_csv = "phase_3_subjects_sympto_visits.csv",
-  nov_csv = "phase_3_subjects_sympto_visits_nov_14.csv",
+  march_csv  = "phase_3_subjects_sympto_visits.csv",
   march_html = "local_test_chi_sq_march_13.html",
-  nov_html = "local_test_chi_sq_nov_14.html",
-  march_plot = "testing_comparison_march", # base name, no extension
-  nov_plot = "testing_comparison_nov"      # base name, no extension
+  march_plot = "testing_comparison_march"
 )
 
 # Helpers
@@ -273,6 +268,7 @@ perform_chi_square_analysis <- function(data, test_type = "local") {
 }
 
 create_testing_comparison_plot <- function(central_results, local_results, cutoff_date, text_scale = 1.6) {
+  # Build plotting frame
   testing_data <- data.frame(
     Test_Type  = rep(c("Central Test", "Local Test"), each = 2),
     Group      = rep(central_results$counts$ARM, 2),
@@ -284,7 +280,10 @@ create_testing_comparison_plot <- function(central_results, local_results, cutof
                    local_results$counts$total_visits)
   )
 
-  # Sizes (all scale together)
+  # Force consistent group labels & order (align legend/colors deterministically)
+  testing_data$Group <- factor(testing_data$Group, levels = c("Placebo", "BNT162b2 Phase 2/3 (30 mcg)"))
+
+  # Sizes
   s_base       <- 12 * text_scale
   s_title      <- 16 * text_scale
   s_subtitle   <- 12 * text_scale
@@ -302,74 +301,103 @@ create_testing_comparison_plot <- function(central_results, local_results, cutof
   local_p      <- ifelse(local_results$test$p.value   < 0.001, "p < 0.001",
                          paste0("p = ", format(local_results$test$p.value,   digits = 3)))
 
-  # Label positions
-  y1 <- max(testing_data$Percentage[1:2]) # central bars top
-  y2 <- max(testing_data$Percentage[3:4]) # local bars top
-  y_top <- max(y1, y2) + 14 * text_scale  # extra headroom for bigger text
+  # Bar tops for annotation headroom
+  y1 <- max(testing_data$Percentage[1:2])
+  y2 <- max(testing_data$Percentage[3:4])
+  y_top <- max(y1, y2) + 14 * text_scale
 
   p <- ggplot(testing_data, aes(x = Test_Type, y = Percentage, fill = Group)) +
     geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.7) +
     geom_text(aes(label = sprintf("%.1f%%", Percentage)),
               position = position_dodge(0.7),
               vjust = -0.5, size = s_bar_label, fontface = "bold") +
-    scale_y_continuous(limits = c(0, y_top), breaks = seq(0, 100, 10),
-                       expand = expansion(mult = c(0, 0.05))) +
-    scale_fill_manual(values = c("#667eea", "#764ba2")) +
+
+    scale_fill_manual(values = c(
+      "Placebo" = "#0d132d",
+      "BNT162b2 Phase 2/3 (30 mcg)" = "#a1082c"
+    )) +
     labs(
       title    = "PCR Testing Rates by Treatment Arms - Central & Local Tests",
       subtitle = paste0("Data through ", cutoff_date),
       x = "Test Type", y = "Percentage of Symptomatic Visits Tested (%)",
       fill = "Treatment Group"
     ) +
+
+    # Titles (keep your top subtitle) + bottom-right caption "Figure 1"
+    labs(
+      title    = "PCR Testing Rates by Treatment Arms - Central & Local Tests",
+      subtitle = paste0("Data through ", cutoff_date),
+      caption  = "Figure 1",
+      x = "Test Type", y = "Percentage of Symptomatic Visits Tested (%)"
+    ) +
+
+    # Clean y scale
+    scale_y_continuous(limits = c(0, y_top), breaks = seq(0, 100, 10),
+                       expand = expansion(mult = c(0, 0.05))) +
+
+    # Theme aligned with the other script; force all-white backgrounds for print
     theme_minimal(base_size = s_base) +
     theme(
-      plot.title      = element_text(size = s_title, face = "bold", hjust = 0.5),
-      plot.subtitle   = element_text(size = s_subtitle, hjust = 0.5, color = "gray35"),
-      axis.text       = element_text(size = s_axis),
-      axis.title      = element_text(size = s_axis_title, face = "bold"),
-      legend.position = "bottom",
-      legend.title    = element_text(size = s_legend, face = "bold"),
-      legend.text     = element_text(size = s_legend),
-      legend.key.size = grid::unit(12 * text_scale, "pt"),
+      plot.title       = element_text(size = s_title, face = "bold", hjust = 0.5),
+      plot.subtitle    = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
+                                      margin = margin(b = 6 * text_scale)),
+      plot.caption     = element_text(size = s_subtitle, hjust = 1, vjust = 1,
+                                      margin = margin(t = 6 * text_scale)),
+      plot.caption.position = "plot",
+
+      axis.text        = element_text(size = s_axis),
+      axis.title       = element_text(size = s_axis_title, face = "bold"),
+
+      legend.position  = "bottom",
+      legend.title     = element_text(size = s_legend, face = "bold"),
+      legend.text      = element_text(size = s_legend),
+      legend.key.size  = grid::unit(12 * text_scale, "pt"),
+      legend.background    = element_rect(fill = "white", color = NA),
+      legend.box.background = element_rect(fill = "white", color = NA),
+
       panel.grid.minor = element_blank(),
-      plot.margin     = margin(t = 12 * text_scale, r = 10 * text_scale,
-                               b = 10 * text_scale, l = 10 * text_scale)
+      panel.background = element_rect(fill = "white", color = NA),
+      plot.background  = element_rect(fill = "white", color = NA),
+
+      # Match margins to your other plot (note larger bottom margin)
+      plot.margin      = margin(t = 12 * text_scale, r = 10 * text_scale,
+                                b = 14 * text_scale, l = 10 * text_scale)
     ) +
     coord_cartesian(clip = "off")
 
   # Central labels
   p <- p +
-    annotate("text", x = 1, y = y1 + 4.5 * text_scale, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 1, y = y1 + 6 * text_scale, vjust = 0, lineheight = 0.95,
              label = sprintf("%.1f%% difference", central_diff),
              size = s_annot, fontface = "bold") +
-    annotate("text", x = 1, y = y1 + 7.7 * text_scale, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 1, y = y1 + 9.8 * text_scale, vjust = 0, lineheight = 0.95,
              label = central_p, size = s_annot, fontface = "bold",
-             color = ifelse(central_results$test$p.value < 0.05, "red", "black"))
+             color = ifelse(central_results$test$p.value < 0.05, "#a1082c", "black"))
 
   # Local labels
   p <- p +
-    annotate("text", x = 2, y = y2 + 4.5 * text_scale, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 2, y = y2 + 6 * text_scale, vjust = 0, lineheight = 0.95,
              label = sprintf("%.1f%% difference", local_diff),
              size = s_annot, fontface = "bold") +
-    annotate("text", x = 2, y = y2 + 7.7 * text_scale, vjust = 0, lineheight = 0.95,
+    annotate("text", x = 2, y = y2 + 9.8 * text_scale, vjust = 0, lineheight = 0.95,
              label = local_p, size = s_annot, fontface = "bold",
-             color = ifelse(local_results$test$p.value < 0.05, "red", "black"))
+             color = ifelse(local_results$test$p.value < 0.05, "#a1082c", "black"))
 
-  # Optional highlight
+  # Optional highlight (kept; remove if you prefer 100% monochrome)
   if (local_results$test$p.value < 0.05) {
     p <- p + annotate("rect", xmin = 1.5, xmax = 2.5,
                       ymin = -2, ymax = max(testing_data$Percentage) * 1.25,
-                      alpha = 0.08, fill = "red") +
+                      alpha = 0.08, fill = "#a1082c") +
       annotate("text", x = 2, y = -5, label = "⚠ Significant Disparity",
-               size = 3 * text_scale, fontface = "italic", color = "red")
+               size = 3 * text_scale, fontface = "italic", color = "#a1082c")
   }
+
   p
 }
 
-
 save_plot <- function(plot, base_filename, width = 10, height = 6) {
-  ggsave(paste0(base_filename, ".png"), plot = plot, width = width, height = height, dpi = 300)
-  ggsave(paste0(base_filename, ".pdf"), plot = plot, width = width, height = height)
+  ggsave(paste0(base_filename, ".png"), plot = plot, width = width, height = height, dpi = 300, bg = "white")
+  ggsave(paste0(base_filename, ".pdf"), plot = plot, width = width, height = height, bg = "white")
   cat(sprintf("Plots saved: %s.png and %s.pdf\n", base_filename, base_filename))
 }
 
@@ -386,7 +414,6 @@ generate_html_report <- function(chi_sq_results, template_file, output_file, cut
 
   plot_section <- ""
   if (!is.null(plot_filename) && file.exists(paste0(plot_filename, ".png"))) {
-    # safer: construct proper data URI
     uri <- base64enc::dataURI(file = paste0(plot_filename, ".png"), mime = "image/png")
     plot_section <- paste0('
       <div class="plot-section">
@@ -505,34 +532,9 @@ generate_html_report <- function(chi_sq_results, template_file, output_file, cut
 }
 
 # ---------------------------------------------------------------------
-# 7. RUN: NOV 14 AND MARCH 13 PIPELINES
+# 7. RUN: MARCH 13 PIPELINE
 # ---------------------------------------------------------------------
 
-# --- NOV 14 ---
-cat("\n=== NOV 14 PIPELINE ===\n")
-merged_nov <- merge_test_data(subjects_sympto_visits, central_tests, local_tests, CUTOFF_DATE_NOV)
-
-# Write CSV of symptomatic visits used up to NOV 14
-write.csv(merged_nov %>% arrange(SUBJID, VISIT), OUTPUT_FILES$nov_csv, row.names = FALSE)
-cat(sprintf("CSV saved: %s\n", OUTPUT_FILES$nov_csv))
-
-central_results_nov <- perform_chi_square_analysis(merged_nov, "central")
-local_results_nov   <- perform_chi_square_analysis(merged_nov, "local")
-
-p_nov <- create_testing_comparison_plot(central_results_nov, local_results_nov,
-                                        CUTOFF_DATE_NOV, text_scale = 1.3)
-save_plot(p_nov, OUTPUT_FILES$nov_plot, width = 12, height = 7)
-
-# HTML uses the *local* test chi-square (as in your original)
-generate_html_report(
-  chi_sq_results = local_results_nov,
-  template_file  = FILES$html_template,
-  output_file    = OUTPUT_FILES$nov_html,
-  cutoff_date    = CUTOFF_DATE_NOV,
-  plot_filename  = OUTPUT_FILES$nov_plot   # base name only, no extension
-)
-
-# --- MARCH 13 ---
 cat("\n=== MARCH 13 PIPELINE ===\n")
 merged_march <- merge_test_data(subjects_sympto_visits, central_tests, local_tests, CUTOFF_DATE_MARCH)
 
@@ -544,7 +546,7 @@ central_results_march <- perform_chi_square_analysis(merged_march, "central")
 local_results_march   <- perform_chi_square_analysis(merged_march, "local")
 
 p_march <- create_testing_comparison_plot(central_results_march, local_results_march,
-                                          CUTOFF_DATE_MARCH, text_scale = 1.3)
+                                          CUTOFF_DATE_MARCH, text_scale = 1.6)
 save_plot(p_march, OUTPUT_FILES$march_plot, width = 12, height = 7)
 
 generate_html_report(

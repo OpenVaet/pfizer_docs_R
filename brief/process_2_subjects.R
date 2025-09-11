@@ -163,14 +163,19 @@ print(recruitment_by_day)
 # 7) STACKED WEEKLY PLOT
 # ---------------------------------------------------------------------
 # --- Build plotting frame (stacked weekly) ---
+# ---------------------------------------------------------------------
+# 7) STACKED WEEKLY PLOT (house style + placebo/bnt tones)
+# ---------------------------------------------------------------------
+
+# Ensure stacking & legend order: Process 1 bottom, Process 2 top
 plot_df <- recruitment_by_week_long %>%
+  mutate(Process = factor(Process, levels = c("Process 1 Subjects", "Process 2 Subjects"))) %>%
   group_by(week) %>%
-  arrange(factor(Process, levels = c("Process 1 Subjects","Process 2 Subjects")),
-          .by_group = TRUE) %>%
+  arrange(Process, .by_group = TRUE) %>%
   mutate(total = sum(Subjects)) %>%
   ungroup()
 
-# text sizes & palette (unchanged)
+# text sizes
 text_scale   <- 1.6
 s_base       <- 12 * text_scale
 s_title      <- 16 * text_scale
@@ -180,56 +185,76 @@ s_axis_title <- 12 * text_scale
 s_legend     <- 12 * text_scale
 s_inbar_lab  <- 3.6 * text_scale
 s_total_lab  <- 4.0 * text_scale
+s_caption    <- 14 * text_scale 
 
-pal <- c("Process 1 Subjects" = "#667eea", "Process 2 Subjects" = "#764ba2")
+# Placebo & BNT162b2 tones
+pal <- c("Process 1 Subjects" = "#0d132d",   # Placebo tone
+         "Process 2 Subjects" = "#a1082c")   # BNT162b2 tone
+
 y_top <- max(plot_df$total, na.rm = TRUE) + 8 * text_scale
 
 p_proc <- ggplot(plot_df, aes(x = week, y = Subjects, fill = Process)) +
   geom_col(width = 0.75) +
-  
-  # GREY LABELS: anchor near the TOP of each segment (not centered)
+
+  # GREY labels near top of each segment
   geom_text(
     data = dplyr::filter(plot_df, Subjects >= 3),
     aes(label = format(Subjects, big.mark = ",")),
-    position = position_stack(vjust = 0.96),   # <— key change
+    position = position_stack(vjust = 0.96),
     color = "#D0D0D0", fontface = "bold", size = s_inbar_lab
   ) +
-  
-  # Single BLACK total above each stack
+
+  # Single BLACK total above stack
   geom_text(
     data = dplyr::distinct(plot_df, week, total),
     aes(x = week, y = total, label = format(total, big.mark = ",")),
     inherit.aes = FALSE, vjust = -0.6, color = "black",
     fontface = "bold", size = s_total_lab
   ) +
-  
-  scale_fill_manual(values = pal, guide = guide_legend(title = "Process")) +
+
+  scale_fill_manual(
+    values = pal,
+    breaks = names(pal),                         # keep legend stable
+    labels = c("Process 1 Subjects", "Process 2 Subjects"),
+    name   = "Process"
+  ) +
   scale_y_continuous(limits = c(0, y_top), expand = expansion(mult = c(0, 0.04))) +
   labs(
     title    = "C4591001 — BNT162b2 Subjects Randomized by Week - Process 1 vs Commercial Process 2",
-    subtitle = "Grey labels show in-stack counts, black labels show daily totals",
+    subtitle = "Grey labels show in-stack counts, black labels show weekly totals",
+    caption  = "Figure 5",
     x = "ISO Year–Week", y = "Subjects randomized"
   ) +
   theme_minimal(base_size = s_base) +
   theme(
-    plot.title    = element_text(size = s_title, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
-                                 margin = margin(b = 6 * text_scale)),
-    axis.text     = element_text(size = s_axis),
-    axis.title    = element_text(size = s_axis_title, face = "bold"),
-    axis.text.x   = element_text(angle = 90, hjust = 1, vjust = 0.5),
-    legend.position = "bottom",
-    legend.title    = element_text(size = s_legend, face = "bold"),
-    legend.text     = element_text(size = s_legend),
-    legend.key.size = grid::unit(12 * text_scale, "pt"),
+    plot.title       = element_text(size = s_title, face = "bold", hjust = 0.5),
+    plot.subtitle    = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
+                                    margin = margin(b = 6 * text_scale)),
+    axis.text        = element_text(size = s_axis),
+    axis.title       = element_text(size = s_axis_title, face = "bold"),
+    axis.text.x      = element_text(angle = 90, hjust = 1, vjust = 0.5),
+
+    legend.position  = "bottom",
+    legend.title     = element_text(size = s_legend, face = "bold"),
+    legend.text      = element_text(size = s_legend),
+    legend.key.size  = grid::unit(12 * text_scale, "pt"),
+    legend.background     = element_rect(fill = "white", color = NA),
+    legend.box.background = element_rect(fill = "white", color = NA),
+
     panel.grid.minor = element_blank(),
-    plot.margin     = margin(t = 12 * text_scale, r = 10 * text_scale,
-                             b = 14 * text_scale, l = 10 * text_scale)
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background  = element_rect(fill = "white", color = NA),
+
+    plot.margin      = margin(t = 12 * text_scale, r = 10 * text_scale,
+                              b = 14 * text_scale, l = 10 * text_scale),
+    plot.caption          = element_text(size = s_caption,
+                                     hjust = 1, color = "black",
+                                     margin = margin(t = 6 * text_scale)),
+    plot.caption.position = "plot",
   ) +
   coord_cartesian(clip = "off")
 
 print(p_proc)
-
 
 # Save like the others
 ggsave("process_weekly_stack.png", p_proc, width = 12, height = 6.5, dpi = 300)

@@ -347,18 +347,23 @@ writeLines(template, "subjects_missing.html")
 # 1) Ensure RFICDT is Date and build a per-day summary
 site_1231_plot_df <- site_1231_subjects_with_RFICDT %>%
   mutate(
-    RFICDT = as.Date(RFICDT),                          # enforce Date
+    RFICDT = as.Date(RFICDT),
     Status = ifelse(missing == "Yes", "Missing", "Screened")
   ) %>%
   filter(!is.na(RFICDT)) %>%
-  mutate(Status = factor(Status, levels = c("Screened", "Missing"))) %>%
-  count(RFICDT, Status, name = "n") %>%                 # counts per day & status
+  # Stack order: Missing (bottom), Screened (top)
+  mutate(Status = factor(Status, levels = c("Missing", "Screened"))) %>%
+  count(RFICDT, Status, name = "n") %>%
   group_by(RFICDT) %>%
-  mutate(
-    total = sum(n),
-    ypos  = cumsum(n)                                   # for in-stack labels
-  ) %>%
+  mutate(total = sum(n)) %>%
   ungroup()
+
+# Ensure stable ordering and color mapping
+site_1231_plot_df$Status <- factor(site_1231_plot_df$Status, levels = c("Screened", "Missing"))
+
+# Placebo / BNT162b2 tones
+pal <- c("Screened" = "#0d132d",
+         "Missing"  = "#a1082c")
 
 # 2) Sizing + palette (kept consistent with other plots)
 text_scale   <- 1.4
@@ -370,8 +375,7 @@ s_axis_title <- 12 * text_scale
 s_legend     <- 12 * text_scale
 s_inbar_lab  <- 3.4 * text_scale
 s_total_lab  <- 3.6 * text_scale
-
-pal <- c("Screened" = "#667eea", "Missing" = "#764ba2")
+s_caption    <- 14 * text_scale 
 
 # 3) Top headroom so total labels never collide with subtitle/title
 max_total <- if (nrow(site_1231_plot_df)) max(site_1231_plot_df$total, na.rm = TRUE) else 0
@@ -381,57 +385,73 @@ y_top     <- max_total + pad_top
 # 4) Build the plot
 p_1231 <- ggplot(site_1231_plot_df, aes(x = RFICDT, y = n, fill = Status)) +
   geom_col(width = 0.9) +
-  # white in-stack labels; hide tiny stacks to avoid clutter
+
+  # Grey labels near the TOP of each segment
   geom_text(
-    data = subset(site_1231_plot_df, n >= 2),
-    aes(x = RFICDT, y = ypos - n / 2, label = n),
-    inherit.aes = FALSE,
-    color = "white", fontface = "bold", size = s_inbar_lab
+    data = dplyr::filter(site_1231_plot_df, n >= 2),
+    aes(label = n),
+    position = position_stack(vjust = 0.96),
+    color = "#D0D0D0", fontface = "bold", size = s_inbar_lab
   ) +
 
-  # total per day above the stack (single label per date)
+  # Single black total per day
   geom_text(
     data = dplyr::distinct(site_1231_plot_df, RFICDT, total),
     aes(x = RFICDT, y = total, label = total),
-    inherit.aes = FALSE,
-    vjust = -0.6, color = "black", fontface = "bold", size = s_total_lab
+    inherit.aes = FALSE, vjust = -0.6, color = "black",
+    fontface = "bold", size = s_total_lab
   ) +
 
-  scale_fill_manual(values = pal, guide = guide_legend(title = "Status")) +
-  scale_y_continuous(limits = c(0, y_top), expand = expansion(mult = c(0, 0.03))) +
+  scale_fill_manual(values = pal,
+                    breaks = c("Screened","Missing"),   # legend order
+                    drop = FALSE,
+                    guide = guide_legend(title = "Status")) +
+  scale_y_continuous(limits = c(0, max(site_1231_plot_df$total) + max(2, ceiling(max(site_1231_plot_df$total)*0.10))),
+                     expand = expansion(mult = c(0, 0.03))) +
   scale_x_date(date_breaks = "1 day", date_labels = "%Y-%m-%d",
                expand = expansion(mult = c(0.01, 0.05))) +
   labs(
     title    = "C4591001 — Site 1231 Daily Screening vs Missing Subjects",
-    subtitle = "Counts per screening date; white labels show in-stack counts, black labels show daily totals",
+    subtitle = "Grey labels show in-stack counts, black labels show daily totals",
+    caption  = "Figure 4",
     x = "Date", y = "Number of Subjects"
   ) +
   theme_minimal(base_size = s_base) +
   theme(
-    plot.title      = element_text(size = s_title, face = "bold", hjust = 0.5),
-    plot.subtitle   = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
-                                   margin = margin(b = 6 * text_scale)),
-    axis.text       = element_text(size = s_axis),
-    axis.title      = element_text(size = s_axis_title, face = "bold"),
-    axis.text.x     = element_text(angle = 90, hjust = 1, vjust = 0.5),
-    legend.position = "bottom",
-    legend.title    = element_text(size = s_legend, face = "bold"),
-    legend.text     = element_text(size = s_legend),
-    legend.key.size = grid::unit(12 * text_scale, "pt"),
+    plot.title       = element_text(size = s_title, face = "bold", hjust = 0.5),
+    plot.subtitle    = element_text(size = s_subtitle, hjust = 0.5, color = "gray35",
+                                    margin = margin(b = 6 * text_scale)),
+    axis.text        = element_text(size = s_axis),
+    axis.title       = element_text(size = s_axis_title, face = "bold"),
+    axis.text.x      = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    legend.position  = "bottom",
+    legend.title     = element_text(size = s_legend, face = "bold"),
+    legend.text      = element_text(size = s_legend),
+    legend.key.size  = grid::unit(12 * text_scale, "pt"),
+    legend.background     = element_rect(fill = "white", color = NA),
+    legend.box.background = element_rect(fill = "white", color = NA),
     panel.grid.minor = element_blank(),
-    plot.margin     = margin(t = 12 * text_scale, r = 10 * text_scale,
-                             b = 14 * text_scale, l = 10 * text_scale)
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.background  = element_rect(fill = "white", color = NA),
+    plot.margin      = margin(t = 12 * text_scale, r = 10 * text_scale,
+                              b = 14 * text_scale, l = 10 * text_scale),
+    plot.caption          = element_text(size = s_caption,
+                                     hjust = 1, color = "black",
+                                     margin = margin(t = 6 * text_scale)),
+    plot.caption.position = "plot",
   ) +
   coord_cartesian(clip = "off")
 
 print(p_1231)
 
 # Save alongside other outputs
-ggsave("site_1231_daily_screened_vs_missing.png", p_1231, width = 12, height = 6, dpi = 300)
-# Use Cairo PDF if available for best text rendering
+ggsave("site_1231_daily_screened_vs_missing.png", p_1231,
+       width = 12, height = 6, dpi = 300, bg = "white")
+
 if (isTRUE(capabilities("cairo"))) {
-  ggsave("site_1231_daily_screened_vs_missing.pdf", p_1231, width = 12, height = 6,
-         device = grDevices::cairo_pdf)
+  ggsave("site_1231_daily_screened_vs_missing.pdf", p_1231,
+         width = 12, height = 6, device = grDevices::cairo_pdf, bg = "white")
 } else {
-  ggsave("site_1231_daily_screened_vs_missing.pdf", p_1231, width = 12, height = 6)
+  ggsave("site_1231_daily_screened_vs_missing.pdf", p_1231,
+         width = 12, height = 6, bg = "white")
 }
